@@ -11,7 +11,7 @@ from invenio_search import current_search_client
 
 from invenio_stats.aggregations import StatAggregator
 from invenio_stats.contrib.event_builders import build_file_unique_id, \
-    build_record_unique_id
+    build_record_unique_id, build_top_unique_id
 from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
@@ -38,7 +38,18 @@ def register_events():
                     flag_robots,
                     anonymize_user,
                     build_record_unique_id
+                ])),
+        dict(
+            event_type='top-view',
+            templates='invenio_stats.contrib.record_view',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_top_unique_id
                 ]))
+
     ]
 
 

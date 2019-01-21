@@ -61,3 +61,23 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         **get_user()
     ))
     return event
+
+
+def top_view_event_builder(event, sender_app, **kwargs):
+    """Build a top-view event."""
+    event.update(dict(
+        # When:
+        timestamp=datetime.datetime.utcnow().isoformat(),
+        # What:
+        referrer=request.referrer,
+        remote_addr=request.remote_addr,
+        # Who:
+        **get_user()
+    ))
+    return event
+
+
+def build_top_unique_id(doc):
+    """Build top unique identifier."""
+    doc['unique_id'] = '{0}_{1}'.format("top", "view")
+    return doc

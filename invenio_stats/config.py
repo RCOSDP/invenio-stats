@@ -30,12 +30,18 @@ STATS_EVENTS = {
             'invenio_stats.contrib.event_builders.file_download_event_builder'
         ]
     },
-	'record-view': {
-		'signal': 'invenio_records_ui.signals.record_viewed',
-		'event_builders': [
-			'invenio_stats.contrib.event_builders.record_view_event_builder'
-		]
-	}
+    'record-view': {
+        'signal': 'invenio_records_ui.signals.record_viewed',
+        'event_builders': [
+            'invenio_stats.contrib.event_builders.record_view_event_builder'
+        ]
+    },
+    'top-view': {
+        'signal': 'weko_theme.views.top_viewed',
+        'event_builders': [
+            'invenio_stats.contrib.event_builders.top_view_event_builder'
+        ]
+    }
 }
 """Enabled Events.
 
