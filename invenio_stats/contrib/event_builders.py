@@ -49,11 +49,22 @@ def build_record_unique_id(doc):
 def record_view_event_builder(event, sender_app, pid=None, record=None,
                               **kwargs):
     """Build a record-view event."""
+    # get index information
+    index_list = []
+    if len(record.navi) > 0:
+        for index in record.navi:
+            index_list.append(dict(
+                index_id=index[1],
+                index_name=index[3],
+                index_name_en=index[4]
+            ))
+
     event.update(dict(
         # When:
         timestamp=datetime.datetime.utcnow().isoformat(),
         # What:
         record_id=str(record.id),
+        record_index_list=index_list,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
