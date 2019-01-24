@@ -30,6 +30,16 @@ def register_events():
                     build_file_unique_id
                 ])),
         dict(
+            event_type='file-preview',
+            templates='invenio_stats.contrib.file_preview',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_file_unique_id
+                ])),
+        dict(
             event_type='record-view',
             templates='invenio_stats.contrib.record_view',
             processor_class=EventsIndexer,
@@ -62,6 +72,25 @@ def register_aggregations():
         aggregator_config=dict(
             client=current_search_client,
             event='file-download',
+            aggregation_field='unique_id',
+            aggregation_interval='day',
+            copy_fields=dict(
+                file_key='file_key',
+                bucket_id='bucket_id',
+                file_id='file_id',
+            ),
+            metric_aggregation_fields={
+                'unique_count': ('cardinality', 'unique_session_id',
+                                 {'precision_threshold': 1000}),
+                'volume': ('sum', 'size', {}),
+            },
+        )), dict(
+        aggregation_name='file-preview-agg',
+        templates='invenio_stats.contrib.aggregations.aggr_file_preview',
+        aggregator_class=StatAggregator,
+        aggregator_config=dict(
+            client=current_search_client,
+            event='file-preview',
             aggregation_field='unique_id',
             aggregation_interval='day',
             copy_fields=dict(
@@ -120,6 +149,37 @@ def register_queries():
             query_config=dict(
                 index='stats-file-download',
                 doc_type='file-download-day-aggregation',
+                copy_fields=dict(
+                    # bucket_id='bucket_id',
+                ),
+                required_filters=dict(
+                    bucket_id='bucket_id',
+                ),
+                aggregated_fields=['file_key']
+            )
+        ),
+        dict(
+            query_name='bucket-file-preview-histogram',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
+                copy_fields=dict(
+                    bucket_id='bucket_id',
+                    file_key='file_key',
+                ),
+                required_filters=dict(
+                    bucket_id='bucket_id',
+                    file_key='file_key',
+                )
+            )
+        ),
+        dict(
+            query_name='bucket-file-preview-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
                 copy_fields=dict(
                     # bucket_id='bucket_id',
                 ),

@@ -34,6 +34,23 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
     return event
 
 
+def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
+    """Build a file-preview event."""
+    event.update(dict(
+        # When:
+        timestamp=datetime.datetime.utcnow().isoformat(),
+        # What:
+        bucket_id=str(obj.bucket_id),
+        file_id=str(obj.file_id),
+        file_key=obj.key,
+        size=obj.file.size,
+        referrer=request.referrer,
+        # Who:
+        **get_user()
+    ))
+    return event
+
+
 def build_file_unique_id(doc):
     """Build file unique identifier."""
     doc['unique_id'] = '{0}_{1}'.format(doc['bucket_id'], doc['file_id'])
