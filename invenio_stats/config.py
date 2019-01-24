@@ -41,6 +41,12 @@ STATS_EVENTS = {
         'event_builders': [
             'invenio_stats.contrib.event_builders.top_view_event_builder'
         ]
+    },
+    'search': {
+        'signal': 'weko_search_ui.views.searched',
+        'event_builders': [
+            'invenio_stats.contrib.event_builders.search_event_builder'
+        ]
     }
 }
 """Enabled Events.

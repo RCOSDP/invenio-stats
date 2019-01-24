@@ -81,3 +81,37 @@ def build_top_unique_id(doc):
     """Build top unique identifier."""
     doc['unique_id'] = '{0}_{1}'.format("top", "view")
     return doc
+
+
+def search_event_builder(event, sender_app, search_args=None, **kwargs):
+    """Build a search event."""
+    event.update(dict(
+        # When:
+        timestamp=datetime.datetime.utcnow().isoformat(),
+        # What:
+        referrer=request.referrer,
+        search_detail=search_args.to_dict(flat=False),
+        # Who:
+        **get_user()
+    ))
+    return event
+
+
+def build_search_unique_id(doc):
+    """Build search unique identifier."""
+    doc['unique_id'] = '{0}_{1}'.format(doc['search_detail']['search_key'], doc['search_detail']['search_type'])
+    return doc
+
+
+def build_search_detail_condition(doc):
+    """Build search detail condition."""
+    search_detail = {}
+    for key, value in doc['search_detail'].items():
+        str_val = ' '.join(value)
+        if key == 'q':
+            search_detail['search_key'] = str_val
+        elif len(value) > 0:
+            search_detail[key] = str_val
+
+    doc['search_detail'] = search_detail
+    return doc
