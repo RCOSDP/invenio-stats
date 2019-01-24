@@ -58,6 +58,10 @@
         "remote_addr": {
           "type": "string",
           "index": "not_analyzed"
+        },
+        "record_index_list": {
+          "type": "List",
+          "index": "not_analyzed"
         }
       }
     }
