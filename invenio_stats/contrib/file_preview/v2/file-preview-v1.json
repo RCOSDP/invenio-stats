@@ -1,5 +1,5 @@
 {
-  "template": "events-stats-record-view-*",
+  "template": "events-stats-file-preview-*",
   "settings": {
     "index.mapper.dynamic": false,
     "index": {
@@ -7,7 +7,20 @@
     }
   },
   "mappings": {
-    "stats-record-view": {
+    "_default_": {
+      "dynamic_templates": [
+        {
+          "date_fields": {
+            "match_mapping_type": "date",
+            "mapping": {
+              "type": "date",
+              "format": "strict_date_hour_minute_second"
+            }
+          }
+        }
+      ]
+    },
+    "stats-file-preview": {
       "_all": {
         "enabled": false
       },
@@ -19,19 +32,19 @@
           "type": "date",
           "format": "strict_date_hour_minute_second"
         },
-        "record_id": {
+        "bucket_id": {
           "type": "string",
           "index": "not_analyzed"
         },
-        "pid_type": {
+        "file_id": {
           "type": "string",
           "index": "not_analyzed"
         },
-        "pid_value": {
+        "file_key": {
           "type": "string",
           "index": "not_analyzed"
         },
-        "labels": {
+        "unique_id": {
           "type": "string",
           "index": "not_analyzed"
         },
@@ -40,6 +53,10 @@
           "index": "not_analyzed"
         },
         "visitor_id": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "collection": {
           "type": "string",
           "index": "not_analyzed"
         },
@@ -55,18 +72,14 @@
           "type": "boolean",
           "index": "not_analyzed"
         },
-        "remote_addr": {
-          "type": "string",
-          "index": "not_analyzed"
-        },
-        "record_index_list": {
-          "type": "List",
+        "size": {
+          "type": "double",
           "index": "not_analyzed"
         }
       }
     }
   },
   "aliases": {
-    "events-stats-record-view": {}
+    "events-stats-file-preview": {}
   }
 }

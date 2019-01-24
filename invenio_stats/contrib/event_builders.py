@@ -34,6 +34,23 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
     return event
 
 
+def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
+    """Build a file-preview event."""
+    event.update(dict(
+        # When:
+        timestamp=datetime.datetime.utcnow().isoformat(),
+        # What:
+        bucket_id=str(obj.bucket_id),
+        file_id=str(obj.file_id),
+        file_key=obj.key,
+        size=obj.file.size,
+        referrer=request.referrer,
+        # Who:
+        **get_user()
+    ))
+    return event
+
+
 def build_file_unique_id(doc):
     """Build file unique identifier."""
     doc['unique_id'] = '{0}_{1}'.format(doc['bucket_id'], doc['file_id'])
@@ -49,11 +66,22 @@ def build_record_unique_id(doc):
 def record_view_event_builder(event, sender_app, pid=None, record=None,
                               **kwargs):
     """Build a record-view event."""
+    # get index information
+    index_list = []
+    if len(record.navi) > 0:
+        for index in record.navi:
+            index_list.append(dict(
+                index_id=index[1],
+                index_name=index[3],
+                index_name_en=index[4]
+            ))
+
     event.update(dict(
         # When:
         timestamp=datetime.datetime.utcnow().isoformat(),
         # What:
         record_id=str(record.id),
+        record_index_list=index_list,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
