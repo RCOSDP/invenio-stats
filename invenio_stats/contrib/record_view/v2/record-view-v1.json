@@ -60,8 +60,18 @@
           "index": "not_analyzed"
         },
         "record_index_list": {
-          "type": "List",
-          "index": "not_analyzed"
+          "type": "nested",
+          "properties": {
+            "index_id": {
+              "type": "string"
+            },
+            "index_name_en": {
+              "type": "string"
+            },
+            "index_name": {
+              "type": "string"
+            }
+          }
         }
       }
     }
