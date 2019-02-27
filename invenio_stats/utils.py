@@ -23,7 +23,6 @@ from werkzeug.utils import import_string
 from invenio_search.api import RecordsSearch
 from invenio_stats import current_stats
 
-from zenodo.modules.records.resolvers import record_resolver
 
 def get_anonymization_salt(ts):
     """Get the anonymization salt based on the event timestamp's day."""
