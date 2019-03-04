@@ -21,7 +21,7 @@ from invenio_cache import current_cache
 from werkzeug.utils import import_string
 
 from invenio_search.api import RecordsSearch
-from invenio_stats import current_stats
+from .proxies import current_stats
 
 
 def get_anonymization_salt(ts):
