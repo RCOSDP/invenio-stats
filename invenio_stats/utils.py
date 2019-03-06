@@ -117,14 +117,14 @@ def build_record_stats(recid, conceptrecid):
     stats = {}
     stats_sources = {
         'bucket-file-download-histogram': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': recid}, #recid
             'fields': {
                 'views': 'count',
                 'unique_views': 'unique_count',
             },
         },
         'bucket-file-download-total': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': recid},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
@@ -147,14 +147,14 @@ def build_record_stats(recid, conceptrecid):
             },
         },
         'record-view': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': recid},
             'fields': {
                 'views': 'count',
                 'unique_views': 'unique_count',
             },
         },
         'record-download': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': recid},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
