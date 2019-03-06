@@ -15,3 +15,7 @@ from werkzeug.local import LocalProxy
 
 current_stats = LocalProxy(
     lambda: current_app.extensions['invenio-stats'])
+
+current_stats_search_client = LocalProxy(
+    lambda: current_app.extensions['zenodo-stats'].search_client)
+"""Proxy to Elasticsearch client used for statistics queries."""
