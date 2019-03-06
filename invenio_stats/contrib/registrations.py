@@ -21,7 +21,7 @@ from invenio_access.permissions import Permission
 from invenio_stats.aggregations import StatAggregator
 from invenio_stats.queries import ESTermsQuery
 
-from .proxies import current_stats_search_client
+from invenio_stats.proxies import current_stats_search_client
 
 
 def register_events():
