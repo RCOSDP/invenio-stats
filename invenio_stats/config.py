@@ -86,10 +86,10 @@ STATS_QUERIES = {
     'bucket-file-download-total': {},
     'bucket-file-preview-histogram': {},
     'bucket-file-preview-total': {},
-    'record-view': {},
-    'record-view-all-versions': {},
-    'record-download': {},
-    'record-download-all-versions': {},
+    # 'record-view': {},
+    # 'record-view-all-versions': {},
+    # 'record-download': {},
+    # 'record-download-all-versions': {},
 }
 
 
