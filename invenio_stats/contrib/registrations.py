@@ -77,7 +77,7 @@ def register_events():
 def register_aggregations():
     """Register sample aggregations."""
     return [dict(
-        aggregation_name='file-download-agg',
+        aggregation_name='file-download-agg', # 'record-download-agg'
         templates='invenio_stats.contrib.aggregations.aggr_file_download',
         aggregator_class=StatAggregator,
         aggregator_config=dict(
@@ -198,6 +198,114 @@ def register_queries():
                     bucket_id='bucket_id',
                 ),
                 aggregated_fields=['file_key']
+            )
+        ),
+        # Weko queries.
+        dict(
+            query_name='record-download',
+            query_class=ESTermsQuery,
+            permission_factory=queries_permission_factory,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                copy_fields=dict(
+                    bucket_id='bucket_id',
+                    record_id='record_id',
+                    recid='recid',
+                    conceptrecid='conceptrecid',
+                    doi='doi',
+                    conceptdoi='conceptdoi',
+                    communities='communities',
+                    owners='owners',
+                    is_parent='is_parent'
+                ),
+                required_filters=dict(
+                    recid='recid',
+                ),
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                    volume=('sum', 'volume', {}),
+                )
+            ),
+        ),
+        dict(
+            query_name='record-download-all-versions',
+            query_class=ESTermsQuery,
+            permission_factory=queries_permission_factory,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                copy_fields=dict(
+                    conceptrecid='conceptrecid',
+                    conceptdoi='conceptdoi',
+                    communities='communities',
+                    owners='owners',
+                    is_parent='is_parent'
+                ),
+                query_modifiers=[
+                    lambda query, **_: query.filter('term', is_parent=True)
+                ],
+                required_filters=dict(
+                    conceptrecid='conceptrecid',
+                ),
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                    volume=('sum', 'volume', {}),
+                )
+            )
+        ),
+        dict(
+            query_name='record-view',
+            query_class=ESTermsQuery,
+            permission_factory=queries_permission_factory,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                copy_fields=dict(
+                    record_id='record_id',
+                    recid='recid',
+                    conceptrecid='conceptrecid',
+                    doi='doi',
+                    conceptdoi='conceptdoi',
+                    communities='communities',
+                    owners='owners',
+                    is_parent='is_parent'
+                ),
+                required_filters=dict(
+                    recid='recid',
+                ),
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                )
+            )
+        ),
+        dict(
+            query_name='record-view-all-versions',
+            query_class=ESTermsQuery,
+            permission_factory=queries_permission_factory,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                copy_fields=dict(
+                    conceptrecid='conceptrecid',
+                    conceptdoi='conceptdoi',
+                    communities='communities',
+                    owners='owners',
+                    is_parent='is_parent'
+                ),
+                query_modifiers=[
+                    lambda query, **_: query.filter('term', is_parent=True)
+                ],
+                required_filters=dict(
+                    conceptrecid='conceptrecid',
+                ),
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                )
             )
         ),
     ]
