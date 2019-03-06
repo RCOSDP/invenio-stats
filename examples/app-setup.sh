@@ -7,6 +7,6 @@ flask index init
 flask queues declare
 
 flask fixtures events
-curl -XGET localhost:9200/*/_flush
+curl -XGET localhost:29206/*/_flush
 flask fixtures aggregations
-curl -XGET localhost:9200/*/_flush
+curl -XGET localhost:29206/*/_flush
