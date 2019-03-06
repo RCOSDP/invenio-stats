@@ -16,6 +16,13 @@ from invenio_stats.contrib.event_builders import build_file_unique_id, \
 from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
+from flask_principal import ActionNeed
+from invenio_access.permissions import Permission
+from invenio_stats.aggregations import StatAggregator
+from invenio_stats.queries import ESTermsQuery
+
+from .proxies import current_stats_search_client
+
 
 def register_events():
     """Register sample events."""
@@ -70,7 +77,85 @@ def register_events():
                     anonymize_user,
                     build_search_detail_condition,
                     build_search_unique_id
-                ]))
+                ])),
+        dict(
+        aggregation_name='record-download-agg',
+        templates='zenodo.modules.stats.templates.aggregations',
+        aggregator_class=StatAggregator,
+        aggregator_config=dict(
+            client=current_stats_search_client,
+            event='file-download',
+            aggregation_field='recid',
+            aggregation_interval='day',
+            batch_size=1,
+            copy_fields=dict(
+                bucket_id='bucket_id',
+                record_id='record_id',
+                recid='recid',
+                conceptrecid='conceptrecid',
+                doi='doi',
+                conceptdoi='conceptdoi',
+                communities=lambda d, _: (list(d.communities)
+                                          if d.communities else None),
+                owners=lambda d, _: (list(d.owners) if d.owners else None),
+                is_parent=lambda *_: False
+            ),
+            metric_aggregation_fields=dict(
+                unique_count=('cardinality', 'unique_session_id',
+                              {'precision_threshold': 1000}),
+                volume=('sum', 'size', {}),
+            )
+        )),
+        dict(
+            aggregation_name='record-download-all-versions-agg',
+            templates='zenodo.modules.stats.templates.aggregations',
+            aggregator_class=StatAggregator,
+            aggregator_config=dict(
+                client=current_stats_search_client,
+                event='file-download',
+                aggregation_field='conceptrecid',
+                aggregation_interval='day',
+                batch_size=1,
+                copy_fields=dict(
+                    conceptrecid='conceptrecid',
+                    conceptdoi='conceptdoi',
+                    communities=lambda d, _: (list(d.communities)
+                                              if d.communities else None),
+                    owners=lambda d, _: (list(d.owners) if d.owners else None),
+                    is_parent=lambda *_: True
+                ),
+                metric_aggregation_fields=dict(
+                    unique_count=('cardinality', 'unique_session_id',
+                                  {'precision_threshold': 1000}),
+                    volume=('sum', 'size', {}),
+                )
+            )),
+        # NOTE: Since the "record-view-agg" aggregations is already registered
+        # in "invenio_stasts.contrib.registrations", we have to overwrite the
+        # configuration in "zenodo.config.STATS_AGGREGATIONS".
+        dict(
+            aggregation_name='record-view-all-versions-agg',
+            templates='zenodo.modules.stats.templates.aggregations',
+            aggregator_class=StatAggregator,
+            aggregator_config=dict(
+                client=current_stats_search_client,
+                event='record-view',
+                aggregation_field='conceptrecid',
+                aggregation_interval='day',
+                batch_size=1,
+                copy_fields=dict(
+                    conceptrecid='conceptrecid',
+                    conceptdoi='conceptdoi',
+                    communities=lambda d, _: (list(d.communities)
+                                              if d.communities else None),
+                    owners=lambda d, _: (list(d.owners) if d.owners else None),
+                    is_parent=lambda *_: True
+                ),
+                metric_aggregation_fields=dict(
+                    unique_count=('cardinality', 'unique_session_id',
+                                  {'precision_threshold': 1000}),
+                )
+            )),
     ]
 
 
