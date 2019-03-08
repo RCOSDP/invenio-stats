@@ -30,12 +30,12 @@ STATS_EVENTS = {
             'invenio_stats.contrib.event_builders.file_download_event_builder'
         ]
     },
-    # 'file-preview': {
-    #     'signal': 'invenio_files_rest.signals.file_previewed',
-    #     'event_builders': [
-    #         'invenio_stats.contrib.event_builders.file_preview_event_builder'
-    #     ]
-    # },
+    'file-preview': {
+        'signal': 'invenio_files_rest.signals.file_previewed',
+        'event_builders': [
+            'invenio_stats.contrib.event_builders.file_preview_event_builder'
+        ]
+    },
     'record-view': {
         'signal': 'invenio_records_ui.signals.record_viewed',
         'event_builders': [
@@ -77,7 +77,11 @@ is the name of the emitted event.
 STATS_AGGREGATIONS = {
     'file-download-agg': {},
     'file-preview-agg': {},
-
+    #zenodo aggregations
+    'record-view-agg': {},
+    'record-download-agg': {},
+    'record-download-all-versions-agg': {},
+    'record-view-all-versions-agg': {}
 }
 
 
