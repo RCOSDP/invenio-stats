@@ -116,66 +116,66 @@ def build_record_stats(recid, conceptrecid):
     """Build the record's stats."""
     stats = {}
     stats_sources = {
-        'bucket-file-download-histogram': {
-            'params': {'recid': recid}, #recid
-            'fields': {
-                'views': 'count',
-                'unique_views': 'unique_count',
-            },
-        },
+        # 'bucket-file-download-histogram': {
+        #     'params': {'recid': recid}, #recid
+        #     'fields': {
+        #         'views': 'count',
+        #         'unique_views': 'unique_count',
+        #     },
+        # },
         'bucket-file-download-total': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': recid},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
                 'volume': 'volume',
             },
         },
-        'bucket-file-preview-histogram': {
-            'params': {'conceptrecid': conceptrecid},
-            'fields': {
-                'version_views': 'count',
-                'version_unique_views': 'unique_count',
-            }
-        },
-        'bucket-file-preview-total': {
-            'params': {'conceptrecid': conceptrecid},
-            'fields': {
-                'version_downloads': 'count',
-                'version_unique_downloads': 'unique_count',
-                'version_volume': 'volume',
-            },
-        },
-        'record-view': {
-            'params': {'recid': recid},
-            'fields': {
-                'views': 'count',
-                'unique_views': 'unique_count',
-            },
-        },
-        'record-download': {
-            'params': {'recid': recid},
-            'fields': {
-                'downloads': 'count',
-                'unique_downloads': 'unique_count',
-                'volume': 'volume',
-            },
-        },
-        'record-view-all-versions': {
-            'params': {'conceptrecid': conceptrecid},
-            'fields': {
-                'version_views': 'count',
-                'version_unique_views': 'unique_count',
-            }
-        },
-        'record-download-all-versions': {
-            'params': {'conceptrecid': conceptrecid},
-            'fields': {
-                'version_downloads': 'count',
-                'version_unique_downloads': 'unique_count',
-                'version_volume': 'volume',
-            },
-        },
+        # 'bucket-file-preview-histogram': {
+        #     'params': {'conceptrecid': conceptrecid},
+        #     'fields': {
+        #         'version_views': 'count',
+        #         'version_unique_views': 'unique_count',
+        #     }
+        # },
+        # 'bucket-file-preview-total': {
+        #     'params': {'conceptrecid': conceptrecid},
+        #     'fields': {
+        #         'version_downloads': 'count',
+        #         'version_unique_downloads': 'unique_count',
+        #         'version_volume': 'volume',
+        #     },
+        # },
+        # 'record-view': {
+        #     'params': {'recid': recid},
+        #     'fields': {
+        #         'views': 'count',
+        #         'unique_views': 'unique_count',
+        #     },
+        # },
+        # 'record-download': {
+        #     'params': {'recid': recid},
+        #     'fields': {
+        #         'downloads': 'count',
+        #         'unique_downloads': 'unique_count',
+        #         'volume': 'volume',
+        #     },
+        # },
+        # 'record-view-all-versions': {
+        #     'params': {'conceptrecid': conceptrecid},
+        #     'fields': {
+        #         'version_views': 'count',
+        #         'version_unique_views': 'unique_count',
+        #     }
+        # },
+        # 'record-download-all-versions': {
+        #     'params': {'conceptrecid': conceptrecid},
+        #     'fields': {
+        #         'version_downloads': 'count',
+        #         'version_unique_downloads': 'unique_count',
+        #         'version_volume': 'volume',
+        #     },
+        # },
     }
     for query_name, cfg in stats_sources.items():
         try:
