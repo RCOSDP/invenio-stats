@@ -153,14 +153,14 @@ def build_record_stats(bucket_id, conceptrecid=None):
     #             'unique_views': 'unique_count',
     #         },
     #     },
-        'record-download': {
-            'params': {'bucket_id': bucket_id},
-            'fields': {
-                'downloads': 'count',
-                'unique_downloads': 'unique_count',
-                'volume': 'volume',
-            },
-        },
+        # 'record-download': {
+        #     'params': {'bucket_id': bucket_id},
+        #     'fields': {
+        #         'downloads': 'count',
+        #         'unique_downloads': 'unique_count',
+        #         'volume': 'volume',
+        #     },
+        # },
         # 'record-view-all-versions': {
         #     'params': {'conceptrecid': conceptrecid},
         #     'fields': {
