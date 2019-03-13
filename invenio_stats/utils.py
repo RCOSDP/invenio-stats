@@ -154,7 +154,7 @@ def build_record_stats(recid, conceptrecid=None):
     #         },
     #     },
         'record-download': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': recid},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
