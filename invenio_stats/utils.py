@@ -112,7 +112,7 @@ def default_permission_factory(query_name, params):
         )
 
 
-def build_record_stats(bucket_id):
+def build_record_stats(bucket_id, conceptrecid):
     """Build the record's stats."""
     stats = {}
     stats_sources = {
@@ -168,14 +168,14 @@ def build_record_stats(bucket_id):
         #         'version_unique_views': 'unique_count',
         #     }
         # },
-        # 'record-download-all-versions': {
-        #     'params': {'conceptrecid': conceptrecid},
-        #     'fields': {
-        #         'version_downloads': 'count',
-        #         'version_unique_downloads': 'unique_count',
-        #         'version_volume': 'volume',
-        #     },
-        # },
+        'record-download-all-versions': {
+            'params': {'conceptrecid': conceptrecid},
+            'fields': {
+                'version_downloads': 'count',
+                'version_unique_downloads': 'unique_count',
+                'version_volume': 'volume',
+            },
+        },
     }
     for query_name, cfg in stats_sources.items():
         try:
