@@ -123,14 +123,14 @@ def build_record_stats(recid, conceptrecid=None):
     #             'unique_views': 'unique_count',
     #         },
     #     },
-        'bucket-file-download-total': {
-            'params': {'unique_id': recid},
-            'fields': {
-                'downloads': 'count',
-                'unique_downloads': 'unique_count',
-                'volume': 'volume',
-            },
-        },
+        # 'bucket-file-download-total': {
+        #     'params': {'unique_id': recid},
+        #     'fields': {
+        #         'downloads': 'count',
+        #         'unique_downloads': 'unique_count',
+        #         'volume': 'volume',
+        #     },
+        # },
     #     'bucket-file-preview-histogram': {
     #         'params': {'conceptrecid': conceptrecid},
     #         'fields': {
