@@ -123,14 +123,14 @@ def build_record_stats(recid, conceptrecid):
     #             'unique_views': 'unique_count',
     #         },
     #     },
-        'bucket-file-download-total': {
-            'params': {'recid': recid},
-            'fields': {
-                'downloads': 'count',
-                'unique_downloads': 'unique_count',
-                'volume': 'volume',
-            },
-        },
+        # 'bucket-file-download-total': {
+        #     'params': {'recid': recid},
+        #     'fields': {
+        #         'downloads': 'count',
+        #         'unique_downloads': 'unique_count',
+        #         'volume': 'volume',
+        #     },
+        # },
     #     'bucket-file-preview-histogram': {
     #         'params': {'conceptrecid': conceptrecid},
     #         'fields': {
@@ -153,14 +153,14 @@ def build_record_stats(recid, conceptrecid):
     #             'unique_views': 'unique_count',
     #         },
     #     },
-        # 'record-download': {
-        #     'params': {'bucket_id': recid},
-        #     'fields': {
-        #         'downloads': 'count',
-        #         'unique_downloads': 'unique_count',
-        #         'volume': 'volume',
-        #     },
-        # },
+        'record-download': {
+            'params': {'recid': recid},
+            'fields': {
+                'downloads': 'count',
+                'unique_downloads': 'unique_count',
+                'volume': 'volume',
+            },
+        },
         # 'record-view-all-versions': {
         #     'params': {'conceptrecid': conceptrecid},
         #     'fields': {
