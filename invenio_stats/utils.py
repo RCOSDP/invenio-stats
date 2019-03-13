@@ -112,7 +112,7 @@ def default_permission_factory(query_name, params):
         )
 
 
-def build_record_stats(bucket_id, conceptrecid):
+def build_record_stats(recid, conceptrecid):
     """Build the record's stats."""
     stats = {}
     stats_sources = {
@@ -123,14 +123,14 @@ def build_record_stats(bucket_id, conceptrecid):
     #             'unique_views': 'unique_count',
     #         },
     #     },
-        'bucket-file-download-total': {
-            'params': {'bucket_id': bucket_id},
-            'fields': {
-                'downloads': 'count',
-                'unique_downloads': 'unique_count',
-                'volume': 'volume',
-            },
-        },
+        # 'bucket-file-download-total': {
+        #     'params': {'bucket_id': recid},
+        #     'fields': {
+        #         'downloads': 'count',
+        #         'unique_downloads': 'unique_count',
+        #         'volume': 'volume',
+        #     },
+        # },
     #     'bucket-file-preview-histogram': {
     #         'params': {'conceptrecid': conceptrecid},
     #         'fields': {
@@ -154,7 +154,7 @@ def build_record_stats(bucket_id, conceptrecid):
     #         },
     #     },
         'record-download': {
-            'params': {'bucket_id': bucket_id},
+            'params': {'bucket_id': recid},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
@@ -168,14 +168,14 @@ def build_record_stats(bucket_id, conceptrecid):
         #         'version_unique_views': 'unique_count',
         #     }
         # },
-        'record-download-all-versions': {
-            'params': {'conceptrecid': conceptrecid},
-            'fields': {
-                'version_downloads': 'count',
-                'version_unique_downloads': 'unique_count',
-                'version_volume': 'volume',
-            },
-        },
+        # 'record-download-all-versions': {
+        #     'params': {'conceptrecid': conceptrecid},
+        #     'fields': {
+        #         'version_downloads': 'count',
+        #         'version_unique_downloads': 'unique_count',
+        #         'version_volume': 'volume',
+        #     },
+        # },
     }
     for query_name, cfg in stats_sources.items():
         try:
