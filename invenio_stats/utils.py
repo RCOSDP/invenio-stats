@@ -112,7 +112,7 @@ def default_permission_factory(query_name, params):
         )
 
 
-def build_record_stats(record_id, conceptrecid=None):
+def build_record_stats(bucket_id, conceptrecid=None):
     """Build the record's stats."""
     stats = {}
     stats_sources = {
@@ -123,14 +123,14 @@ def build_record_stats(record_id, conceptrecid=None):
     #             'unique_views': 'unique_count',
     #         },
     #     },
-        # 'bucket-file-download-total': {
-        #     'params': {'recid': recid},
-        #     'fields': {
-        #         'downloads': 'count',
-        #         'unique_downloads': 'unique_count',
-        #         'volume': 'volume',
-        #     },
-        # },
+        'bucket-file-download-total': {
+            'params': {'bucket_id': bucket_id},
+            'fields': {
+                'downloads': 'count',
+                'unique_downloads': 'unique_count',
+                'volume': 'volume',
+            },
+        },
     #     'bucket-file-preview-histogram': {
     #         'params': {'conceptrecid': conceptrecid},
     #         'fields': {
@@ -153,14 +153,14 @@ def build_record_stats(record_id, conceptrecid=None):
     #             'unique_views': 'unique_count',
     #         },
     #     },
-        'record-download': {
-            'params': {'record_id': record_id},
-            'fields': {
-                'downloads': 'count',
-                'unique_downloads': 'unique_count',
-                'volume': 'volume',
-            },
-        },
+        # 'record-download': {
+        #     'params': {'recid': recid},
+        #     'fields': {
+        #         'downloads': 'count',
+        #         'unique_downloads': 'unique_count',
+        #         'volume': 'volume',
+        #     },
+        # },
         # 'record-view-all-versions': {
         #     'params': {'conceptrecid': conceptrecid},
         #     'fields': {
