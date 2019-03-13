@@ -112,7 +112,7 @@ def default_permission_factory(query_name, params):
         )
 
 
-def build_record_stats(recid):
+def build_record_stats(bucket_id):
     """Build the record's stats."""
     stats = {}
     stats_sources = {
@@ -124,7 +124,7 @@ def build_record_stats(recid):
     #         },
     #     },
         'bucket-file-download-total': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': bucket_id},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
@@ -154,7 +154,7 @@ def build_record_stats(recid):
     #         },
     #     },
         'record-download': {
-            'params': {'recid': recid},
+            'params': {'bucket_id': bucket_id},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
