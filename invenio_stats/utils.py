@@ -112,7 +112,7 @@ def default_permission_factory(query_name, params):
         )
 
 
-def build_record_stats(recid, conceptrecid):
+def build_record_stats(recid, conceptrecid=None):
     """Build the record's stats."""
     stats = {}
     stats_sources = {
