@@ -138,14 +138,14 @@ def build_record_stats(recid):
     #             'version_unique_views': 'unique_count',
     #         }
     #     },
-        'bucket-file-preview-total': {
-            'params': {'conceptrecid': conceptrecid},
-            'fields': {
-                'version_downloads': 'count',
-                'version_unique_downloads': 'unique_count',
-                'version_volume': 'volume',
-            },
-        },
+        # 'bucket-file-preview-total': {
+        #     'params': {'conceptrecid': conceptrecid},
+        #     'fields': {
+        #         'version_downloads': 'count',
+        #         'version_unique_downloads': 'unique_count',
+        #         'version_volume': 'volume',
+        #     },
+        # },
     #     'record-view': {
     #         'params': {'recid': recid},
     #         'fields': {
