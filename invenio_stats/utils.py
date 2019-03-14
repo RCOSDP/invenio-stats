@@ -124,7 +124,7 @@ def build_record_stats(bucket_key, file_key):
     #         },
     #     },
         'bucket-file-download-total': {
-            'params': {'bucket_key': bucket_key, 'file_key': file_key}
+            'params': {'bucket_key': bucket_key, 'file_key': file_key},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
