@@ -251,16 +251,24 @@ def register_queries():
                 doc_type='file-download-day-aggregation',
                 copy_fields=dict(
                     bucket_id='bucket_id',
+                    record_id='record_id',
+                    recid='recid',
+                    conceptrecid='conceptrecid',
+                    doi='doi',
+                    conceptdoi='conceptdoi',
+                    communities='communities',
+                    owners='owners',
+                    is_parent='is_parent'
                 ),
                 required_filters=dict(
                     bucket_id='bucket_id',
                 ),
                 aggregated_fields=['file_key'],
-                # metric_fields=dict(
-                #     count=('sum', 'count', {}),
-                #     unique_count=('sum', 'unique_count', {}),
-                #     volume=('sum', 'volume', {}),
-                # )
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                    volume=('sum', 'volume', {}),
+                )
             )
         ),
         dict(
