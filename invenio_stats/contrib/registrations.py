@@ -255,7 +255,12 @@ def register_queries():
                 required_filters=dict(
                     bucket_id='bucket_id',
                 ),
-                aggregated_fields=['file_key']
+                aggregated_fields=['file_key'],
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                    volume=('sum', 'volume', {}),
+                )
             )
         ),
         dict(
@@ -281,12 +286,17 @@ def register_queries():
                 index='stats-file-preview',
                 doc_type='file-preview-day-aggregation',
                 copy_fields=dict(
-                    # bucket_id='bucket_id',
+                    bucket_id='bucket_id',
                 ),
                 required_filters=dict(
                     bucket_id='bucket_id',
                 ),
-                aggregated_fields=['file_key']
+                aggregated_fields=['file_key'],
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                    volume=('sum', 'volume', {}),
+                )
             )
         ),
         # Weko queries.
