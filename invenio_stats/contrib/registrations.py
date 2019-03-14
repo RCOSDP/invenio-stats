@@ -256,11 +256,11 @@ def register_queries():
                     bucket_id='bucket_id',
                 ),
                 aggregated_fields=['file_key'],
-                metric_fields=dict(
-                    count=('sum', 'count', {}),
-                    unique_count=('sum', 'unique_count', {}),
-                    volume=('sum', 'volume', {}),
-                )
+                # metric_fields=dict(
+                #     count=('sum', 'count', {}),
+                #     unique_count=('sum', 'unique_count', {}),
+                #     volume=('sum', 'volume', {}),
+                # )
             )
         ),
         dict(
