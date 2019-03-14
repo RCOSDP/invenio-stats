@@ -309,7 +309,8 @@ def register_queries():
                     is_parent='is_parent'
                 ),
                 required_filters=dict(
-                    recid='recid',
+                    # recid='recid',
+                    bucket_id='bucket_id'
                 ),
                 metric_fields=dict(
                     count=('sum', 'count', {}),

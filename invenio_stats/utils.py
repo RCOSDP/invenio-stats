@@ -154,7 +154,7 @@ def build_record_stats(bucket_id, file_key):
     #         },
     #     },
         'record-download': {
-            'params': {'bucket_id': bucket_id, 'file_key': file_key},
+            'params': {'bucket_id': bucket_id},
             'fields': {
                 'downloads': 'count',
                 'unique_downloads': 'unique_count',
