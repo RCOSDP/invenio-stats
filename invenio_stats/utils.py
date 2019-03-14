@@ -112,7 +112,7 @@ def default_permission_factory(query_name, params):
         )
 
 
-def build_record_stats(bucket_id, file_key):
+def build_record_stats(bucket_id):
     """Build the record's stats."""
     stats = {}
     stats_sources = {
