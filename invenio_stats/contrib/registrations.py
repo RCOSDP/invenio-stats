@@ -205,12 +205,11 @@ def register_queries():
             query_class=ESTermsQuery,
             query_config=dict(
                 index='stats-file-download',
-                doc_type='file-download-day-aggregation',
                 copy_fields=dict(
                     # bucket_id='bucket_id',
                 ),
                 required_filters=dict(
-                    bucket_id='bucket_id',
+                    weko_creator_id='weko_creator_id',
                 ),
                 aggregated_fields=['file_key']
             )
