@@ -205,6 +205,7 @@ def register_queries():
             query_class=ESTermsQuery,
             query_config=dict(
                 index='weko',
+                doc_type='',
                 copy_fields=dict(
                     # bucket_id='bucket_id',
                 ),
