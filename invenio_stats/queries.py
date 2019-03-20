@@ -316,6 +316,6 @@ class ESTermsQuery(ESQuery):
         self.validate_arguments(start_date, end_date, **kwargs)
 
         agg_query = self.build_query(start_date, end_date, **kwargs)
-        query_result = agg_query.execute().to_dict()
-        res = self.process_query_result(query_result, start_date, end_date)
-        return res
+        # query_result = agg_query.execute().to_dict()
+        # res = self.process_query_result(query_result, start_date, end_date)
+        return agg_query
