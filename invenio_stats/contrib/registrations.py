@@ -200,4 +200,18 @@ def register_queries():
                 aggregated_fields=['file_key']
             )
         ),
+        dict(
+            query_name='bucket-item-registration-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='weko',
+                copy_fields=dict(
+                    # bucket_id='bucket_id',
+                ),
+                required_filters=dict(
+                    weko_creator_id='weko_creator_id',
+                ),
+                aggregated_fields=['publish_status']
+            )
+        ),
     ]
