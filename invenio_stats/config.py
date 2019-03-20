@@ -85,6 +85,7 @@ STATS_QUERIES = {
     'bucket-file-download-total': {},
     'bucket-file-preview-histogram': {},
     'bucket-file-preview-total': {},
+    'bucket-item-registration-total': {},
 }
 
 
