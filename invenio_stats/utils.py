@@ -116,10 +116,9 @@ def get_aggregations(index, aggs_query):
     :param aggs_query:
     :return:
     """
-    if not index or 'aggs' not in aggs_query:
-        return {}
+    results = {}
+    if index and aggs_query and 'aggs' in aggs_query:
+        from invenio_indexer.api import RecordIndexer
+        results = RecordIndexer().client.search(index=index, body=aggs_query)['aggregations']
 
-    from invenio_indexer.api import RecordIndexer
-    results = RecordIndexer().client.search(index=index, body=aggs_query)
-
-    return results['aggregations']
+    return results
