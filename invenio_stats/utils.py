@@ -107,3 +107,19 @@ def default_permission_factory(query_name, params):
         return current_stats.queries[query_name].permission_factory(
             query_name, params
         )
+
+
+def get_aggregations(index, aggs_query):
+    """
+    Aggregations
+    :param index:
+    :param aggs_query:
+    :return:
+    """
+    if not index or 'aggs' not in aggs_query:
+        return {}
+
+    from invenio_indexer.api import RecordIndexer
+    results = RecordIndexer().client.search(index=index, body=aggs_query)
+
+    return results['aggregations']
