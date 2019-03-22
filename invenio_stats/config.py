@@ -77,6 +77,7 @@ is the name of the emitted event.
 STATS_AGGREGATIONS = {
     'file-download-agg': {},
     'file-preview-agg': {},
+    'record-view-agg': {},
 }
 
 
@@ -85,6 +86,8 @@ STATS_QUERIES = {
     'bucket-file-download-total': {},
     'bucket-file-preview-histogram': {},
     'bucket-file-preview-total': {},
+    'bucket-record-view-histogram': {},
+    'bucket-record-view-total': {},
 }
 
 

@@ -121,7 +121,7 @@ def register_aggregations():
         aggregator_config=dict(
             client=current_search_client,
             event='record-view',
-            aggregation_field='unique_id',
+            aggregation_field='record_id',
             aggregation_interval='day',
             copy_fields=dict(
                 record_id='record_id',
@@ -198,6 +198,38 @@ def register_queries():
                     bucket_id='bucket_id',
                 ),
                 aggregated_fields=['file_key']
+            )
+        ),
+        dict(
+            query_name='bucket-record-view-histogram',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                copy_fields=dict(
+                    record_id='record_id',
+                ),
+                required_filters=dict(
+                    record_id='record_id',
+                )
+            )
+        ),
+        dict(
+            query_name='bucket-record-view-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                copy_fields=dict(
+                    record_id='record_id',
+                ),
+                required_filters=dict(
+                    record_id='record_id',
+                ),
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                )
             )
         ),
     ]
