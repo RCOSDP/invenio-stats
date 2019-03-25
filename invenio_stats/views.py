@@ -81,11 +81,63 @@ class StatsQueryResource(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
+class QueryRecordViewCount(ContentNegotiatedMethodView):
+
+    view_name = 'get_record_view_count'
+
+    def __init__(self, **kwargs):
+        super(QueryRecordViewCount, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def get(self, **kwargs):
+        result = {}
+        period = {}
+
+        record_id = kwargs.get('record_id')
+        params_total = {'record_id': record_id}
+        params_period = {'record_id': record_id, 'interval': 'month'}
+        query_total_cfg = current_stats.queries['bucket-record-view-total']
+        query_period_cfg = current_stats.queries['bucket-record-view-histogram']
+        query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
+        query_period = query_period_cfg.query_class(**query_period_cfg.query_config)
+
+        try:
+            res_total = query_total.run(**params_total)
+            res_period = query_period.run(**params_period)
+            result['total'] = res_total['count']
+            for bucket in res_period['buckets']:
+                period[bucket['date'][0:7]] = bucket['value']
+            result['period'] = period
+        except ValueError as e:
+            raise InvalidRequestInputError(e.args[0])
+        except NotFoundError as e:
+            return None
+
+        return self.make_response(result)
+
+
 stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
+)
+
+record_view_count = QueryRecordViewCount.as_view(
+    QueryRecordViewCount.view_name,
 )
 
 blueprint.add_url_rule(
     '',
     view_func=stats_view,
+)
+
+blueprint.add_url_rule(
+    '/GetRecordViewCount/<string:record_id>',
+    view_func=record_view_count,
 )
