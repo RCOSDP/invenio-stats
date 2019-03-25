@@ -102,6 +102,7 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
         period = {}
 
         record_id = kwargs.get('record_id')
+
         params_total = {'record_id': record_id}
         params_period = {'record_id': record_id, 'interval': 'month'}
         query_total_cfg = current_stats.queries['bucket-record-view-total']
@@ -113,9 +114,68 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             res_total = query_total.run(**params_total)
             res_period = query_period.run(**params_period)
             result['total'] = res_total['count']
-            for bucket in res_period['buckets']:
-                period[bucket['date'][0:7]] = bucket['value']
+            for m in res_period['buckets']:
+                period[m['date'][0:7]] = m['value']
             result['period'] = period
+        except ValueError as e:
+            raise InvalidRequestInputError(e.args[0])
+        except NotFoundError as e:
+            return None
+
+        return self.make_response(result)
+
+
+class QueryFileStatsCount(ContentNegotiatedMethodView):
+
+    view_name = 'get_file_stats_count'
+
+    def __init__(self, **kwargs):
+        super(QueryFileStatsCount, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def get(self, **kwargs):
+        result = {}
+        period = {}
+
+        bucket_id = kwargs.get('bucket_id')
+        file_key = kwargs.get('file_key')
+
+        params_total = {'bucket_id': bucket_id}
+        params_period = {'bucket_id': bucket_id, 'file_key': file_key, 'interval': 'month'}
+
+        # file download
+        query_download_total_cfg = current_stats.queries['bucket-file-download-total']
+        query_download_period_cfg = current_stats.queries['bucket-file-download-histogram']
+        query_download_total = query_download_total_cfg.query_class(**query_download_total_cfg.query_config)
+        query_download_period = query_download_period_cfg.query_class(**query_download_period_cfg.query_config)
+
+        # file preview
+        #query_preview_total_cfg = current_stats.queries['bucket-file-preview-total']
+        #query_preview_period_cfg = current_stats.queries['bucket-file-preview-histogram']
+        #query_preview_total = query_preview_total_cfg.query_class(**query_preview_total_cfg.query_config)
+        #query_preview_period = query_preview_period_cfg.query_class(**query_preview_period_cfg.query_config)
+
+        try:
+            # file download
+            res_download_total = query_download_total.run(**params_total)
+            res_download_period = query_download_period.run(**params_period)
+            # file preview
+            # code...
+            for f in res_download_total['buckets']:
+                if file_key == f['key']:
+                    result['download_total'] = f['value']
+                    break
+            for m in res_download_period['buckets']:
+                period[m['date'][0:7]] = m['value']
+            result['download_period'] = period
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
         except NotFoundError as e:
@@ -132,6 +192,10 @@ record_view_count = QueryRecordViewCount.as_view(
     QueryRecordViewCount.view_name,
 )
 
+file_stats_count = QueryFileStatsCount.as_view(
+    QueryFileStatsCount.view_name,
+)
+
 blueprint.add_url_rule(
     '',
     view_func=stats_view,
@@ -140,4 +204,9 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/GetRecordViewCount/<string:record_id>',
     view_func=record_view_count,
+)
+
+blueprint.add_url_rule(
+    '/GetFileStatsCount/<string:bucket_id>/<string:file_key>',
+    view_func=file_stats_count,
 )
