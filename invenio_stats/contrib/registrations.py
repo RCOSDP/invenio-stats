@@ -165,8 +165,8 @@ def register_queries():
                 ),
                 required_filters=dict(
                     bucket_id='bucket_id',
-                ),
-                aggregated_fields=['file_key']
+                    file_key='file_key',
+                )
             )
         ),
         dict(
@@ -196,8 +196,8 @@ def register_queries():
                 ),
                 required_filters=dict(
                     bucket_id='bucket_id',
-                ),
-                aggregated_fields=['file_key']
+                    file_key='file_key',
+                )
             )
         ),
         dict(

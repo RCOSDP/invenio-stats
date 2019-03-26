@@ -143,12 +143,13 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
 
     def get(self, **kwargs):
         result = {}
-        period = {}
+        download_period = {}
+        preview_period = {}
 
         bucket_id = kwargs.get('bucket_id')
         file_key = kwargs.get('file_key')
 
-        params_total = {'bucket_id': bucket_id}
+        params_total = {'bucket_id': bucket_id, 'file_key': file_key}
         params_period = {'bucket_id': bucket_id, 'file_key': file_key, 'interval': 'month'}
 
         # file download
@@ -158,24 +159,28 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         query_download_period = query_download_period_cfg.query_class(**query_download_period_cfg.query_config)
 
         # file preview
-        #query_preview_total_cfg = current_stats.queries['bucket-file-preview-total']
-        #query_preview_period_cfg = current_stats.queries['bucket-file-preview-histogram']
-        #query_preview_total = query_preview_total_cfg.query_class(**query_preview_total_cfg.query_config)
-        #query_preview_period = query_preview_period_cfg.query_class(**query_preview_period_cfg.query_config)
+        query_preview_total_cfg = current_stats.queries['bucket-file-preview-total']
+        query_preview_period_cfg = current_stats.queries['bucket-file-preview-histogram']
+        query_preview_total = query_preview_total_cfg.query_class(**query_preview_total_cfg.query_config)
+        query_preview_period = query_preview_period_cfg.query_class(**query_preview_period_cfg.query_config)
 
         try:
             # file download
             res_download_total = query_download_total.run(**params_total)
             res_download_period = query_download_period.run(**params_period)
             # file preview
-            # code...
-            for f in res_download_total['buckets']:
-                if file_key == f['key']:
-                    result['download_total'] = f['value']
-                    break
+            res_preview_total = query_preview_total.run(**params_total)
+            res_preview_period = query_preview_period.run(**params_period)
+            # file download
+            result['download_total'] = res_download_total['value']
             for m in res_download_period['buckets']:
-                period[m['date'][0:7]] = m['value']
-            result['download_period'] = period
+                download_period[m['date'][0:7]] = m['value']
+            result['download_period'] = download_period
+            # file preview
+            result['preview_total'] = res_preview_total['value']
+            for m in res_preview_period['buckets']:
+                preview_period[m['date'][0:7]] = m['value']
+            result['preview_period'] = preview_period
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
         except NotFoundError as e:
