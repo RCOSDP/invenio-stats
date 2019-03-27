@@ -7,7 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """InvenioStats views."""
-
+from datetime import datetime, timedelta
 from elasticsearch.exceptions import NotFoundError
 from flask import Blueprint, abort, jsonify, request
 from invenio_rest.views import ContentNegotiatedMethodView
@@ -189,6 +189,113 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
+class QueryFileStatsReport(ContentNegotiatedMethodView):
+
+    view_name = 'get_file_stats_report'
+
+    def __init__(self, **kwargs):
+        super(QueryFileStatsReport, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def get(self, **kwargs):
+        result = {}
+        download_list = []
+        preview_list = []
+
+
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        # test data start
+        index = ['インデックス1', 'インデックス2| インデックス3',
+                 'インデックス1\インデックス1-1']
+        for i in range(5):
+            count = {'index_name': index[i%3],
+                    'file_key': 'file' + str(i) + '.pdf',
+                    'total': 100 + i * 2,
+                    'login': 40 + i,
+                    'no_login': 60 + i,
+                    'site_license': 15,
+                    'admin': 20,
+                    'reg': 10}
+            download_list.append(count)
+            if i > 2:
+                preview_list.append(count)
+        # test data end
+
+        result['date'] = str(year) + '-' + str(month).zfill(2)
+        result['file_download'] = download_list
+        result['file_preview'] = preview_list
+
+        return self.make_response(result)
+
+
+class QueryItemRegReport(ContentNegotiatedMethodView):
+
+    view_name = 'get_item_registration_report'
+
+    def __init__(self, **kwargs):
+        super(QueryItemRegReport, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def get(self, **kwargs):
+        start_date = datetime.strptime(kwargs.get('start_date'), '%Y-%m-%d')
+        end_date = datetime.strptime(kwargs.get('end_date'), '%Y-%m-%d')
+        unit = kwargs.get('unit').title()
+
+        d = start_date
+        if unit == 'Day':
+            result = {}
+            delta = timedelta(days=1)
+            while d <= end_date:
+                result[d.strftime('%Y-%m-%d')] = 10
+                d += delta
+        elif unit == 'Week':
+            result = []
+            delta = timedelta(days=7)
+            d1 = timedelta(days=1)
+            while d <= end_date:
+                temp = {}
+                temp['start_date'] = d.strftime('%Y-%m-%d')
+                d += delta
+                t = d - d1
+                temp['end_date'] = t.strftime('%Y-%m-%d')
+                temp['counts'] = 10
+                result.append(temp)
+        elif unit == 'Year':
+            result = {}
+            start_year = start_date.year
+            end_year = end_date.year
+            for i in range(end_year - start_year + 1):
+                result[start_year + i] = 20 + i
+        elif unit == 'Host':
+            result = []
+            temp1 = {'host':'xxx.yy.jp','ip':'10.23.56.76','counts':100}
+            result.append(temp1)
+            temp2 = {'host':'xxx.yy.com','ip':'10.24.57.76','counts':130}
+            result.append(temp2)
+        else:
+            result = {}
+
+        return self.make_response(result)
+
+
 stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
 )
@@ -199,6 +306,14 @@ record_view_count = QueryRecordViewCount.as_view(
 
 file_stats_count = QueryFileStatsCount.as_view(
     QueryFileStatsCount.view_name,
+)
+
+file_stats_report = QueryFileStatsReport.as_view(
+    QueryFileStatsReport.view_name,
+)
+
+item_reg_report = QueryItemRegReport.as_view(
+    QueryItemRegReport.view_name,
 )
 
 blueprint.add_url_rule(
@@ -214,4 +329,14 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/GetFileStatsCount/<string:bucket_id>/<string:file_key>',
     view_func=file_stats_count,
+)
+
+blueprint.add_url_rule(
+    '/GetFileStatsReport/<int:year>/<int:month>',
+    view_func=file_stats_report,
+)
+
+blueprint.add_url_rule(
+    '/GetItemRegReport/<string:start_date>/<string:end_date>/<string:unit>',
+    view_func=item_reg_report,
 )
