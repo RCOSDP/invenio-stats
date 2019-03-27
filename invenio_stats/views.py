@@ -115,8 +115,14 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             res_period = query_period.run(**params_period)
             result['total'] = res_total['count']
             for m in res_period['buckets']:
-                period[m['date'][0:7]] = m['value']
+                data = {}
+                data['total'] = m['value']
+                data['domain'] = {'xxx.co.jp': m['value'] // 2,
+                                  'yyy.com': m['value'] // 2} # test data
+                period[m['date'][0:7]] = data
             result['period'] = period
+            result['domain'] = {'xxx.co.jp': res_total['count'] // 2,
+                                'yyy.com': res_total['count'] // 2} # test data
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
         except NotFoundError as e:
@@ -143,8 +149,7 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
 
     def get(self, **kwargs):
         result = {}
-        download_period = {}
-        preview_period = {}
+        period = {}
 
         bucket_id = kwargs.get('bucket_id')
         file_key = kwargs.get('file_key')
@@ -171,16 +176,55 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             # file preview
             res_preview_total = query_preview_total.run(**params_total)
             res_preview_period = query_preview_period.run(**params_period)
-            # file download
+            # total
             result['download_total'] = res_download_total['value']
-            for m in res_download_period['buckets']:
-                download_period[m['date'][0:7]] = m['value']
-            result['download_period'] = download_period
-            # file preview
             result['preview_total'] = res_preview_total['value']
+            # period
+            for m in res_download_period['buckets']:
+                data = {}
+                data['download_total'] = m['value']
+                data['preview_total'] = 0
+                data['domain_list'] = [{'domain': 'xxx.yy.jp',
+                                        'download_counts':
+                                        m['value'] // 2,
+                                        'preview_counts': 0},
+                                       {'domain': 'yyy.com',
+                                        'download_counts':
+                                        m['value'] // 2,
+                                        'preview_counts': 0}] # test data
+                period[m['date'][0:7]] = data
             for m in res_preview_period['buckets']:
-                preview_period[m['date'][0:7]] = m['value']
-            result['preview_period'] = preview_period
+                if m['date'][0:7] in period:
+                    data = period[m['date'][0:7]]
+                    data['preview_total'] = m['value']
+                    # test data
+                    data['domain_list'][0]['preview_counts'] = m['value'] // 2
+                    data['domain_list'][1]['preview_counts'] = m['value'] // 2
+                else:
+                    data = {}
+                    data['download_total'] = 0
+                    data['preview_total'] = m['value']
+                    data['domain_list'] = [{'domain': 'xxx.yy.jp',
+                                            'download_counts': 0,
+                                            'preview_counts':
+                                            m['value'] // 2},
+                                           {'domain': 'yyy.com',
+                                            'download_counts': 0,
+                                            'preview_counts':
+                                            m['value'] // 2}] # test data
+                period[m['date'][0:7]] = data
+            result['period'] = period
+            # total domain - test data
+            result['domain_list'] = [{'domain': 'xxx.yy.jp',
+                                 'download_counts':
+                                 res_download_total['value'] // 2,
+                                 'preview_counts':
+                                 res_preview_total['value'] // 2},
+                                {'domain': 'yyy.com',
+                                 'download_counts':
+                                 res_download_total['value'] // 2,
+                                 'preview_counts':
+                                 res_preview_total['value'] // 2}]
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
         except NotFoundError as e:
@@ -218,7 +262,7 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
         index = ['インデックス1', 'インデックス2| インデックス3',
                  'インデックス1\インデックス1-1']
         for i in range(5):
-            count = {'index_name': index[i%3],
+            count = {'index_list': index[i%3],
                     'file_key': 'file' + str(i) + '.pdf',
                     'total': 100 + i * 2,
                     'login': 40 + i,
@@ -286,9 +330,9 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 result[start_year + i] = 20 + i
         elif unit == 'Host':
             result = []
-            temp1 = {'host':'xxx.yy.jp','ip':'10.23.56.76','counts':100}
+            temp1 = {'domain':'xxx.yy.jp','ip':'10.23.56.76','counts':100}
             result.append(temp1)
-            temp2 = {'host':'xxx.yy.com','ip':'10.24.57.76','counts':130}
+            temp2 = {'domain':'xxx.yy.com','ip':'10.24.57.76','counts':130}
             result.append(temp2)
         else:
             result = {}
