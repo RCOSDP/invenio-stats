@@ -80,28 +80,28 @@ class StatsQueryResource(ContentNegotiatedMethodView):
                 return None
         return self.make_response(result)
 
+class QueryRecordViewCount():
+#class QueryRecordViewCount(ContentNegotiatedMethodView):
 
-class QueryRecordViewCount(ContentNegotiatedMethodView):
+    #view_name = 'get_record_view_count'
 
-    view_name = 'get_record_view_count'
+    #def __init__(self, **kwargs):
+        #super(QueryRecordViewCount, self).__init__(
+            #serializers={
+            #    'application/json':
+            #    lambda data, *args, **kwargs: jsonify(data),
+            #},
+            #default_method_media_type={
+            #    'GET': 'application/json',
+            #},
+            #default_media_type='application/json',
+            #**kwargs)
 
-    def __init__(self, **kwargs):
-        super(QueryRecordViewCount, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
-
-    def get(self, **kwargs):
+    def get_count(record_id):
         result = {}
         period = {}
 
-        record_id = kwargs.get('record_id')
+        #record_id = kwargs.get('record_id')
 
         params_total = {'record_id': record_id}
         params_period = {'record_id': record_id, 'interval': 'month'}
@@ -123,12 +123,14 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             result['period'] = period
             result['domain'] = {'xxx.co.jp': res_total['count'] // 2,
                                 'yyy.com': res_total['count'] // 2} # test data
-        except ValueError as e:
-            raise InvalidRequestInputError(e.args[0])
-        except NotFoundError as e:
-            return None
+        #except ValueError as e:
+        #    raise InvalidRequestInputError(e.args[0])
+        #except NotFoundError as e:
+        #    return None
+        except:
+            return {}
 
-        return self.make_response(result)
+        return result#self.make_response(result)
 
 
 class QueryFileStatsCount(ContentNegotiatedMethodView):
@@ -344,9 +346,9 @@ stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
 )
 
-record_view_count = QueryRecordViewCount.as_view(
-    QueryRecordViewCount.view_name,
-)
+#record_view_count = QueryRecordViewCount.as_view(
+#    QueryRecordViewCount.view_name,
+#)
 
 file_stats_count = QueryFileStatsCount.as_view(
     QueryFileStatsCount.view_name,
@@ -365,10 +367,10 @@ blueprint.add_url_rule(
     view_func=stats_view,
 )
 
-blueprint.add_url_rule(
-    '/GetRecordViewCount/<string:record_id>',
-    view_func=record_view_count,
-)
+#blueprint.add_url_rule(
+#    '/GetRecordViewCount/<string:record_id>',
+#    view_func=record_view_count,
+#)
 
 blueprint.add_url_rule(
     '/GetFileStatsCount/<string:bucket_id>/<string:file_key>',
