@@ -75,6 +75,22 @@
         "size": {
           "type": "double",
           "index": "not_analyzed"
+        },
+        "accessrole": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "userrole": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "site_license_flag": {
+          "type": "boolean",
+          "index": "not_analyzed"
+        },
+        "index_list": {
+          "type": "string",
+          "index": "not_analyzed"
         }
       }
     }

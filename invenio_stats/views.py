@@ -80,28 +80,27 @@ class StatsQueryResource(ContentNegotiatedMethodView):
                 return None
         return self.make_response(result)
 
-class QueryRecordViewCount():
-#class QueryRecordViewCount(ContentNegotiatedMethodView):
+class QueryRecordViewCount(ContentNegotiatedMethodView):
 
-    #view_name = 'get_record_view_count'
+    view_name = 'get_record_view_count'
 
-    #def __init__(self, **kwargs):
-        #super(QueryRecordViewCount, self).__init__(
-            #serializers={
-            #    'application/json':
-            #    lambda data, *args, **kwargs: jsonify(data),
-            #},
-            #default_method_media_type={
-            #    'GET': 'application/json',
-            #},
-            #default_media_type='application/json',
-            #**kwargs)
+    def __init__(self, **kwargs):
+        super(QueryRecordViewCount, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
 
-    def get_count(record_id):
+    def get(self, **kwargs):
         result = {}
         period = {}
 
-        #record_id = kwargs.get('record_id')
+        record_id = kwargs.get('record_id')
 
         params_total = {'record_id': record_id}
         params_period = {'record_id': record_id, 'interval': 'month'}
@@ -123,14 +122,12 @@ class QueryRecordViewCount():
             result['period'] = period
             result['domain'] = {'xxx.co.jp': res_total['count'] // 2,
                                 'yyy.com': res_total['count'] // 2} # test data
-        #except ValueError as e:
-        #    raise InvalidRequestInputError(e.args[0])
-        #except NotFoundError as e:
-        #    return None
-        except:
-            return {}
+        except ValueError as e:
+            raise InvalidRequestInputError(e.args[0])
+        except NotFoundError as e:
+            return None
 
-        return result#self.make_response(result)
+        return self.make_response(result)
 
 
 class QueryFileStatsCount(ContentNegotiatedMethodView):
@@ -251,35 +248,71 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
             default_media_type='application/json',
             **kwargs)
 
+    def Calculation(self, res, data_list):
+        for file in res['buckets']:
+            for index in file['buckets']:
+                data = {}
+                data['file_key'] = file['key']
+                data['index_list'] = index['key']
+                data['total'] = index['value']
+                data['admin'] = 0
+                data['reg'] = 0
+                data['login'] = 0
+                data['no_login'] = 0
+                data['site_license'] = 0
+                for user in index['buckets']:
+                    for license in user['buckets']:
+                        if license['key'] == 1:
+                            data['site_license'] += license['value']
+                            break
+                    userrole = user['key']
+                    count = user['value']
+                    if userrole == 'guest':
+                        data['no_login'] += count
+                    elif userrole == 'Contributor':
+                        data['reg'] += count
+                        data['login'] += count
+                    elif 'Administrator' in userrole:
+                        data['admin'] += count
+                        data['login'] += count
+                    else:
+                        data['login'] += count
+                data_list.append(data)
+
     def get(self, **kwargs):
         result = {}
-        download_list = []
-        preview_list = []
+        res_list = []
 
-
+        event = kwargs.get('event')
         year = kwargs.get('year')
         month = kwargs.get('month')
 
-        # test data start
-        index = ['インデックス1', 'インデックス2| インデックス3',
-                 'インデックス1\インデックス1-1']
-        for i in range(5):
-            count = {'index_list': index[i%3],
-                    'file_key': 'file' + str(i) + '.pdf',
-                    'total': 100 + i * 2,
-                    'login': 40 + i,
-                    'no_login': 60 + i,
-                    'site_license': 15,
-                    'admin': 20,
-                    'reg': 10}
-            download_list.append(count)
-            if i > 2:
-                preview_list.append(count)
-        # test data end
+        params = {}
 
-        result['date'] = str(year) + '-' + str(month).zfill(2)
-        result['file_download'] = download_list
-        result['file_preview'] = preview_list
+        all_query = ''
+        if event == 'file_download':
+            all_query = 'get-file-download-report'
+        elif event == 'file_preview':
+            all_query = 'get-file-preview-report'
+
+        query_cfg = current_stats.queries[all_query]
+        query = query_cfg.query_class(**query_cfg.query_config)
+
+        try:
+            res = query.run(params)
+            self.Calculation(res, res_list)
+
+            result['date'] = str(year) + '-' + str(month).zfill(2)
+            result['all'] = res_list
+
+        except ValueError as e:
+            raise InvalidRequestInputError(e.args[0])
+        except KeyError as e:
+            raise InvalidRequestInputError(e.args[0])
+        except NotFoundError as e:
+            return None
+        except Exception as e:
+            return str(e)
 
         return self.make_response(result)
 
@@ -346,9 +379,9 @@ stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
 )
 
-#record_view_count = QueryRecordViewCount.as_view(
-#    QueryRecordViewCount.view_name,
-#)
+record_view_count = QueryRecordViewCount.as_view(
+    QueryRecordViewCount.view_name,
+)
 
 file_stats_count = QueryFileStatsCount.as_view(
     QueryFileStatsCount.view_name,
@@ -367,10 +400,10 @@ blueprint.add_url_rule(
     view_func=stats_view,
 )
 
-#blueprint.add_url_rule(
-#    '/GetRecordViewCount/<string:record_id>',
-#    view_func=record_view_count,
-#)
+blueprint.add_url_rule(
+    '/GetRecordViewCount/<string:record_id>',
+    view_func=record_view_count,
+)
 
 blueprint.add_url_rule(
     '/GetFileStatsCount/<string:bucket_id>/<string:file_key>',
@@ -378,7 +411,7 @@ blueprint.add_url_rule(
 )
 
 blueprint.add_url_rule(
-    '/GetFileStatsReport/<int:year>/<int:month>',
+    '/<string:event>/<int:year>/<int:month>',
     view_func=file_stats_report,
 )
 

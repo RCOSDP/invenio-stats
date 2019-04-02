@@ -89,6 +89,10 @@ def register_aggregations():
                 file_key='file_key',
                 bucket_id='bucket_id',
                 file_id='file_id',
+                accessrole='accessrole',
+                userrole='userrole',
+                index_list='index_list',
+                site_license_flag='site_license_flag',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -108,6 +112,10 @@ def register_aggregations():
                 file_key='file_key',
                 bucket_id='bucket_id',
                 file_id='file_id',
+                accessrole='accessrole',
+                userrole='userrole',
+                index_list='index_list',
+                site_license_flag='site_license_flag',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -138,6 +146,26 @@ def register_aggregations():
 def register_queries():
     """Register queries."""
     return [
+        dict(
+            query_name='get-file-download-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                aggregated_fields=['file_key', 'index_list',
+                                   'userrole', 'site_license_flag']
+            )
+        ),
+        dict(
+            query_name='get-file-preview-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
+                aggregated_fields=['file_key', 'index_list',
+                                   'userrole', 'site_license_flag']
+            )
+        ),
         dict(
             query_name='bucket-file-download-histogram',
             query_class=ESDateHistogramQuery,

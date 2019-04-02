@@ -9,9 +9,9 @@
 """Signal receivers for certain events."""
 
 from __future__ import absolute_import, print_function
-
+import hashlib
 import datetime
-
+import uuid
 from flask import request
 
 from ..utils import get_user
@@ -28,6 +28,10 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
+        accessrole=obj.file.json['accessrole'],
+        userrole=obj.userrole,
+        site_license_flag=obj.site_license_flag,
+        index_list=obj.index_list,
         # Who:
         **get_user()
     ))
@@ -45,6 +49,10 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
+        accessrole=obj.file.json['accessrole'],
+        userrole=obj.userrole,
+        site_license_flag=obj.site_license_flag,
+        index_list=obj.index_list,
         # Who:
         **get_user()
     ))
@@ -53,7 +61,11 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
 
 def build_file_unique_id(doc):
     """Build file unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format(doc['bucket_id'], doc['file_id'])
+    key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(
+        doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
+        doc['index_list'], doc['site_license_flag'], 'domain'
+    )
+    doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     return doc
 
 
