@@ -83,9 +83,9 @@ STATS_AGGREGATIONS = {
 
 STATS_QUERIES = {
     'get-file-download-report': {},
-    #'get-file-download-open-access-report': {},
+    'get-file-download-open-access-report': {},
     'get-file-preview-report': {},
-    #'get-file-preview-open-access-report': {},
+    'get-file-preview-open-access-report': {},
     'bucket-file-download-histogram': {},
     'bucket-file-download-total': {},
     'bucket-file-preview-histogram': {},

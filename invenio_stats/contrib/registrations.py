@@ -157,6 +157,19 @@ def register_queries():
             )
         ),
         dict(
+            query_name='get-file-download-open-access-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                aggregated_fields=['file_key', 'index_list',
+                                   'userrole', 'site_license_flag'],
+                required_filters=dict(
+                    accessrole='accessrole',
+                )
+            )
+        ),
+        dict(
             query_name='get-file-preview-report',
             query_class=ESTermsQuery,
             query_config=dict(
@@ -164,6 +177,19 @@ def register_queries():
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag']
+            )
+        ),
+        dict(
+            query_name='get-file-preview-open-access-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
+                aggregated_fields=['file_key', 'index_list',
+                                   'userrole', 'site_license_flag'],
+                required_filters=dict(
+                    accessrole='accessrole',
+                )
             )
         ),
         dict(

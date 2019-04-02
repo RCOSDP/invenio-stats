@@ -7,6 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """InvenioStats views."""
+import calendar
 from datetime import datetime, timedelta
 from elasticsearch.exceptions import NotFoundError
 from flask import Blueprint, abort, jsonify, request
@@ -281,29 +282,50 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
 
     def get(self, **kwargs):
         result = {}
-        res_list = []
+        all_list = []
+        open_access_list = []
 
         event = kwargs.get('event')
         year = kwargs.get('year')
         month = kwargs.get('month')
 
-        params = {}
-
-        all_query = ''
-        if event == 'file_download':
-            all_query = 'get-file-download-report'
-        elif event == 'file_preview':
-            all_query = 'get-file-preview-report'
-
-        query_cfg = current_stats.queries[all_query]
-        query = query_cfg.query_class(**query_cfg.query_config)
-
         try:
-            res = query.run(params)
-            self.Calculation(res, res_list)
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            all_params = {'start_date': query_month + '-01',
+                          'end_date':
+                          query_month + '-' + str(lastday).zfill(2)
+                          + 'T23:59:59'}
+            params = {'start_date': query_month + '-01',
+                                'end_date':
+                                query_month + '-' + str(lastday).zfill(2)
+                                + 'T23:59:59',
+                                'accessrole': 'open_access'}
 
-            result['date'] = str(year) + '-' + str(month).zfill(2)
-            result['all'] = res_list
+            all_query_name = ''
+            open_access_query_name = ''
+            if event == 'file_download':
+                all_query_name = 'get-file-download-report'
+                open_access_query_name = 'get-file-download-open-access-report'
+            elif event == 'file_preview':
+                all_query_name = 'get-file-preview-report'
+                open_access_query_name = 'get-file-preview-open-access-report'
+
+            # all
+            all_query_cfg = current_stats.queries[all_query_name]
+            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
+            all_res = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+            # open access
+            open_access_query_cfg = current_stats.queries[open_access_query_name]
+            open_access = open_access_query_cfg.query_class(**open_access_query_cfg.query_config)
+            open_access_res = open_access.run(**params)
+            self.Calculation(open_access_res, open_access_list)
+
+            result['date'] = query_month
+            result['all'] = all_list
+            result['open_access'] = open_access_list
 
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
@@ -311,8 +333,6 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
             raise InvalidRequestInputError(e.args[0])
         except NotFoundError as e:
             return None
-        except Exception as e:
-            return str(e)
 
         return self.make_response(result)
 
