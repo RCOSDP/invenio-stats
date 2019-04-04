@@ -14,6 +14,7 @@ from elasticsearch.exceptions import NotFoundError
 from flask import Blueprint, abort, current_app, jsonify, request
 from invenio_rest.views import ContentNegotiatedMethodView
 
+from . import config
 from .errors import InvalidRequestInputError, UnknownQueryError
 from .proxies import current_stats
 from .utils import current_user
@@ -110,19 +111,15 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
         try:
             if not query_date:
                 params = {'record_id': record_id,
-                          # 'interval': 'month'}
-                          'interval': 'day'}
+                          'interval': 'month'}
             else:
                 year = int(query_date[0: 4])
                 month = int(query_date[5: 7])
                 _, lastday = calendar.monthrange(year, month)
                 params = {'record_id': record_id,
-                          # 'interval': 'month',
-                          'interval': 'day',
-                          # 'start_date': query_date + '-01',
-                          # 'end_date': query_date + '-' + str(lastday).zfill(2)
-                          'start_date': query_date,
-                          'end_date': query_date
+                          'interval': 'month',
+                          'start_date': query_date + '-01',
+                          'end_date': query_date + '-' + str(lastday).zfill(2)
                           + 'T23:59:59'}
             query_period_cfg = current_stats.queries['bucket-record-view-histogram']
             query_period = query_period_cfg.query_class(
@@ -139,13 +136,16 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             result['domain'] = domain
             # period
             if get_period:
-                query_period_cfg = current_stats.queries['bucket-record-view-histogram']
-                query_period = query_period_cfg.query_class(
-                    **query_period_cfg.query_config)
-                res_period = query_period.run(**params)
-                for m in res_period['buckets']:
-                    # period.append(m['date'][0:7])
-                    period.append(m['date'][0:10])
+                provide_year = int(getattr(config, 'PROVIDE_PERIOD_YEAR'))
+                sYear = datetime.now().year
+                sMonth = datetime.now().month
+                eYear = sYear - provide_year
+                start = datetime(sYear, sMonth, 15)
+                end = datetime(eYear, 1, 1)
+                while end < start:
+                    period.append(start.strftime('%Y-%m'))
+                    start -= timedelta(days=16)
+                    start = datetime(start.year, start.month, 15)
                 result['period'] = period
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
@@ -198,20 +198,16 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         if not query_date:
             params = {'bucket_id': bucket_id,
                       'file_key': file_key,
-                      # 'interval': 'month'}
-                      'interval': 'day'}
+                      'interval': 'month'}
         else:
             year = int(query_date[0: 4])
             month = int(query_date[5: 7])
             _, lastday = calendar.monthrange(year, month)
             params = {'bucket_id': bucket_id,
                       'file_key': file_key,
-                      # 'interval': 'month',
-                      'interval': 'day',
-                      # 'start_date': query_date + '-01',
-                      # 'end_date': query_date + '-' + str(lastday).zfill(2)
-                      'start_date': query_date,
-                      'end_date': query_date
+                      'interval': 'month',
+                      'start_date': query_date + '-01',
+                      'end_date': query_date + '-' + str(lastday).zfill(2)
                       + 'T23:59:59'}
 
         try:
@@ -249,25 +245,16 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             result['domain_list'] = domain_list
             # period
             if get_period:
-                # file download
-                query_download_period_cfg = current_stats.queries['bucket-file-download-histogram']
-                query_download_period = query_download_period_cfg.query_class(
-                    **query_download_period_cfg.query_config)
-                res_download_period = query_download_period.run(**params)
-                # file preview
-                query_preview_period_cfg = current_stats.queries['bucket-file-preview-histogram']
-                query_preview_period = query_preview_period_cfg.query_class(
-                    **query_preview_period_cfg.query_config)
-                res_preview_period = query_preview_period.run(**params)
-
-                for m in res_download_period['buckets']:
-                    # period.append(m['date'][0:7])
-                    period.append(m['date'][0:10])
-                for m in res_preview_period['buckets']:
-                    # if m['date'][0:7] not in period:
-                    #    period.append(m['date'][0:7])
-                    if m['date'][0:10] not in period:
-                        period.append(m['date'][0:10])
+                provide_year = int(getattr(config, 'PROVIDE_PERIOD_YEAR'))
+                sYear = datetime.now().year
+                sMonth = datetime.now().month
+                eYear = sYear - provide_year
+                start = datetime(sYear, sMonth, 15)
+                end = datetime(eYear, 1, 1)
+                while end < start:
+                    period.append(start.strftime('%Y-%m'))
+                    start -= timedelta(days=16)
+                    start = datetime(start.year, start.month, 15)
                 result['period'] = period
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])

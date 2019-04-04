@@ -23,6 +23,8 @@ by the ``STATS_EVENTS`` config variable. An event will be generated for each
 signal sent.
 """
 
+PROVIDE_PERIOD_YEAR = 5
+
 STATS_EVENTS = {
     'file-download': {
         'signal': 'invenio_files_rest.signals.file_downloaded',
