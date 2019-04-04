@@ -97,19 +97,22 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             default_media_type='application/json',
             **kwargs)
 
-    def get_data(self, record_id, query_date=None):
+    def get_data(self, record_id, query_date=None, get_period=False):
         result = {}
         period = []
         domain = {}
 
         try:
             if not query_date:
-                params = {'record_id': record_id, 'interval': 'day'}
+                params = {'record_id': record_id,
+                          #'interval': 'month'}
+                          'interval': 'day'}
             else:
                 year = int(query_date[0: 4])
                 month = int(query_date[5: 7])
                 _, lastday = calendar.monthrange(year, month)
                 params = {'record_id': record_id,
+                          #'interval': 'month',
                           'interval': 'day',
                           #'start_date': query_date + '-01',
                           #'end_date': query_date + '-' + str(lastday).zfill(2)
@@ -128,11 +131,12 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
                 domain[d['key']] = d['count']
             result['domain'] = domain
             # period
-            if not query_date:
+            if get_period:
                 query_period_cfg = current_stats.queries['bucket-record-view-histogram']
                 query_period = query_period_cfg.query_class(**query_period_cfg.query_config)
                 res_period = query_period.run(**params)
                 for m in res_period['buckets']:
+                    #period.append(m['date'][0:7])
                     period.append(m['date'][0:10])
                 result['period'] = period
         except ValueError as e:
@@ -144,13 +148,17 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
 
     def get(self, **kwargs):
         record_id = kwargs.get('record_id')
-        return self.make_response(self.get_data(record_id))
+        return self.make_response(self.get_data(record_id, get_period=True))
 
     def post(self, **kwargs):
         record_id = kwargs.get('record_id')
         d = request.get_json(force=False)
         current_app.logger.debug(d)
-        return self.make_response(self.get_data(record_id, d['date']))
+        if d['date'] == 'total':
+            date = None
+        else:
+            date = d['date']
+        return self.make_response(self.get_data(record_id, date))
 
 class QueryFileStatsCount(ContentNegotiatedMethodView):
 
@@ -168,92 +176,102 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             default_media_type='application/json',
             **kwargs)
 
-    def get(self, **kwargs):
+    def get_data(self, bucket_id, file_key, query_date=None, get_period=False):
         result = {}
-        period = {}
+        period = []
+        domain_list = []
+        mapping = {}
 
-        bucket_id = kwargs.get('bucket_id')
-        file_key = kwargs.get('file_key')
-
-        params_total = {'bucket_id': bucket_id, 'file_key': file_key}
-        params_period = {'bucket_id': bucket_id, 'file_key': file_key,
-                         'interval': 'day'}
-
-        # file download
-        query_download_total_cfg = current_stats.queries['bucket-file-download-total']
-        query_download_period_cfg = current_stats.queries['bucket-file-download-histogram']
-        query_download_total = query_download_total_cfg.query_class(**query_download_total_cfg.query_config)
-        query_download_period = query_download_period_cfg.query_class(**query_download_period_cfg.query_config)
-
-        # file preview
-        query_preview_total_cfg = current_stats.queries['bucket-file-preview-total']
-        query_preview_period_cfg = current_stats.queries['bucket-file-preview-histogram']
-        query_preview_total = query_preview_total_cfg.query_class(**query_preview_total_cfg.query_config)
-        query_preview_period = query_preview_period_cfg.query_class(**query_preview_period_cfg.query_config)
+        if not query_date:
+            params = {'bucket_id': bucket_id,
+                      'file_key': file_key,
+                      #'interval': 'month'}
+                      'interval': 'day'}
+        else:
+            year = int(query_date[0: 4])
+            month = int(query_date[5: 7])
+            _, lastday = calendar.monthrange(year, month)
+            params = {'bucket_id': bucket_id,
+                      'file_key': file_key,
+                      #'interval': 'month',
+                      'interval': 'day',
+                      #'start_date': query_date + '-01',
+                      #'end_date': query_date + '-' + str(lastday).zfill(2)
+                      'start_date': query_date,
+                      'end_date': query_date
+                      + 'T23:59:59'}
 
         try:
             # file download
-            res_download_total = query_download_total.run(**params_total)
-            res_download_period = query_download_period.run(**params_period)
+            query_download_total_cfg = current_stats.queries['bucket-file-download-total']
+            query_download_total = query_download_total_cfg.query_class(**query_download_total_cfg.query_config)
+            res_download_total = query_download_total.run(**params)
             # file preview
-            res_preview_total = query_preview_total.run(**params_total)
-            res_preview_period = query_preview_period.run(**params_period)
+            query_preview_total_cfg = current_stats.queries['bucket-file-preview-total']
+            query_preview_total = query_preview_total_cfg.query_class(**query_preview_total_cfg.query_config)
+            res_preview_total = query_preview_total.run(**params)
             # total
             result['download_total'] = res_download_total['value']
             result['preview_total'] = res_preview_total['value']
-            # period
-            for m in res_download_period['buckets']:
+            # domain
+            for d in res_download_total['buckets']:
                 data = {}
-                data['download_total'] = m['value']
-                data['preview_total'] = 0
-                data['domain_list'] = [{'domain': 'xxx.yy.jp',
-                                        'download_counts':
-                                        m['value'] // 2,
-                                        'preview_counts': 0},
-                                       {'domain': 'yyy.com',
-                                        'download_counts':
-                                        m['value'] // 2,
-                                        'preview_counts': 0}] # test data
-                period[m['date'][0:10]] = data
-            for m in res_preview_period['buckets']:
-                if m['date'][0:10] in period:
-                    data = period[m['date'][0:10]]
-                    data['preview_total'] = m['value']
-                    # test data
-                    data['domain_list'][0]['preview_counts'] = m['value'] // 2
-                    data['domain_list'][1]['preview_counts'] = m['value'] // 2
+                data['domain'] = d['key']
+                data['download_counts'] = d['value']
+                data['preview_counts'] = 0
+                domain_list.append(data)
+                mapping[d['key']] = len(domain_list) - 1
+            for d in res_preview_total['buckets']:
+                if d['key'] in mapping:
+                    domain_list[mapping[d['key']]]['preview_counts'] = d['value']
                 else:
                     data = {}
-                    data['download_total'] = 0
-                    data['preview_total'] = m['value']
-                    data['domain_list'] = [{'domain': 'xxx.yy.jp',
-                                            'download_counts': 0,
-                                            'preview_counts':
-                                            m['value'] // 2},
-                                           {'domain': 'yyy.com',
-                                            'download_counts': 0,
-                                            'preview_counts':
-                                            m['value'] // 2}] # test data
-                period[m['date'][0:10]] = data
-            result['period'] = period
-            # total domain - test data
-            result['domain_list'] = [{'domain': 'xxx.yy.jp',
-                                 'download_counts':
-                                 res_download_total['value'] // 2,
-                                 'preview_counts':
-                                 res_preview_total['value'] // 2},
-                                {'domain': 'yyy.com',
-                                 'download_counts':
-                                 res_download_total['value'] // 2,
-                                 'preview_counts':
-                                 res_preview_total['value'] // 2}]
+                    data['domain'] = d['key']
+                    data['download_counts'] = 0
+                    data['preview_counts'] = d['value']
+                    domain_list.append(data)
+            result['domain_list'] = domain_list
+            # period
+            if get_period:
+                # file download
+                query_download_period_cfg = current_stats.queries['bucket-file-download-histogram']
+                query_download_period = query_download_period_cfg.query_class(**query_download_period_cfg.query_config)
+                res_download_period = query_download_period.run(**params)
+                # file preview
+                query_preview_period_cfg = current_stats.queries['bucket-file-preview-histogram']
+                query_preview_period = query_preview_period_cfg.query_class(**query_preview_period_cfg.query_config)
+                res_preview_period = query_preview_period.run(**params)
+
+                for m in res_download_period['buckets']:
+                    #period.append(m['date'][0:7])
+                    period.append(m['date'][0:10])
+                for m in res_preview_period['buckets']:
+                    #if m['date'][0:7] not in period:
+                        #period.append(m['date'][0:7])
+                    if m['date'][0:10] not in period:
+                        period.append(m['date'][0:10])
+                result['period'] = period
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
         except NotFoundError as e:
             return None
 
-        return self.make_response(result)
+        return result
 
+    def get(self, **kwargs):
+        bucket_id = kwargs.get('bucket_id')
+        file_key = kwargs.get('file_key')
+        return self.make_response(self.get_data(bucket_id, file_key, get_period=True))
+
+    def post(self, **kwargs):
+        bucket_id = kwargs.get('bucket_id')
+        file_key = kwargs.get('file_key')
+        d = request.get_json(force=False)
+        if d['date'] == 'total':
+            date = None
+        else:
+            date = d['date']
+        return self.make_response(self.get_data(bucket_id, file_key, date))
 
 class QueryFileStatsReport(ContentNegotiatedMethodView):
 
