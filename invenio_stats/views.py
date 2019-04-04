@@ -10,7 +10,7 @@
 import calendar
 from datetime import datetime, timedelta
 from elasticsearch.exceptions import NotFoundError
-from flask import Blueprint, abort, jsonify, request
+from flask import Blueprint, abort, jsonify, request, current_app
 from invenio_rest.views import ContentNegotiatedMethodView
 
 from .errors import InvalidRequestInputError, UnknownQueryError
@@ -97,39 +97,60 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             default_media_type='application/json',
             **kwargs)
 
-    def get(self, **kwargs):
+    def get_data(self, record_id, query_date=None):
         result = {}
-        period = {}
-
-        record_id = kwargs.get('record_id')
-
-        params_total = {'record_id': record_id}
-        params_period = {'record_id': record_id, 'interval': 'month'}
-        query_total_cfg = current_stats.queries['bucket-record-view-total']
-        query_period_cfg = current_stats.queries['bucket-record-view-histogram']
-        query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
-        query_period = query_period_cfg.query_class(**query_period_cfg.query_config)
+        period = []
+        domain = {}
 
         try:
-            res_total = query_total.run(**params_total)
-            res_period = query_period.run(**params_period)
+            if not query_date:
+                params = {'record_id': record_id, 'interval': 'day'}
+            else:
+                year = int(query_date[0: 4])
+                month = int(query_date[5: 7])
+                _, lastday = calendar.monthrange(year, month)
+                params = {'record_id': record_id,
+                          'interval': 'day',
+                          #'start_date': query_date + '-01',
+                          #'end_date': query_date + '-' + str(lastday).zfill(2)
+                          'start_date': query_date,
+                          'end_date': query_date
+                          + 'T23:59:59'}
+            query_period_cfg = current_stats.queries['bucket-record-view-histogram']
+            query_period = query_period_cfg.query_class(**query_period_cfg.query_config)
+
+            # total
+            query_total_cfg = current_stats.queries['bucket-record-view-total']
+            query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
+            res_total = query_total.run(**params)
             result['total'] = res_total['count']
-            for m in res_period['buckets']:
-                data = {}
-                data['total'] = m['value']
-                data['domain'] = {'xxx.co.jp': m['value'] // 2,
-                                  'yyy.com': m['value'] // 2} # test data
-                period[m['date'][0:7]] = data
-            result['period'] = period
-            result['domain'] = {'xxx.co.jp': res_total['count'] // 2,
-                                'yyy.com': res_total['count'] // 2} # test data
+            for d in res_total['buckets']:
+                domain[d['key']] = d['count']
+            result['domain'] = domain
+            # period
+            if not query_date:
+                query_period_cfg = current_stats.queries['bucket-record-view-histogram']
+                query_period = query_period_cfg.query_class(**query_period_cfg.query_config)
+                res_period = query_period.run(**params)
+                for m in res_period['buckets']:
+                    period.append(m['date'][0:10])
+                result['period'] = period
         except ValueError as e:
             raise InvalidRequestInputError(e.args[0])
         except NotFoundError as e:
             return None
 
-        return self.make_response(result)
+        return result
 
+    def get(self, **kwargs):
+        record_id = kwargs.get('record_id')
+        return self.make_response(self.get_data(record_id))
+
+    def post(self, **kwargs):
+        record_id = kwargs.get('record_id')
+        d = request.get_json(force=False)
+        current_app.logger.debug(d)
+        return self.make_response(self.get_data(record_id, d['date']))
 
 class QueryFileStatsCount(ContentNegotiatedMethodView):
 
@@ -155,7 +176,8 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         file_key = kwargs.get('file_key')
 
         params_total = {'bucket_id': bucket_id, 'file_key': file_key}
-        params_period = {'bucket_id': bucket_id, 'file_key': file_key, 'interval': 'month'}
+        params_period = {'bucket_id': bucket_id, 'file_key': file_key,
+                         'interval': 'day'}
 
         # file download
         query_download_total_cfg = current_stats.queries['bucket-file-download-total']
@@ -192,10 +214,10 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
                                         'download_counts':
                                         m['value'] // 2,
                                         'preview_counts': 0}] # test data
-                period[m['date'][0:7]] = data
+                period[m['date'][0:10]] = data
             for m in res_preview_period['buckets']:
-                if m['date'][0:7] in period:
-                    data = period[m['date'][0:7]]
+                if m['date'][0:10] in period:
+                    data = period[m['date'][0:10]]
                     data['preview_total'] = m['value']
                     # test data
                     data['domain_list'][0]['preview_counts'] = m['value'] // 2
@@ -212,7 +234,7 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
                                             'download_counts': 0,
                                             'preview_counts':
                                             m['value'] // 2}] # test data
-                period[m['date'][0:7]] = data
+                period[m['date'][0:10]] = data
             result['period'] = period
             # total domain - test data
             result['domain_list'] = [{'domain': 'xxx.yy.jp',
@@ -421,12 +443,12 @@ blueprint.add_url_rule(
 )
 
 blueprint.add_url_rule(
-    '/GetRecordViewCount/<string:record_id>',
+    '/<string:record_id>',
     view_func=record_view_count,
 )
 
 blueprint.add_url_rule(
-    '/GetFileStatsCount/<string:bucket_id>/<string:file_key>',
+    '/<string:bucket_id>/<string:file_key>',
     view_func=file_stats_count,
 )
 
@@ -436,6 +458,6 @@ blueprint.add_url_rule(
 )
 
 blueprint.add_url_rule(
-    '/GetItemRegReport/<string:start_date>/<string:end_date>/<string:unit>',
+    '/<string:target_report>/<string:start_date>/<string:end_date>/<string:unit>',
     view_func=item_reg_report,
 )

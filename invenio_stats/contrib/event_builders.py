@@ -16,6 +16,8 @@ from flask import request
 
 from ..utils import get_user
 
+import tldextract
+import socket
 
 def file_download_event_builder(event, sender_app, obj=None, **kwargs):
     """Build a file-download event."""
@@ -28,6 +30,7 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
+        domain=tldextract.extract(socket.gethostbyaddr(request.remote_addr)[0]).suffix,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
@@ -49,6 +52,7 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
+        domain=tldextract.extract(socket.gethostbyaddr(request.remote_addr)[0]).suffix,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
@@ -97,6 +101,7 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
+        domain=tldextract.extract(socket.gethostbyaddr(request.remote_addr)[0]).suffix,
         # Who:
         **get_user()
     ))
