@@ -9,8 +9,9 @@
 """InvenioStats views."""
 import calendar
 from datetime import datetime, timedelta
+
 from elasticsearch.exceptions import NotFoundError
-from flask import Blueprint, abort, jsonify, request, current_app
+from flask import Blueprint, abort, current_app, jsonify, request
 from invenio_rest.views import ContentNegotiatedMethodView
 
 from .errors import InvalidRequestInputError, UnknownQueryError
@@ -55,7 +56,7 @@ class StatsQueryResource(ContentNegotiatedMethodView):
                 raise InvalidRequestInputError(
                     'Invalid Input. It should be of the form '
                     '{ STATISTIC_NAME: { "stat": STAT_TYPE, '
-                    '"params": STAT_PARAMS \}}'
+                    r'"params": STAT_PARAMS \}}'
                 )
             stat = config['stat']
             params = config.get('params', {})
@@ -81,11 +82,14 @@ class StatsQueryResource(ContentNegotiatedMethodView):
                 return None
         return self.make_response(result)
 
+
 class QueryRecordViewCount(ContentNegotiatedMethodView):
+    """REST API resource providing record view count."""
 
     view_name = 'get_record_view_count'
 
     def __init__(self, **kwargs):
+        """Constructor."""
         super(QueryRecordViewCount, self).__init__(
             serializers={
                 'application/json':
@@ -98,6 +102,7 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             **kwargs)
 
     def get_data(self, record_id, query_date=None, get_period=False):
+        """Get data."""
         result = {}
         period = []
         domain = {}
@@ -105,26 +110,28 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
         try:
             if not query_date:
                 params = {'record_id': record_id,
-                          #'interval': 'month'}
+                          # 'interval': 'month'}
                           'interval': 'day'}
             else:
                 year = int(query_date[0: 4])
                 month = int(query_date[5: 7])
                 _, lastday = calendar.monthrange(year, month)
                 params = {'record_id': record_id,
-                          #'interval': 'month',
+                          # 'interval': 'month',
                           'interval': 'day',
-                          #'start_date': query_date + '-01',
-                          #'end_date': query_date + '-' + str(lastday).zfill(2)
+                          # 'start_date': query_date + '-01',
+                          # 'end_date': query_date + '-' + str(lastday).zfill(2)
                           'start_date': query_date,
                           'end_date': query_date
                           + 'T23:59:59'}
             query_period_cfg = current_stats.queries['bucket-record-view-histogram']
-            query_period = query_period_cfg.query_class(**query_period_cfg.query_config)
+            query_period = query_period_cfg.query_class(
+                **query_period_cfg.query_config)
 
             # total
             query_total_cfg = current_stats.queries['bucket-record-view-total']
-            query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
+            query_total = query_total_cfg.query_class(
+                **query_total_cfg.query_config)
             res_total = query_total.run(**params)
             result['total'] = res_total['count']
             for d in res_total['buckets']:
@@ -133,10 +140,11 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             # period
             if get_period:
                 query_period_cfg = current_stats.queries['bucket-record-view-histogram']
-                query_period = query_period_cfg.query_class(**query_period_cfg.query_config)
+                query_period = query_period_cfg.query_class(
+                    **query_period_cfg.query_config)
                 res_period = query_period.run(**params)
                 for m in res_period['buckets']:
-                    #period.append(m['date'][0:7])
+                    # period.append(m['date'][0:7])
                     period.append(m['date'][0:10])
                 result['period'] = period
         except ValueError as e:
@@ -147,24 +155,28 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
         return result
 
     def get(self, **kwargs):
+        """Get total record view count."""
         record_id = kwargs.get('record_id')
         return self.make_response(self.get_data(record_id, get_period=True))
 
     def post(self, **kwargs):
+        """Get record view count with date."""
         record_id = kwargs.get('record_id')
         d = request.get_json(force=False)
-        current_app.logger.debug(d)
         if d['date'] == 'total':
             date = None
         else:
             date = d['date']
         return self.make_response(self.get_data(record_id, date))
 
+
 class QueryFileStatsCount(ContentNegotiatedMethodView):
+    """REST API resource providing file download/preview count."""
 
     view_name = 'get_file_stats_count'
 
     def __init__(self, **kwargs):
+        """Constructor."""
         super(QueryFileStatsCount, self).__init__(
             serializers={
                 'application/json':
@@ -177,6 +189,7 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             **kwargs)
 
     def get_data(self, bucket_id, file_key, query_date=None, get_period=False):
+        """Get data."""
         result = {}
         period = []
         domain_list = []
@@ -185,7 +198,7 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         if not query_date:
             params = {'bucket_id': bucket_id,
                       'file_key': file_key,
-                      #'interval': 'month'}
+                      # 'interval': 'month'}
                       'interval': 'day'}
         else:
             year = int(query_date[0: 4])
@@ -193,10 +206,10 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             _, lastday = calendar.monthrange(year, month)
             params = {'bucket_id': bucket_id,
                       'file_key': file_key,
-                      #'interval': 'month',
+                      # 'interval': 'month',
                       'interval': 'day',
-                      #'start_date': query_date + '-01',
-                      #'end_date': query_date + '-' + str(lastday).zfill(2)
+                      # 'start_date': query_date + '-01',
+                      # 'end_date': query_date + '-' + str(lastday).zfill(2)
                       'start_date': query_date,
                       'end_date': query_date
                       + 'T23:59:59'}
@@ -204,11 +217,13 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         try:
             # file download
             query_download_total_cfg = current_stats.queries['bucket-file-download-total']
-            query_download_total = query_download_total_cfg.query_class(**query_download_total_cfg.query_config)
+            query_download_total = query_download_total_cfg.query_class(
+                **query_download_total_cfg.query_config)
             res_download_total = query_download_total.run(**params)
             # file preview
             query_preview_total_cfg = current_stats.queries['bucket-file-preview-total']
-            query_preview_total = query_preview_total_cfg.query_class(**query_preview_total_cfg.query_config)
+            query_preview_total = query_preview_total_cfg.query_class(
+                **query_preview_total_cfg.query_config)
             res_preview_total = query_preview_total.run(**params)
             # total
             result['download_total'] = res_download_total['value']
@@ -223,7 +238,8 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
                 mapping[d['key']] = len(domain_list) - 1
             for d in res_preview_total['buckets']:
                 if d['key'] in mapping:
-                    domain_list[mapping[d['key']]]['preview_counts'] = d['value']
+                    domain_list[mapping[d['key']]
+                                ]['preview_counts'] = d['value']
                 else:
                     data = {}
                     data['domain'] = d['key']
@@ -235,19 +251,21 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             if get_period:
                 # file download
                 query_download_period_cfg = current_stats.queries['bucket-file-download-histogram']
-                query_download_period = query_download_period_cfg.query_class(**query_download_period_cfg.query_config)
+                query_download_period = query_download_period_cfg.query_class(
+                    **query_download_period_cfg.query_config)
                 res_download_period = query_download_period.run(**params)
                 # file preview
                 query_preview_period_cfg = current_stats.queries['bucket-file-preview-histogram']
-                query_preview_period = query_preview_period_cfg.query_class(**query_preview_period_cfg.query_config)
+                query_preview_period = query_preview_period_cfg.query_class(
+                    **query_preview_period_cfg.query_config)
                 res_preview_period = query_preview_period.run(**params)
 
                 for m in res_download_period['buckets']:
-                    #period.append(m['date'][0:7])
+                    # period.append(m['date'][0:7])
                     period.append(m['date'][0:10])
                 for m in res_preview_period['buckets']:
-                    #if m['date'][0:7] not in period:
-                        #period.append(m['date'][0:7])
+                    # if m['date'][0:7] not in period:
+                    #    period.append(m['date'][0:7])
                     if m['date'][0:10] not in period:
                         period.append(m['date'][0:10])
                 result['period'] = period
@@ -259,11 +277,17 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         return result
 
     def get(self, **kwargs):
+        """Get total file download/preview count."""
         bucket_id = kwargs.get('bucket_id')
         file_key = kwargs.get('file_key')
-        return self.make_response(self.get_data(bucket_id, file_key, get_period=True))
+        return self.make_response(
+            self.get_data(
+                bucket_id,
+                file_key,
+                get_period=True))
 
     def post(self, **kwargs):
+        """Get file download/preview count with date."""
         bucket_id = kwargs.get('bucket_id')
         file_key = kwargs.get('file_key')
         d = request.get_json(force=False)
@@ -273,11 +297,14 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             date = d['date']
         return self.make_response(self.get_data(bucket_id, file_key, date))
 
+
 class QueryFileStatsReport(ContentNegotiatedMethodView):
+    """REST API resource providing file download/preview report."""
 
     view_name = 'get_file_stats_report'
 
     def __init__(self, **kwargs):
+        """Constructor."""
         super(QueryFileStatsReport, self).__init__(
             serializers={
                 'application/json':
@@ -290,6 +317,7 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
             **kwargs)
 
     def Calculation(self, res, data_list):
+        """Create response object."""
         for file in res['buckets']:
             for index in file['buckets']:
                 data = {}
@@ -321,6 +349,7 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
                 data_list.append(data)
 
     def get(self, **kwargs):
+        """Get file download/preview report."""
         result = {}
         all_list = []
         open_access_list = []
@@ -337,10 +366,10 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
                           query_month + '-' + str(lastday).zfill(2)
                           + 'T23:59:59'}
             params = {'start_date': query_month + '-01',
-                                'end_date':
-                                query_month + '-' + str(lastday).zfill(2)
-                                + 'T23:59:59',
-                                'accessrole': 'open_access'}
+                      'end_date':
+                      query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59',
+                      'accessrole': 'open_access'}
 
             all_query_name = ''
             open_access_query_name = ''
@@ -359,7 +388,8 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
 
             # open access
             open_access_query_cfg = current_stats.queries[open_access_query_name]
-            open_access = open_access_query_cfg.query_class(**open_access_query_cfg.query_config)
+            open_access = open_access_query_cfg.query_class(
+                **open_access_query_cfg.query_config)
             open_access_res = open_access.run(**params)
             self.Calculation(open_access_res, open_access_list)
 
@@ -378,10 +408,12 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
 
 
 class QueryItemRegReport(ContentNegotiatedMethodView):
+    """REST API resource providing item registration report."""
 
     view_name = 'get_item_registration_report'
 
     def __init__(self, **kwargs):
+        """Constructor."""
         super(QueryItemRegReport, self).__init__(
             serializers={
                 'application/json':
@@ -394,6 +426,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
             **kwargs)
 
     def get(self, **kwargs):
+        """Get item registration report."""
         start_date = datetime.strptime(kwargs.get('start_date'), '%Y-%m-%d')
         end_date = datetime.strptime(kwargs.get('end_date'), '%Y-%m-%d')
         unit = kwargs.get('unit').title()
@@ -425,9 +458,12 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 result[start_year + i] = 20 + i
         elif unit == 'Host':
             result = []
-            temp1 = {'domain':'xxx.yy.jp','ip':'10.23.56.76','counts':100}
+            temp1 = {'domain': 'xxx.yy.jp', 'ip': '10.23.56.76', 'counts': 100}
             result.append(temp1)
-            temp2 = {'domain':'xxx.yy.com','ip':'10.24.57.76','counts':130}
+            temp2 = {
+                'domain': 'xxx.yy.com',
+                'ip': '10.24.57.76',
+                'counts': 130}
             result.append(temp2)
         else:
             result = {}

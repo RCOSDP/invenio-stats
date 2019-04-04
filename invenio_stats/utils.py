@@ -110,8 +110,8 @@ def default_permission_factory(query_name, params):
 
 
 def get_aggregations(index, aggs_query):
-    """
-    Get aggregations.
+    """Get aggregations.
+
     :param index:
     :param aggs_query:
     :return:
@@ -119,6 +119,7 @@ def get_aggregations(index, aggs_query):
     results = {}
     if index and aggs_query and 'aggs' in aggs_query:
         from invenio_indexer.api import RecordIndexer
-        results = RecordIndexer().client.search(index=index, body=aggs_query)['aggregations']
+        results = RecordIndexer().client.search(
+            index=index, body=aggs_query)['aggregations']
 
     return results

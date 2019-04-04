@@ -9,15 +9,17 @@
 """Signal receivers for certain events."""
 
 from __future__ import absolute_import, print_function
-import hashlib
+
 import datetime
+import hashlib
+import socket
 import uuid
+
+import tldextract
 from flask import request
 
 from ..utils import get_user
 
-import tldextract
-import socket
 
 def file_download_event_builder(event, sender_app, obj=None, **kwargs):
     """Build a file-download event."""
@@ -30,7 +32,9 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
-        domain=tldextract.extract(socket.gethostbyaddr(request.remote_addr)[0]).suffix,
+        domain=tldextract.extract(
+            socket.gethostbyaddr(
+                request.remote_addr)[0]).suffix,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
@@ -52,7 +56,9 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
-        domain=tldextract.extract(socket.gethostbyaddr(request.remote_addr)[0]).suffix,
+        domain=tldextract.extract(
+            socket.gethostbyaddr(
+                request.remote_addr)[0]).suffix,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
@@ -101,7 +107,9 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
-        domain=tldextract.extract(socket.gethostbyaddr(request.remote_addr)[0]).suffix,
+        domain=tldextract.extract(
+            socket.gethostbyaddr(
+                request.remote_addr)[0]).suffix,
         # Who:
         **get_user()
     ))
@@ -144,7 +152,9 @@ def search_event_builder(event, sender_app, search_args=None, **kwargs):
 
 def build_search_unique_id(doc):
     """Build search unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format(doc['search_detail']['search_key'], doc['search_detail']['search_type'])
+    doc['unique_id'] = '{0}_{1}'.format(
+        doc['search_detail']['search_key'],
+        doc['search_detail']['search_type'])
     return doc
 
 
