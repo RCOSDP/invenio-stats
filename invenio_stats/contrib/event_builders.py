@@ -73,7 +73,7 @@ def build_file_unique_id(doc):
     """Build file unique identifier."""
     key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
-        doc['index_list'], doc['site_license_flag'], 'domain'
+        doc['index_list'], doc['site_license_flag'], doc['domain']
     )
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     return doc
@@ -81,7 +81,7 @@ def build_file_unique_id(doc):
 
 def build_record_unique_id(doc):
     """Build record unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format(doc['pid_type'], doc['pid_value'])
+    doc['unique_id'] = '{0}_{1}'.format(doc['record_id'], doc['domain'])
     return doc
 
 
