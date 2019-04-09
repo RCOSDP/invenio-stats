@@ -73,7 +73,7 @@ def build_file_unique_id(doc):
 
 def build_record_unique_id(doc):
     """Build record unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format(doc['pid_type'], doc['pid_value'])
+    doc['unique_id'] = '{0}_{1}'.format(doc['record_id'], doc['country'])
     return doc
 
 

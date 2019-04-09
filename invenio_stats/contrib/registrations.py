@@ -131,7 +131,7 @@ def register_aggregations():
         aggregator_config=dict(
             client=current_search_client,
             event='record-view',
-            aggregation_field='record_id',
+            aggregation_field='unique_id',
             aggregation_interval='day',
             copy_fields=dict(
                 country='country',
