@@ -234,8 +234,7 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
                 mapping[d['key']] = len(country_list) - 1
             for d in res_preview_total['buckets']:
                 if d['key'] in mapping:
-                    country_list[mapping[d['key']]]
-                    ['preview_counts'] = d['value']
+                    country_list[mapping[d['key']]]['preview_counts'] = d['value']
                 else:
                     data = {}
                     data['country'] = d['key']
