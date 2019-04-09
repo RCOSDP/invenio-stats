@@ -86,7 +86,7 @@ def register_aggregations():
             aggregation_field='unique_id',
             aggregation_interval='day',
             copy_fields=dict(
-                domain='domain',
+                country='country',
                 file_key='file_key',
                 bucket_id='bucket_id',
                 file_id='file_id',
@@ -110,7 +110,7 @@ def register_aggregations():
             aggregation_field='unique_id',
             aggregation_interval='day',
             copy_fields=dict(
-                domain='domain',
+                country='country',
                 file_key='file_key',
                 bucket_id='bucket_id',
                 file_id='file_id',
@@ -134,7 +134,7 @@ def register_aggregations():
             aggregation_field='record_id',
             aggregation_interval='day',
             copy_fields=dict(
-                domain='domain',
+                country='country',
                 record_id='record_id',
                 pid_type='pid_type',
                 pid_value='pid_value',
@@ -224,7 +224,7 @@ def register_queries():
                     bucket_id='bucket_id',
                     file_key='file_key',
                 ),
-                aggregated_fields=['domain']
+                aggregated_fields=['country']
             )
         ),
         dict(
@@ -256,7 +256,7 @@ def register_queries():
                     bucket_id='bucket_id',
                     file_key='file_key',
                 ),
-                aggregated_fields=['domain']
+                aggregated_fields=['country']
             )
         ),
         dict(
@@ -289,7 +289,7 @@ def register_queries():
                     count=('sum', 'count', {}),
                     unique_count=('sum', 'unique_count', {}),
                 ),
-                aggregated_fields=['domain']
+                aggregated_fields=['country']
             )
         ),
     ]

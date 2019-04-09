@@ -106,7 +106,7 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
         """Get data."""
         result = {}
         period = []
-        domain = {}
+        country = {}
 
         try:
             if not query_date:
@@ -132,8 +132,8 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
             res_total = query_total.run(**params)
             result['total'] = res_total['count']
             for d in res_total['buckets']:
-                domain[d['key']] = d['count']
-            result['domain'] = domain
+                country[d['key']] = d['count']
+            result['country'] = country
             # period
             if get_period:
                 provide_year = int(getattr(config, 'PROVIDE_PERIOD_YEAR'))
@@ -192,7 +192,7 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         """Get data."""
         result = {}
         period = []
-        domain_list = []
+        country_list = []
         mapping = {}
 
         if not query_date:
@@ -224,25 +224,25 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
             # total
             result['download_total'] = res_download_total['value']
             result['preview_total'] = res_preview_total['value']
-            # domain
+            # country
             for d in res_download_total['buckets']:
                 data = {}
-                data['domain'] = d['key']
+                data['country'] = d['key']
                 data['download_counts'] = d['value']
                 data['preview_counts'] = 0
-                domain_list.append(data)
-                mapping[d['key']] = len(domain_list) - 1
+                country_list.append(data)
+                mapping[d['key']] = len(country_list) - 1
             for d in res_preview_total['buckets']:
                 if d['key'] in mapping:
-                    domain_list[mapping[d['key']]
-                                ]['preview_counts'] = d['value']
+                    country_list[mapping[d['key']]]
+                    ['preview_counts'] = d['value']
                 else:
                     data = {}
-                    data['domain'] = d['key']
+                    data['country'] = d['key']
                     data['download_counts'] = 0
                     data['preview_counts'] = d['value']
-                    domain_list.append(data)
-            result['domain_list'] = domain_list
+                    country_list.append(data)
+            result['country_list'] = country_list
             # period
             if get_period:
                 provide_year = int(getattr(config, 'PROVIDE_PERIOD_YEAR'))

@@ -12,10 +12,8 @@ from __future__ import absolute_import, print_function
 
 import datetime
 import hashlib
-import socket
 import uuid
 
-import tldextract
 from flask import request
 
 from ..utils import get_user
@@ -32,9 +30,6 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
-        domain=tldextract.extract(
-            socket.gethostbyaddr(
-                request.remote_addr)[0]).suffix,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
@@ -56,9 +51,6 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         file_key=obj.key,
         size=obj.file.size,
         referrer=request.referrer,
-        domain=tldextract.extract(
-            socket.gethostbyaddr(
-                request.remote_addr)[0]).suffix,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
@@ -73,7 +65,7 @@ def build_file_unique_id(doc):
     """Build file unique identifier."""
     key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
-        doc['index_list'], doc['site_license_flag'], 'domain'
+        doc['index_list'], doc['site_license_flag'], doc['country']
     )
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     return doc
@@ -107,9 +99,6 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
-        domain=tldextract.extract(
-            socket.gethostbyaddr(
-                request.remote_addr)[0]).suffix,
         # Who:
         **get_user()
     ))
