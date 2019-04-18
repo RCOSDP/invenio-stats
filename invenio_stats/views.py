@@ -147,10 +147,11 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
                     start -= timedelta(days=16)
                     start = datetime(start.year, start.month, 15)
                 result['period'] = period
-        except ValueError as e:
-            raise InvalidRequestInputError(e.args[0])
-        except NotFoundError as e:
-            return None
+        except Exception as e:
+            current_app.logger.debug(e)
+            result['total'] = 0
+            result['country'] = country
+            result['period'] = period
 
         return result
 
@@ -255,10 +256,12 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
                     start -= timedelta(days=16)
                     start = datetime(start.year, start.month, 15)
                 result['period'] = period
-        except ValueError as e:
-            raise InvalidRequestInputError(e.args[0])
-        except NotFoundError as e:
-            return None
+        except Exception as e:
+            current_app.logger.debug(e)
+            result['download_total'] = 0
+            result['preview_total'] = 0
+            result['country_list'] = country_list
+            result['period'] = period
 
         return result
 
@@ -379,16 +382,12 @@ class QueryFileStatsReport(ContentNegotiatedMethodView):
             open_access_res = open_access.run(**params)
             self.Calculation(open_access_res, open_access_list)
 
-            result['date'] = query_month
-            result['all'] = all_list
-            result['open_access'] = open_access_list
+        except Exception as e:
+            current_app.logger.debug(e)
 
-        except ValueError as e:
-            raise InvalidRequestInputError(e.args[0])
-        except KeyError as e:
-            raise InvalidRequestInputError(e.args[0])
-        except NotFoundError as e:
-            return None
+        result['date'] = query_month
+        result['all'] = all_list
+        result['open_access'] = open_access_list
 
         return self.make_response(result)
 
