@@ -41,6 +41,16 @@ def register_events():
                     build_file_unique_id
                 ])),
         dict(
+            event_type='item-create',
+            templates='invenio_stats.contrib.item_create',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_top_unique_id
+                ])),
+        dict(
             event_type='record-view',
             templates='invenio_stats.contrib.record_view',
             processor_class=EventsIndexer,
@@ -118,6 +128,26 @@ def register_aggregations():
                 userrole='userrole',
                 index_list='index_list',
                 site_license_flag='site_license_flag',
+            ),
+            metric_aggregation_fields={
+                'unique_count': ('cardinality', 'unique_session_id',
+                                 {'precision_threshold': 1000}),
+                'volume': ('sum', 'size', {}),
+            },
+        )), dict(
+        aggregation_name='item-create-agg',
+        templates='invenio_stats.contrib.aggregations.aggr_item_create',
+        aggregator_class=StatAggregator,
+        aggregator_config=dict(
+            client=current_search_client,
+            event='item-create',
+            aggregation_field='unique_id',
+            aggregation_interval='day',
+            copy_fields=dict(
+                country='country',
+                remote_addr='remote_addr',
+                pid_type='pid_type',
+                pid_value='pid_value',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',

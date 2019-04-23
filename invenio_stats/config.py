@@ -38,6 +38,12 @@ STATS_EVENTS = {
             'invenio_stats.contrib.event_builders.file_preview_event_builder'
         ]
     },
+    'item_create': {
+        'signal': 'weko_deposit.signals.item_created',
+        'event_builders': [
+            'invenio_stats.contrib.event_builders.item_create_event_builder'
+        ]
+    },
     'record-view': {
         'signal': 'invenio_records_ui.signals.record_viewed',
         'event_builders': [
@@ -80,6 +86,7 @@ STATS_AGGREGATIONS = {
     'file-download-agg': {},
     'file-preview-agg': {},
     'record-view-agg': {},
+    'item-create-agg': {},
 }
 
 
