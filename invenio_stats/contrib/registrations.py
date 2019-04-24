@@ -152,7 +152,6 @@ def register_aggregations():
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
                                  {'precision_threshold': 1000}),
-                'volume': ('sum', 'size', {}),
             },
         )), dict(
         aggregation_name='record-view-agg',
