@@ -38,7 +38,7 @@ STATS_EVENTS = {
             'invenio_stats.contrib.event_builders.file_preview_event_builder'
         ]
     },
-    'item_create': {
+    'item-create': {
         'signal': 'weko_deposit.signals.item_created',
         'event_builders': [
             'invenio_stats.contrib.event_builders.item_create_event_builder'
