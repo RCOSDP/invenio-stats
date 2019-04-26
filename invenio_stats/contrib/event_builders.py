@@ -160,7 +160,7 @@ def build_search_detail_condition(doc):
     doc['search_detail'] = search_detail
     return doc
 
-def item_create_event_builder(event, sender_app, pid=None, **kwargs):
+def item_create_event_builder(event, sender_app, item_id=None, **kwargs):
     """Build a item-create event."""
     event.update(dict(
         # When:
@@ -168,8 +168,8 @@ def item_create_event_builder(event, sender_app, pid=None, **kwargs):
         # What:
         referrer=request.referrer,
         remote_addr=request.remote_addr,
-        pid_type=pid.pid_type,
-        pid_value=str(pid.pid_value),
+        pid_type=item_id.pid_type,
+        pid_value=str(item_id.pid_value),
         # Who:
         **get_user()
     ))
