@@ -586,6 +586,6 @@ blueprint.add_url_rule(
 )
 
 blueprint.add_url_rule(
-    '/record_view/<int:year>/<int:month>',
+    '/report/record/record_view/<int:year>/<int:month>',
     view_func=record_view_report,
 )
