@@ -289,6 +289,16 @@ def register_queries():
             )
         ),
         dict(
+            query_name='get-record-view-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                aggregated_fields=['record_id', 'record_index_list',
+                                   'pid_type', 'pid_value']
+            )
+        ),
+        dict(
             query_name='bucket-record-view-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
