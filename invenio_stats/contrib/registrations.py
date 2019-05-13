@@ -296,7 +296,7 @@ def register_queries():
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['record_id', 'record_index_list',
-                                   'pid_type', 'pid_value']
+                                   'count', 'collection']
             )
         ),
         dict(

@@ -38,6 +38,20 @@
         "collection": {
           "type": "string",
           "index": "not_analyzed"
+        },
+        "record_index_list": {
+          "type": "nested",
+          "properties": {
+            "index_id": {
+              "type": "string"
+            },
+            "index_name_en": {
+              "type": "string"
+            },
+            "index_name": {
+              "type": "string"
+            }
+          }
         }
       }
     },
