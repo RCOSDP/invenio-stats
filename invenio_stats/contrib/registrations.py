@@ -165,6 +165,7 @@ def register_aggregations():
             copy_fields=dict(
                 country='country',
                 record_id='record_id',
+                #record_index_list='record_index_list',
                 pid_type='pid_type',
                 pid_value='pid_value',
             ),
@@ -289,6 +290,15 @@ def register_queries():
             )
         ),
         dict(
+            query_name='get-record-view-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                aggregated_fields=['record_id']
+            )
+        ),
+        dict(
             query_name='bucket-record-view-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
@@ -344,18 +354,18 @@ def register_queries():
             query_config=dict(
                 index='stats-item-create',
                 doc_type='item-create-day-aggregation',
-                # copy_fields=dict(
+                copy_fields=dict(
                     # record_id='record_id',
-                # ),
+                ),
                 # required_filters=dict(
-                    # pid_type='pid_type',
-                    # pid_value='pid_value',
+                #     pid_type='pid_type',
+                #     pid_value='pid_value',
                 # ),
                 metric_fields=dict(
                     count=('sum', 'count', {}),
                     unique_count=('sum', 'unique_count', {}),
                 ),
-                aggregated_fields=['pid_type', 'pid_value']
+                aggregated_fields=['country']
             )
         ),
     ]

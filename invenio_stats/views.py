@@ -456,6 +456,63 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
+class QueryRecordViewReport(ContentNegotiatedMethodView):
+    """REST API resource providing record view report."""
+
+    view_name = 'get_record_view_report'
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        super(QueryRecordViewReport, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def Calculation(self, res, data_list):
+        """Create response object."""
+        for record in res['buckets']:
+            data = {}
+            data['record_id'] = record['key']
+            #data['index_list'] = index['key']
+            data['total'] = record['value']
+            data_list.append(data)
+
+    def get(self, **kwargs):
+        """Get record view report."""
+        result = {}
+        all_list = []
+
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            params = {'start_date': query_month + '-01',
+                          'end_date':
+                          query_month + '-' + str(lastday).zfill(2)
+                          + 'T23:59:59'}
+
+            all_query_cfg = current_stats.queries['get-record-view-report']
+            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
+            all_res = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_month
+        result['all'] = all_list
+
+        return self.make_response(result)
+
+
 stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
 )
@@ -474,6 +531,10 @@ file_stats_report = QueryFileStatsReport.as_view(
 
 item_reg_report = QueryItemRegReport.as_view(
     QueryItemRegReport.view_name,
+)
+
+record_view_report = QueryRecordViewReport.as_view(
+    QueryRecordViewReport.view_name,
 )
 
 blueprint.add_url_rule(
@@ -499,4 +560,9 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/<string:target_report>/<string:start_date>/<string:end_date>/<string:unit>',
     view_func=item_reg_report,
+)
+
+blueprint.add_url_rule(
+    '/report/record/record_view/<int:year>/<int:month>',
+    view_func=record_view_report,
 )
