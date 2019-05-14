@@ -297,7 +297,7 @@ def register_queries():
             query_config=dict(
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
-                aggregated_fields=['record_id']
+                aggregated_fields=['record_id', 'cur_user_id']
             )
         ),
         dict(
