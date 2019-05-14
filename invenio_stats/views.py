@@ -476,40 +476,18 @@ class QueryRecordViewReport(ContentNegotiatedMethodView):
 
     def Calculation(self, res, data_list):
         """Create response object."""
-        for file in res['buckets']:
-            for index in file['buckets']:
+        for record in res['buckets']:
+            for index in record['buckets']:
                 data = {}
-                data['file_key'] = file['key']
-                data['index_list'] = index['key']
+                data['record_id'] = record['key']
+                #data['index_list'] = index['key']
                 data['total'] = index['value']
-                data['admin'] = 0
-                data['reg'] = 0
-                data['login'] = 0
-                data['no_login'] = 0
-                data['site_license'] = 0
-                for user in index['buckets']:
-                    for license in user['buckets']:
-                        if license['key'] == 1:
-                            data['site_license'] += license['value']
-                            break
-                    userrole = user['key']
-                    count = user['value']
-                    if userrole == 'guest':
-                        data['no_login'] += count
-                    elif userrole == 'Contributor':
-                        data['reg'] += count
-                        data['login'] += count
-                    elif 'Administrator' in userrole:
-                        data['admin'] += count
-                        data['login'] += count
-                    else:
-                        data['login'] += count
                 data_list.append(data)
 
     def get(self, **kwargs):
         """Get record view report."""
         result = {}
-        #all_list = []
+        all_list = []
 
         year = kwargs.get('year')
         month = kwargs.get('month')
@@ -525,13 +503,13 @@ class QueryRecordViewReport(ContentNegotiatedMethodView):
             all_query_cfg = current_stats.queries['get-record-view-report']
             all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
             all_res = all_query.run(**params)
-            #self.Calculation(all_res, all_list)
+            self.Calculation(all_res, all_list)
 
         except Exception as e:
             current_app.logger.debug(e)
 
         result['date'] = query_month
-        result['all'] = all_res
+        result['all'] = all_list
 
         return self.make_response(result)
 
