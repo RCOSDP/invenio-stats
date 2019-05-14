@@ -169,7 +169,7 @@ def register_aggregations():
                 #record_index_list='record_index_list',
                 pid_type='pid_type',
                 pid_value='pid_value',
-                userid='userid',
+                user_id='user_id',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
