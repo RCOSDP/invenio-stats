@@ -102,6 +102,7 @@ def register_aggregations():
                 file_id='file_id',
                 accessrole='accessrole',
                 userrole='userrole',
+                userid='userid',
                 index_list='index_list',
                 site_license_flag='site_license_flag',
             ),

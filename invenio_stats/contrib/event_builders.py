@@ -32,6 +32,7 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         referrer=request.referrer,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
+        userid=obj.userid,
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
         # Who:
