@@ -12,7 +12,7 @@ from invenio_search import current_search_client
 from invenio_stats.aggregations import StatAggregator
 from invenio_stats.contrib.event_builders import build_file_unique_id, \
     build_record_unique_id, build_search_detail_condition, \
-    build_search_unique_id, build_top_unique_id
+    build_search_unique_id, build_top_unique_id, build_item_create_unique_id
 from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
@@ -48,7 +48,7 @@ def register_events():
                 preprocessors=[
                     flag_robots,
                     anonymize_user,
-                    build_top_unique_id
+                    build_item_create_unique_id
                 ])),
         dict(
             event_type='record-view',
@@ -319,6 +319,43 @@ def register_queries():
                     unique_count=('sum', 'unique_count', {}),
                 ),
                 aggregated_fields=['country']
+            )
+        ),
+        dict(
+            query_name='item-create-histogram',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-item-create',
+                doc_type='item-create-day-aggregation',
+                copy_fields=dict(
+                    remote_addr='remote_addr',
+                    pid_type='pid_type',
+                    pid_value='pid_value',
+                ),
+                # required_filters=dict(
+                    # pid_type='pid_type',
+                    # pid_value='pid_value',
+                # ),
+            )
+        ),
+        dict(
+            query_name='item-create-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-item-create',
+                doc_type='item-create-day-aggregation',
+                # copy_fields=dict(
+                    # record_id='record_id',
+                # ),
+                # required_filters=dict(
+                    # pid_type='pid_type',
+                    # pid_value='pid_value',
+                # ),
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                ),
+                aggregated_fields=['pid_type', 'pid_value']
             )
         ),
     ]

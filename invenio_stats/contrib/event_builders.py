@@ -125,6 +125,12 @@ def build_top_unique_id(doc):
     return doc
 
 
+def build_item_create_unique_id(doc):
+    """Build item_create unique identifier."""
+    doc['unique_id'] = '{0}_{1}'.format("item", "create")
+    return doc
+
+
 def search_event_builder(event, sender_app, search_args=None, **kwargs):
     """Build a search event."""
     event.update(dict(
@@ -159,6 +165,7 @@ def build_search_detail_condition(doc):
 
     doc['search_detail'] = search_detail
     return doc
+
 
 def item_create_event_builder(event, sender_app, item_id=None, **kwargs):
     """Build a item-create event."""
