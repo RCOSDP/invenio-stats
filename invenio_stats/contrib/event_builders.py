@@ -100,6 +100,7 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
+        userid=record.userid,
         # Who:
         **get_user()
     ))

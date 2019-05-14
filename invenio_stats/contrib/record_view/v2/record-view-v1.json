@@ -76,6 +76,10 @@
               "type": "string"
             }
           }
+        },
+        "userid": {
+          "type": "string",
+          "index": "not_analyzed"
         }
       }
     }
