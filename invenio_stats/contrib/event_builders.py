@@ -92,6 +92,7 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
                 index_name_en=index[4]
             ))
     cur_user = get_user()
+    cur_user_id = cur_user['user_id'] if cur_user['user_id'] else 'guest'
 
     event.update(dict(
         # When:
@@ -102,7 +103,7 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
-        cur_user_id=cur_user['user_id'],
+        cur_user_id=cur_user_id,
         # Who:
         **get_user()
     ))
