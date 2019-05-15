@@ -421,45 +421,59 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
 
         d = start_date
+        result = []
         if unit == 'Day':
-            result = {}
             delta = timedelta(days=1)
             while d <= end_date:
+                start_date_string = d.strftime('%Y-%m-%d')
+                end_date_string = d.strftime('%Y-%m-%d')
                 params = {'interval': 'day',
-                          'start_date': d.strftime('%Y-%m-%d'),
-                          'end_date': d.strftime('%Y-%m-%d')
+                          'start_date': start_date_string,
+                          'end_date': end_date_string
                           }
                 res_total = query_total.run(**params)
-                result[d.strftime('%Y-%m-%d')] = res_total['count']
+                result.append({
+                    'count': res_total['count'],
+                    'start_date': start_date_string,
+                    'end_date': end_date_string,
+                })
                 d += delta
         elif unit == 'Week':
-            result = []
             delta = timedelta(days=7)
             d1 = timedelta(days=1)
             while d <= end_date:
-                temp = {}
-                temp['start_date'] = d.strftime('%Y-%m-%d')
+                start_date_string = d.strftime('%Y-%m-%d')
                 d += delta
                 t = d - d1
-                temp['end_date'] = t.strftime('%Y-%m-%d')
+                end_date_string = t.strftime('%Y-%m-%d')
+                temp = {
+                    'start_date': start_date_string,
+                    'end_date': end_date_string
+                }
                 params = {'interval': 'week',
                           'start_date': temp['start_date'],
                           'end_date': temp['end_date']
                           }
                 res_total = query_total.run(**params)
-                temp['counts'] = res_total['count']
+                temp['count'] = res_total['count']
                 result.append(temp)
         elif unit == 'Year':
-            result = {}
             start_year = start_date.year
             end_year = end_date.year
             for i in range(end_year - start_year + 1):
+                start_date_string = '{}-01-01'.format(start_year + i)
+                end_date_string = '{}-12-31'.format(start_year + i)
                 params = {'interval': 'year',
-                          'start_date': '{}-01-01'.format(start_year + i),
-                          'end_date': '{}-12-31'.format(start_year + i)
+                          'start_date': start_date_string,
+                          'end_date': end_date_string
                           }
                 res_total = query_total.run(**params)
-                result[start_year + i] = res_total['count']
+                result.append({
+                    'count': res_total['count'],
+                    'start_date': start_date_string,
+                    'end_date': end_date_string,
+                    'year': start_year + i
+                })
         elif unit == 'Host':
             result = []
             temp1 = {'domain': 'xxx.yy.jp', 'ip': '10.23.56.76', 'counts': 100}
@@ -470,7 +484,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 'counts': 130}
             result.append(temp2)
         else:
-            result = {}
+            result = []
 
         return self.make_response(result)
 
