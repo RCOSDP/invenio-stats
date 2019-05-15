@@ -74,22 +74,23 @@ def build_file_unique_id(doc):
 
 def build_record_unique_id(doc):
     """Build record unique identifier."""
-    doc['unique_id'] = '{0}_{1}_{2}'.format(doc['record_id'], doc['country'],
-                                            doc['cur_user_id'])
+    record_index_names = copy_record_index_list(doc)
+    doc['unique_id'] = '{0}_{1}_{2}_{3}'.format(
+        doc['record_id'], doc['country'], doc['cur_user_id'],
+        record_index_names)
     return doc
 
 
-def copy_record_index_list(doc, aggregation_data):
+def copy_record_index_list(doc, aggregation_data=None):
     """Copy record index list."""
-    agg_record_index_list = []
-    if doc['record_index_list']:
-        for index in doc['record_index_list']:
-            agg_record_index_list.append(dict(
-                index_id=index['index_id'],
-                index_name=index['index_id'],
-                index_name_en=index['index_name_en']
-            ))
-    return agg_record_index_list
+    record_index_names = ''
+    list = doc['record_index_list']
+    if list:
+        agg_record_index_list = []
+        for index in list:
+            agg_record_index_list.append(index['index_name'])
+            record_index_names = ", ".join(agg_record_index_list)
+    return record_index_names
 
 
 def record_view_event_builder(event, sender_app, pid=None, record=None,

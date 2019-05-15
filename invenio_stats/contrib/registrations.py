@@ -167,7 +167,7 @@ def register_aggregations():
             copy_fields=dict(
                 country='country',
                 record_id='record_id',
-                record_index_list=copy_record_index_list,
+                record_index_names=copy_record_index_list,
                 pid_type='pid_type',
                 pid_value='pid_value',
                 cur_user_id='cur_user_id',
@@ -298,8 +298,8 @@ def register_queries():
             query_config=dict(
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
-                aggregated_fields=['record_id', 'cur_user_id',
-                                   'record_index_list']
+                aggregated_fields=['record_id', 'record_index_names',
+                                   'cur_user_id']
             )
         ),
         dict(

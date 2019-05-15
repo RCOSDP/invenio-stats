@@ -509,16 +509,17 @@ class QueryRecordViewReport(ContentNegotiatedMethodView):
 
     def Calculation(self, res, data_list):
         """Create response object."""
-        for record in res['buckets']:
-            data = {}
-            data['record_id'] = record['key']
-            #data['index_list'] = index['key']
-            data['total_all'] = res['value']
-            data['total_not_login'] = 0
-            for user in record['buckets']:
-                if user['key'] == 'guest':
-                    data['total_not_login'] += user['value']
-            data_list.append(data)
+        for item in res['buckets']:
+            for record in item['buckets']:
+                data = {}
+                data['record_id'] = item['key']
+                data['index_names'] = record['key']
+                data['total_all'] = record['value']
+                data['total_not_login'] = 0
+                for user in record['buckets']:
+                    if user['key'] == 'guest':
+                        data['total_not_login'] += user['value']
+                data_list.append(data)
 
     def get(self, **kwargs):
         """Get record view report."""
