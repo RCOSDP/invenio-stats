@@ -416,12 +416,21 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         end_date = datetime.strptime(kwargs.get('end_date'), '%Y-%m-%d')
         unit = kwargs.get('unit').title()
 
+        # total
+        query_total_cfg = current_stats.queries['item-create-day-aggregation']
+        query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
+
         d = start_date
         if unit == 'Day':
             result = {}
             delta = timedelta(days=1)
             while d <= end_date:
-                result[d.strftime('%Y-%m-%d')] = 10
+                params = {'interval': 'day',
+                          'start_date': d.strftime('%Y-%m-%d'),
+                          'end_date': d.strftime('%Y-%m-%d')
+                          }
+                res_total = query_total.run(**params)
+                result[d.strftime('%Y-%m-%d')] = res_total['count']
                 d += delta
         elif unit == 'Week':
             result = []
@@ -433,14 +442,24 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 d += delta
                 t = d - d1
                 temp['end_date'] = t.strftime('%Y-%m-%d')
-                temp['counts'] = 10
+                params = {'interval': 'week',
+                          'start_date': temp['start_date'],
+                          'end_date': temp['end_date']
+                          }
+                res_total = query_total.run(**params)
+                temp['counts'] = res_total['count']
                 result.append(temp)
         elif unit == 'Year':
             result = {}
             start_year = start_date.year
             end_year = end_date.year
             for i in range(end_year - start_year + 1):
-                result[start_year + i] = 20 + i
+                params = {'interval': 'year',
+                          'start_date': '{}-01-01'.format(start_year + i),
+                          'end_date': '{}-12-31'.format(start_year + i)
+                          }
+                res_total = query_total.run(**params)
+                result[start_year + i] = res_total['count']
         elif unit == 'Host':
             result = []
             temp1 = {'domain': 'xxx.yy.jp', 'ip': '10.23.56.76', 'counts': 100}
