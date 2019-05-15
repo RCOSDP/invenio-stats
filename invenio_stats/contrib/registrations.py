@@ -12,7 +12,8 @@ from invenio_search import current_search_client
 from invenio_stats.aggregations import StatAggregator
 from invenio_stats.contrib.event_builders import build_file_unique_id, \
     build_record_unique_id, build_search_detail_condition, \
-    build_search_unique_id, build_top_unique_id, build_item_create_unique_id
+    build_search_unique_id, build_top_unique_id, build_item_create_unique_id, \
+    copy_record_index_list
 from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
@@ -166,10 +167,10 @@ def register_aggregations():
             copy_fields=dict(
                 country='country',
                 record_id='record_id',
-                #record_index_list='record_index_list',
+                record_index_list=copy_record_index_list,
                 pid_type='pid_type',
                 pid_value='pid_value',
-                userid='userid',
+                cur_user_id='cur_user_id',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -297,7 +298,8 @@ def register_queries():
             query_config=dict(
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
-                aggregated_fields=['record_id']
+                aggregated_fields=['record_id', 'cur_user_id',
+                                   'record_index_list']
             )
         ),
         dict(

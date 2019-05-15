@@ -480,7 +480,11 @@ class QueryRecordViewReport(ContentNegotiatedMethodView):
             data = {}
             data['record_id'] = record['key']
             #data['index_list'] = index['key']
-            data['total'] = record['value']
+            data['total_all'] = res['value']
+            data['total_not_login'] = 0
+            for user in record['buckets']:
+                if user['key'] == 'guest':
+                    data['total_not_login'] += user['value']
             data_list.append(data)
 
     def get(self, **kwargs):

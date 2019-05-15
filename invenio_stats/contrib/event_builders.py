@@ -74,8 +74,22 @@ def build_file_unique_id(doc):
 
 def build_record_unique_id(doc):
     """Build record unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format(doc['record_id'], doc['country'])
+    doc['unique_id'] = '{0}_{1}_{2}'.format(doc['record_id'], doc['country'],
+                                            doc['cur_user_id'])
     return doc
+
+
+def copy_record_index_list(doc, aggregation_data):
+    """Copy record index list."""
+    agg_record_index_list = []
+    if doc['record_index_list']:
+        for index in doc['record_index_list']:
+            agg_record_index_list.append(dict(
+                index_id=index['index_id'],
+                index_name=index['index_id'],
+                index_name_en=index['index_name_en']
+            ))
+    return agg_record_index_list
 
 
 def record_view_event_builder(event, sender_app, pid=None, record=None,
@@ -90,6 +104,8 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
                 index_name=index[3],
                 index_name_en=index[4]
             ))
+    cur_user = get_user()
+    cur_user_id = cur_user['user_id'] if cur_user['user_id'] else 'guest'
 
     event.update(dict(
         # When:
@@ -100,7 +116,7 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
-        userid=record.userid,
+        cur_user_id=cur_user_id,
         # Who:
         **get_user()
     ))
