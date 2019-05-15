@@ -79,6 +79,19 @@ def build_record_unique_id(doc):
     return doc
 
 
+def copy_record_index_list(doc, aggregation_data):
+    """Copy record index list."""
+    agg_record_index_list = []
+    if doc['record_index_list']:
+        for index in doc['record_index_list']:
+            agg_record_index_list.append(dict(
+                index_id=index['index_id'],
+                index_name=index['index_id'],
+                index_name_en=index['index_name_en']
+            ))
+    return agg_record_index_list
+
+
 def record_view_event_builder(event, sender_app, pid=None, record=None,
                               **kwargs):
     """Build a record-view event."""
