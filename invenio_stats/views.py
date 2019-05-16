@@ -491,7 +491,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                     'count': item['count'],
                     'start_date': start_date_string,
                     'end_date': end_date_string,
-                    'domain': '',
+                    'domain': item['hostname'],
                     'ip': item['key']
                 })
         else:

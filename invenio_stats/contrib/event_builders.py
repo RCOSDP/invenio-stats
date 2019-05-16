@@ -149,7 +149,21 @@ def build_top_unique_id(doc):
 def build_item_create_unique_id(doc):
     """Build item_create unique identifier."""
     doc['unique_id'] = '{0}_{1}_{2}'.format("item", "create", doc['pid_value'])
+    doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
+
+
+def resolve_address(addr):
+    """Resolve the ip address string addr and return its DNS name. If no name is found, return None."""
+    from socket import gethostbyaddr, herror
+    try:
+        record = gethostbyaddr(addr)
+
+    except herror as exc:
+        print('an error occurred while resolving ', addr, ': ', exc)
+        return None
+
+    return record[0]
 
 
 def search_event_builder(event, sender_app, search_args=None, **kwargs):
