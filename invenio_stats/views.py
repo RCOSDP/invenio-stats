@@ -561,6 +561,71 @@ class QueryRecordViewReport(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
+class QueryFileUsingPerUseReport(ContentNegotiatedMethodView):
+    """REST API resource providing File Using Per User report."""
+
+    view_name = 'get_file_using_per_user_report'
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        super(QueryFileUsingPerUseReport, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def Calculation(self, res, data_list):
+        """Create response object."""
+        for item in res['buckets']:
+            for record in item['buckets']:
+                data = {}
+                data['record_id'] = item['key']
+                data['index_names'] = record['key']
+                data['total_all'] = record['value']
+                data['total_not_login'] = 0
+                for user in record['buckets']:
+                    if user['key'] == 'guest':
+                        data['total_not_login'] += user['value']
+                data_list.append(data)
+
+    def get(self, **kwargs):
+        """Get File Using Per User report."""
+        result = {}
+        all_list = []
+
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            params = {'start_date': query_month + '-01',
+                      'end_date': query_month + '-' + str(lastday).zfill(2)
+                                  + 'T23:59:59'}
+
+            all_query_name = ['get-file-download-per-user-report',
+                              'get-file-preview-per-user-report']
+            for query in all_query_name:
+                all_query_cfg = current_stats.queries[query]
+                all_query = all_query_cfg.\
+                    query_class(**all_query_cfg.query_config)
+                all_res = all_query.run(**params)
+                #self.Calculation(all_res, all_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_month
+        result['all'] = all_res
+
+        return self.make_response(result)
+
+
 stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
 )
@@ -583,6 +648,10 @@ item_reg_report = QueryItemRegReport.as_view(
 
 record_view_report = QueryRecordViewReport.as_view(
     QueryRecordViewReport.view_name,
+)
+
+file_using_per_user_report = QueryFileUsingPerUseReport.as_view(
+    QueryFileUsingPerUseReport.view_name,
 )
 
 blueprint.add_url_rule(
@@ -613,4 +682,9 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/report/record/record_view/<int:year>/<int:month>',
     view_func=record_view_report,
+)
+
+blueprint.add_url_rule(
+    '/report/file/<string:event>/<int:year>/<int:month>',
+    view_func=file_using_per_user_report,
 )

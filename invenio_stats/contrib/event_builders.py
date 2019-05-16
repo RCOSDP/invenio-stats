@@ -32,9 +32,9 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         referrer=request.referrer,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
-        userid=obj.userid,
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
+        cur_user_id=obj.userid,
         # Who:
         **get_user()
     ))
@@ -56,6 +56,7 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
+        cur_user_id=obj.userid,
         # Who:
         **get_user()
     ))
@@ -66,7 +67,8 @@ def build_file_unique_id(doc):
     """Build file unique identifier."""
     key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
-        doc['index_list'], doc['site_license_flag'], doc['country']
+        doc['index_list'], doc['site_license_flag'], doc['country'],
+        doc['cur_user_id']
     )
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     return doc
