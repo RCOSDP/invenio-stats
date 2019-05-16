@@ -476,7 +476,6 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 })
         elif unit == 'Host':
             result = []
-            temp1 = {'domain': 'xxx.yy.jp', 'ip': '10.23.56.76', 'counts': 100}
             query_total_cfg = current_stats.queries['item-create-host-total']
             query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
             start_date_string = start_date.strftime('%Y-%m-%d')
@@ -487,12 +486,14 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                       }
             res_total = query_total.run(**params)
             print('res_total: ', res_total)
-            result.append(temp1)
-            temp2 = {
-                'domain': 'xxx.yy.com',
-                'ip': '10.24.57.76',
-                'counts': 130}
-            result.append(temp2)
+            for item in res_total.buckets:
+                result.append({
+                    'count': item['count'],
+                    'start_date': start_date_string,
+                    'end_date': end_date_string,
+                    'domain': '',
+                    'ip': item['key']
+                })
         else:
             result = []
 
