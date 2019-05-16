@@ -299,7 +299,7 @@ def register_queries():
             query_config=dict(
                 index='stats-file-download',
                 doc_type='file-download-day-aggregation',
-                aggregated_fields=['cur_user_id', 'file_key']
+                aggregated_fields=['cur_user_id', 'file_id']
             )
         ),
         dict(
@@ -308,7 +308,7 @@ def register_queries():
             query_config=dict(
                 index='stats-file-preview',
                 doc_type='file-preview-day-aggregation',
-                aggregated_fields=['cur_user_id', 'file_key']
+                aggregated_fields=['cur_user_id', 'file_id']
             )
         ),
         dict(
