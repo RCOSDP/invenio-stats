@@ -417,7 +417,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         unit = kwargs.get('unit').title()
 
         # total
-        query_total_cfg = current_stats.queries['item-create-day-aggregation']
+        query_total_cfg = current_stats.queries['item-create-total']
         query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
 
         d = start_date
@@ -477,7 +477,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         elif unit == 'Host':
             result = []
             temp1 = {'domain': 'xxx.yy.jp', 'ip': '10.23.56.76', 'counts': 100}
-            query_total_cfg = current_stats.queries['item-create-host-aggregation']
+            query_total_cfg = current_stats.queries['item-create-host-total']
             query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
             start_date_string = start_date.strftime('%Y-%m-%d')
             end_date_string = end_date.strftime('%Y-%m-%d')
