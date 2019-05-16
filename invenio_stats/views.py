@@ -582,22 +582,27 @@ class QueryFileUsingPerUseReport(ContentNegotiatedMethodView):
 
     def Calculation(self, res, data_list):
         """Create response object."""
-        for item in res['buckets']:
-            for record in item['buckets']:
-                data = {}
-                data['record_id'] = item['key']
-                data['index_names'] = record['key']
-                data['total_all'] = record['value']
-                data['total_not_login'] = 0
-                for user in record['buckets']:
-                    if user['key'] == 'guest':
-                        data['total_not_login'] += user['value']
-                data_list.append(data)
+        # file-download
+        for item in res['get-file-download-per-user-report']['buckets']:
+            data = {}
+            data['cur_user_id'] = item['key']
+            data['total_download'] = item['value']
+            data_list.update({item['key']: data})
+        # file-preview
+        for item in res['get-file-preview-per-user-report']['buckets']:
+            data = {}
+            data['cur_user_id'] = item['key']
+            data['total_preview'] = item['value']
+            if data_list.get(item['key']):
+                data_list[item['key']].update(data)
+            else:
+                data_list.update({item['key']: data})
 
     def get(self, **kwargs):
         """Get File Using Per User report."""
         result = {}
-        all_list = []
+        all_list = {}
+        all_res = {}
 
         year = kwargs.get('year')
         month = kwargs.get('month')
@@ -615,14 +620,14 @@ class QueryFileUsingPerUseReport(ContentNegotiatedMethodView):
                 all_query_cfg = current_stats.queries[query]
                 all_query = all_query_cfg.\
                     query_class(**all_query_cfg.query_config)
-                all_res = all_query.run(**params)
-                #self.Calculation(all_res, all_list)
+                all_res[query] = all_query.run(**params)
+            self.Calculation(all_res, all_list)
 
         except Exception as e:
             current_app.logger.debug(e)
 
         result['date'] = query_month
-        result['all'] = all_res
+        result['all'] = all_list
 
         return self.make_response(result)
 
