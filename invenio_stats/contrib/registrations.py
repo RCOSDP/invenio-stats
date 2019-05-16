@@ -372,4 +372,24 @@ def register_queries():
                 aggregated_fields=['country']
             )
         ),
+        dict(
+            query_name='item-create-host-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-item-create',
+                doc_type='item-create-host-aggregation',
+                copy_fields=dict(
+                    # record_id='record_id',
+                ),
+                # required_filters=dict(
+                #     pid_type='pid_type',
+                #     pid_value='pid_value',
+                # ),
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                    unique_count=('sum', 'unique_count', {}),
+                ),
+                aggregated_fields=['remote_addr']
+            )
+        ),
     ]

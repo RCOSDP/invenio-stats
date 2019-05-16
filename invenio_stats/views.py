@@ -477,6 +477,16 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         elif unit == 'Host':
             result = []
             temp1 = {'domain': 'xxx.yy.jp', 'ip': '10.23.56.76', 'counts': 100}
+            query_total_cfg = current_stats.queries['item-create-host-aggregation']
+            query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
+            start_date_string = start_date.strftime('%Y-%m-%d')
+            end_date_string = end_date.strftime('%Y-%m-%d')
+            params = {
+                      'start_date': start_date_string,
+                      'end_date': end_date_string
+                      }
+            res_total = query_total.run(**params)
+            print('res_total: ', res_total)
             result.append(temp1)
             temp2 = {
                 'domain': 'xxx.yy.com',
