@@ -377,13 +377,6 @@ def register_queries():
             query_config=dict(
                 index='stats-item-create',
                 doc_type='item-create-day-aggregation',
-                copy_fields=dict(
-                    # record_id='record_id',
-                ),
-                # required_filters=dict(
-                #     pid_type='pid_type',
-                #     pid_value='pid_value',
-                # ),
                 metric_fields=dict(
                     count=('sum', 'count', {}),
                     unique_count=('sum', 'unique_count', {}),
@@ -396,17 +389,9 @@ def register_queries():
             query_class=ESTermsQuery,
             query_config=dict(
                 index='stats-item-create',
-                doc_type='item-create-host-aggregation',
-                copy_fields=dict(
-                    # record_id='record_id',
-                ),
-                # required_filters=dict(
-                #     pid_type='pid_type',
-                #     pid_value='pid_value',
-                # ),
+                doc_type='item-create-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
-                    unique_count=('sum', 'unique_count', {}),
                 ),
                 aggregated_fields=['remote_addr']
             )

@@ -148,7 +148,7 @@ def build_top_unique_id(doc):
 
 def build_item_create_unique_id(doc):
     """Build item_create unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format("item", "create")
+    doc['unique_id'] = '{0}_{1}_{2}'.format("item", "create", doc['pid_value'])
     return doc
 
 
