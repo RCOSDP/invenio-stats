@@ -103,9 +103,9 @@ def register_aggregations():
                 file_id='file_id',
                 accessrole='accessrole',
                 userrole='userrole',
-                userid='userid',
                 index_list='index_list',
                 site_license_flag='site_license_flag',
+                cur_user_id='cur_user_id',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -130,6 +130,7 @@ def register_aggregations():
                 userrole='userrole',
                 index_list='index_list',
                 site_license_flag='site_license_flag',
+                cur_user_id='cur_user_id',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -290,6 +291,24 @@ def register_queries():
                     file_key='file_key',
                 ),
                 aggregated_fields=['country']
+            )
+        ),
+        dict(
+            query_name='get-file-download-per-user-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                aggregated_fields=['cur_user_id', 'file_key']
+            )
+        ),
+        dict(
+            query_name='get-file-preview-per-user-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
+                aggregated_fields=['cur_user_id', 'file_key']
             )
         ),
         dict(
