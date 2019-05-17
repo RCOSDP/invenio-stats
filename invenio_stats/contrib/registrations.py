@@ -356,23 +356,6 @@ def register_queries():
             )
         ),
         dict(
-            query_name='item-create-histogram',
-            query_class=ESDateHistogramQuery,
-            query_config=dict(
-                index='stats-item-create',
-                doc_type='item-create-day-aggregation',
-                copy_fields=dict(
-                    remote_addr='remote_addr',
-                    pid_type='pid_type',
-                    pid_value='pid_value',
-                ),
-                # required_filters=dict(
-                    # pid_type='pid_type',
-                    # pid_value='pid_value',
-                # ),
-            )
-        ),
-        dict(
             query_name='item-create-total',
             query_class=ESTermsQuery,
             query_config=dict(
