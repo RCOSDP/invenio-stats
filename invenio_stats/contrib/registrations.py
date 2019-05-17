@@ -148,6 +148,7 @@ def register_aggregations():
             aggregation_interval='day',
             copy_fields=dict(
                 country='country',
+                hostname='hostname',
                 remote_addr='remote_addr',
                 pid_type='pid_type',
                 pid_value='pid_value',
@@ -390,14 +391,10 @@ def register_queries():
             query_config=dict(
                 index='stats-item-create',
                 doc_type='item-create-day-aggregation',
-                copy_fields=dict(
-                    remote_addr='remote_addr',
-                    hostname='hostname',
-                ),
                 metric_fields=dict(
                     count=('sum', 'count', {}),
                 ),
-                aggregated_fields=['remote_addr']
+                aggregated_fields=['remote_addr', 'hostname']
             )
         ),
     ]
