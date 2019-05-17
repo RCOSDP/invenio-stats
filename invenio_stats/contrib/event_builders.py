@@ -80,6 +80,7 @@ def build_record_unique_id(doc):
     doc['unique_id'] = '{0}_{1}_{2}_{3}'.format(
         doc['record_id'], doc['country'], doc['cur_user_id'],
         record_index_names)
+    doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
 
 

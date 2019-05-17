@@ -168,6 +168,8 @@ def register_aggregations():
             aggregation_interval='day',
             copy_fields=dict(
                 country='country',
+                hostname='hostname',
+                remote_addr='remote_addr',
                 record_id='record_id',
                 record_index_names=copy_record_index_list,
                 pid_type='pid_type',
@@ -361,6 +363,18 @@ def register_queries():
             query_config=dict(
                 index='stats-item-create',
                 doc_type='item-create-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['remote_addr', 'hostname']
+            )
+        ),
+        dict(
+            query_name='item-detail-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
                 ),

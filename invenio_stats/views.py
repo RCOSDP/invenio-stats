@@ -420,8 +420,8 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         query_name = 'item-create-total'
         count_keyname = 'count'
         if target_report == config.TARGET_REPORTS['Item Detail']:
-            query_name = 'get-record-view-report'
-            count_keyname = 'value'
+            query_name = 'item-detail-total'
+            count_keyname = 'count'
 
         # total
         query_total_cfg = current_stats.queries[query_name]
