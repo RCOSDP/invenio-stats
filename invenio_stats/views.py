@@ -412,12 +412,19 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
 
     def get(self, **kwargs):
         """Get item registration report."""
+        target_report = kwargs.get('target_report').title()
         start_date = datetime.strptime(kwargs.get('start_date'), '%Y-%m-%d')
         end_date = datetime.strptime(kwargs.get('end_date'), '%Y-%m-%d')
         unit = kwargs.get('unit').title()
 
+        query_name = 'item-create-total'
+        count_keyname = 'count'
+        if target_report == config.TARGET_REPORTS['Item Detail']:
+            query_name = 'get-record-view-report'
+            count_keyname = 'value'
+
         # total
-        query_total_cfg = current_stats.queries['item-create-total']
+        query_total_cfg = current_stats.queries[query_name]
         query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
 
         d = start_date
@@ -433,7 +440,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                           }
                 res_total = query_total.run(**params)
                 result.append({
-                    'count': res_total['count'],
+                    'count': res_total[count_keyname],
                     'start_date': start_date_string,
                     'end_date': end_date_string,
                 })
@@ -455,7 +462,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                           'end_date': temp['end_date']
                           }
                 res_total = query_total.run(**params)
-                temp['count'] = res_total['count']
+                temp['count'] = res_total[count_keyname]
                 result.append(temp)
         elif unit == 'Year':
             start_year = start_date.year
@@ -469,7 +476,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                           }
                 res_total = query_total.run(**params)
                 result.append({
-                    'count': res_total['count'],
+                    'count': res_total[count_keyname],
                     'start_date': start_date_string,
                     'end_date': end_date_string,
                     'year': start_year + i
@@ -488,7 +495,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
             print('res_total: ', res_total)
             for item in res_total.buckets:
                 result.append({
-                    'count': item['count'],
+                    'count': item[count_keyname],
                     'start_date': start_date_string,
                     'end_date': end_date_string,
                     'domain': item['hostname'],

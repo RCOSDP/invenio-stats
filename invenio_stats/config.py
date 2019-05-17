@@ -130,3 +130,9 @@ STATS_MQ_EXCHANGE = Exchange(
     delivery_mode='transient',  # in-memory queue
 )
 """Default exchange used for the message queues."""
+
+
+TARGET_REPORTS = {
+    'Item Registration': '1',
+    'Item Detail': '2',
+}
