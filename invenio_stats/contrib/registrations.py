@@ -380,19 +380,6 @@ def register_queries():
                 doc_type='item-create-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
-                    unique_count=('sum', 'unique_count', {}),
-                ),
-                aggregated_fields=['country']
-            )
-        ),
-        dict(
-            query_name='item-create-host-total',
-            query_class=ESTermsQuery,
-            query_config=dict(
-                index='stats-item-create',
-                doc_type='item-create-day-aggregation',
-                metric_fields=dict(
-                    count=('sum', 'count', {}),
                 ),
                 aggregated_fields=['remote_addr', 'hostname']
             )

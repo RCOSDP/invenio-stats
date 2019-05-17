@@ -59,6 +59,10 @@
           "type": "boolean",
           "index": "not_analyzed"
         },
+        "hostname": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
         "remote_addr": {
           "type": "string",
           "index": "not_analyzed"

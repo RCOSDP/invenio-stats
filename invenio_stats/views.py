@@ -504,8 +504,6 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
 
         elif unit == 'Host':
             result = []
-            query_total_cfg = current_stats.queries['item-create-host-total']
-            query_total = query_total_cfg.query_class(**query_total_cfg.query_config)
             start_date_string = start_date.strftime('%Y-%m-%d')
             end_date_string = end_date.strftime('%Y-%m-%d')
             params = {
