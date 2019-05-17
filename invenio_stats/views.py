@@ -481,6 +481,27 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                     'end_date': end_date_string,
                     'year': start_year + i
                 })
+        elif unit == 'Item':
+            start_date_string = start_date.strftime('%Y-%m-%d')
+            end_date_string = end_date.strftime('%Y-%m-%d')
+            params = {
+                      'start_date': start_date_string,
+                      'end_date': end_date_string
+                      }
+            res_total = query_total.run(**params)
+            for item in res_total['buckets']:
+                print(item)
+                # result.append({
+                #     'item_id': item['key'],
+                #     'item_name': item['buckets'][0]['key'],
+                #     'count': item[count_keyname],
+                # })
+                result.append({
+                    'col1': item['key'],
+                    'col2': item['buckets'][0]['key'],
+                    'col3': item[count_keyname],
+                })
+
         elif unit == 'Host':
             result = []
             query_total_cfg = current_stats.queries['item-create-host-total']
