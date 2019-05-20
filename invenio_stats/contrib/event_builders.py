@@ -121,6 +121,7 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
         cur_user_id=cur_user_id,
+        remote_addr=request.remote_addr,
         # Who:
         **get_user()
     ))
