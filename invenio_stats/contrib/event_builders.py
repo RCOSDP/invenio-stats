@@ -101,8 +101,8 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
     """Build a record-view event."""
     # get index information
     index_list = []
-    if len(record.navi) > 0:
-        for index in record.navi:
+    if record.get('navi') is not None:
+        for index in record.get('navi'):
             index_list.append(dict(
                 index_id=index[1],
                 index_name=index[3],
