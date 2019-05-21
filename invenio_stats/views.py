@@ -431,103 +431,106 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
 
         d = start_date
         result = []
-        if unit == 'Day':
-            delta = timedelta(days=1)
-            while d <= end_date:
-                start_date_string = d.strftime('%Y-%m-%d')
-                end_date_string = d.strftime('%Y-%m-%d')
-                params = {'interval': 'day',
-                          'start_date': start_date_string,
-                          'end_date': end_date_string
-                          }
-                res_total = query_total.run(**params)
-                result.append({
-                    'count': res_total[count_keyname],
-                    'start_date': start_date_string,
-                    'end_date': end_date_string,
-                })
-                d += delta
-        elif unit == 'Week':
-            delta = timedelta(days=7)
-            d1 = timedelta(days=1)
-            while d <= end_date:
-                start_date_string = d.strftime('%Y-%m-%d')
-                d += delta
-                t = d - d1
-                end_date_string = t.strftime('%Y-%m-%d')
-                temp = {
-                    'start_date': start_date_string,
-                    'end_date': end_date_string
-                }
-                params = {'interval': 'week',
-                          'start_date': temp['start_date'],
-                          'end_date': temp['end_date']
-                          }
-                res_total = query_total.run(**params)
-                temp['count'] = res_total[count_keyname]
-                result.append(temp)
-        elif unit == 'Year':
-            start_year = start_date.year
-            end_year = end_date.year
-            for i in range(end_year - start_year + 1):
-                start_date_string = '{}-01-01'.format(start_year + i)
-                end_date_string = '{}-12-31'.format(start_year + i)
-                params = {'interval': 'year',
-                          'start_date': start_date_string,
-                          'end_date': end_date_string
-                          }
-                res_total = query_total.run(**params)
-                result.append({
-                    'count': res_total[count_keyname],
-                    'start_date': start_date_string,
-                    'end_date': end_date_string,
-                    'year': start_year + i
-                })
-        elif unit == 'Item':
-            start_date_string = start_date.strftime('%Y-%m-%d')
-            end_date_string = end_date.strftime('%Y-%m-%d')
-            params = {
-                      'start_date': start_date_string,
-                      'end_date': end_date_string
-                      }
-            res_total = query_total.run(**params)
-            for item in res_total['buckets']:
-                print(item)
-                # result.append({
-                #     'item_id': item['key'],
-                #     'item_name': item['buckets'][0]['key'],
-                #     'count': item[count_keyname],
-                # })
-                pid_value = item['key']
-                for h in item['buckets']:
-                    record_name = h['key'] if h['key'] != 'None' else ''
+        try:
+            if unit == 'Day':
+                delta = timedelta(days=1)
+                while d <= end_date:
+                    start_date_string = d.strftime('%Y-%m-%d')
+                    end_date_string = d.strftime('%Y-%m-%d')
+                    params = {'interval': 'day',
+                              'start_date': start_date_string,
+                              'end_date': end_date_string
+                              }
+                    res_total = query_total.run(**params)
                     result.append({
-                        'col1': pid_value,
-                        'col2': record_name,
-                        'col3': h[count_keyname],
-                    })
-
-        elif unit == 'Host':
-            result = []
-            start_date_string = start_date.strftime('%Y-%m-%d')
-            end_date_string = end_date.strftime('%Y-%m-%d')
-            params = {
-                      'start_date': start_date_string,
-                      'end_date': end_date_string
-                      }
-            res_total = query_total.run(**params)
-            for item in res_total['buckets']:
-                for h in item['buckets']:
-                    hostname = h['key'] if h['key'] != 'None' else ''
-                    result.append({
-                        'count': h[count_keyname],
+                        'count': res_total[count_keyname],
                         'start_date': start_date_string,
                         'end_date': end_date_string,
-                        'domain': hostname,
-                        'ip': item['key']
-                })
-        else:
-            result = []
+                    })
+                    d += delta
+            elif unit == 'Week':
+                delta = timedelta(days=7)
+                d1 = timedelta(days=1)
+                while d <= end_date:
+                    start_date_string = d.strftime('%Y-%m-%d')
+                    d += delta
+                    t = d - d1
+                    end_date_string = t.strftime('%Y-%m-%d')
+                    temp = {
+                        'start_date': start_date_string,
+                        'end_date': end_date_string
+                    }
+                    params = {'interval': 'week',
+                              'start_date': temp['start_date'],
+                              'end_date': temp['end_date']
+                              }
+                    res_total = query_total.run(**params)
+                    temp['count'] = res_total[count_keyname]
+                    result.append(temp)
+            elif unit == 'Year':
+                start_year = start_date.year
+                end_year = end_date.year
+                for i in range(end_year - start_year + 1):
+                    start_date_string = '{}-01-01'.format(start_year + i)
+                    end_date_string = '{}-12-31'.format(start_year + i)
+                    params = {'interval': 'year',
+                              'start_date': start_date_string,
+                              'end_date': end_date_string
+                              }
+                    res_total = query_total.run(**params)
+                    result.append({
+                        'count': res_total[count_keyname],
+                        'start_date': start_date_string,
+                        'end_date': end_date_string,
+                        'year': start_year + i
+                    })
+            elif unit == 'Item':
+                start_date_string = start_date.strftime('%Y-%m-%d')
+                end_date_string = end_date.strftime('%Y-%m-%d')
+                params = {
+                          'start_date': start_date_string,
+                          'end_date': end_date_string
+                          }
+                res_total = query_total.run(**params)
+                for item in res_total['buckets']:
+                    print(item)
+                    # result.append({
+                    #     'item_id': item['key'],
+                    #     'item_name': item['buckets'][0]['key'],
+                    #     'count': item[count_keyname],
+                    # })
+                    pid_value = item['key']
+                    for h in item['buckets']:
+                        record_name = h['key'] if h['key'] != 'None' else ''
+                        result.append({
+                            'col1': pid_value,
+                            'col2': record_name,
+                            'col3': h[count_keyname],
+                        })
+
+            elif unit == 'Host':
+                result = []
+                start_date_string = start_date.strftime('%Y-%m-%d')
+                end_date_string = end_date.strftime('%Y-%m-%d')
+                params = {
+                          'start_date': start_date_string,
+                          'end_date': end_date_string
+                          }
+                res_total = query_total.run(**params)
+                for item in res_total['buckets']:
+                    for h in item['buckets']:
+                        hostname = h['key'] if h['key'] != 'None' else ''
+                        result.append({
+                            'count': h[count_keyname],
+                            'start_date': start_date_string,
+                            'end_date': end_date_string,
+                            'domain': hostname,
+                            'ip': item['key']
+                    })
+            else:
+                result = []
+        except Exception as e:
+            current_app.logger.debug(e)
 
         return self.make_response(result)
 
