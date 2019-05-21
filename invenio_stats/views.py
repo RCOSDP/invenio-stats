@@ -512,17 +512,14 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                       }
             res_total = query_total.run(**params)
             for item in res_total['buckets']:
-                hostname = ''
                 for h in item['buckets']:
-                    if h['key'] != 'None':
-                        hostname = h['key']
-                        break
-                result.append({
-                    'count': item[count_keyname],
-                    'start_date': start_date_string,
-                    'end_date': end_date_string,
-                    'domain': hostname,
-                    'ip': item['key']
+                    hostname = h['key'] if h['key'] != 'None' else ''
+                    result.append({
+                        'count': h[count_keyname],
+                        'start_date': start_date_string,
+                        'end_date': end_date_string,
+                        'domain': hostname,
+                        'ip': item['key']
                 })
         else:
             result = []
