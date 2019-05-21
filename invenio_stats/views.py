@@ -420,8 +420,10 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         query_name = 'item-create-total'
         count_keyname = 'count'
         if target_report == config.TARGET_REPORTS['Item Detail']:
-            query_name = 'item-detail-total'
-            count_keyname = 'count'
+            if unit == 'Item':
+                query_name = 'item-detail-item-total'
+            else:
+                query_name = 'item-detail-total'
 
         # total
         query_total_cfg = current_stats.queries[query_name]
@@ -496,11 +498,14 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 #     'item_name': item['buckets'][0]['key'],
                 #     'count': item[count_keyname],
                 # })
-                result.append({
-                    'col1': item['key'],
-                    'col2': item['buckets'][0]['key'],
-                    'col3': item[count_keyname],
-                })
+                pid_value = item['key']
+                for h in item['buckets']:
+                    record_name = h['key'] if h['key'] != 'None' else ''
+                    result.append({
+                        'col1': pid_value,
+                        'col2': record_name,
+                        'col3': h[count_keyname],
+                    })
 
         elif unit == 'Host':
             result = []

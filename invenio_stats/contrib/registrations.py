@@ -171,6 +171,7 @@ def register_aggregations():
                 hostname='hostname',
                 remote_addr='remote_addr',
                 record_id='record_id',
+                record_name='record_name',
                 record_index_names=copy_record_index_list,
                 pid_type='pid_type',
                 pid_value='pid_value',
@@ -379,6 +380,19 @@ def register_queries():
                     count=('sum', 'count', {}),
                 ),
                 aggregated_fields=['remote_addr', 'hostname']
+            )
+        ),
+        # For query item details (id, name, count)
+        dict(
+            query_name='item-detail-item-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['pid_value', 'record_name']
             )
         ),
     ]

@@ -111,11 +111,14 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
     cur_user = get_user()
     cur_user_id = cur_user['user_id'] if cur_user['user_id'] else 'guest'
 
+    record_name = record.get('item_title', '') if record is not None else ''
+
     event.update(dict(
         # When:
         timestamp=datetime.datetime.utcnow().isoformat(),
         # What:
         record_id=str(record.id),
+        record_name=record_name,
         record_index_list=index_list,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
