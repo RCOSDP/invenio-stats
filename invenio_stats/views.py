@@ -492,7 +492,6 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                       }
             res_total = query_total.run(**params)
             for item in res_total['buckets']:
-                print(item)
                 # result.append({
                 #     'item_id': item['key'],
                 #     'item_name': item['buckets'][0]['key'],
