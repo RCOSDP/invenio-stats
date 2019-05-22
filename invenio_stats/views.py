@@ -455,9 +455,9 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 if empty_date_flg:
                     params = {'interval': 'day'}
                     res_total = query_total.run(**params)
-                    for item in res_total:
+                    for item in res_total['buckets']:
                         if item['value'] > 0:
-                            date = datetime.strptime(item['date'], '%Y-%m-%d')
+                            date = item['date'].split('T')[0]
                             result.append({
                                 'count': item['value'],
                                 'start_date': date,
