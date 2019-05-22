@@ -443,8 +443,10 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                     params = {'interval': 'day'}
                     res_total = query_total.run(**params)
                     for item in res_total['buckets']:
-                        if item['value'] > 0:
-                            date = item['date'].split('T')[0]
+                        date = item['date'].split('T')[0]
+                        if item['value'] > 0 \
+                            and (not start_date or date >= start_date.strftime('%Y-%m-%d')) \
+                            and (not end_date or date <= end_date.strftime('%Y-%m-%d')):
                             result.append({
                                 'count': item['value'],
                                 'start_date': date,
