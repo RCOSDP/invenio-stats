@@ -438,130 +438,131 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         # Request params
         page_index = int(request.args.get('p', 1)) - 1
         result = []
-        try:
-            if unit == 'Day':
-                # total results
-                total_results = (end_date - start_date).days + 1
-                delta = timedelta(days=1)
-                for i in range(total_results):
-                    if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                        start_date_string = d.strftime('%Y-%m-%d')
-                        end_date_string = d.strftime('%Y-%m-%d')
-                        params = {'interval': 'day',
-                                  'start_date': start_date_string,
-                                  'end_date': end_date_string
-                                  }
-                        res_total = query_total.run(**params)
-                        result.append({
-                            'count': res_total[count_keyname],
-                            'start_date': start_date_string,
-                            'end_date': end_date_string,
-                        })
-                    d += delta
-            elif unit == 'Week':
-                # Find Sunday of end_date
-                end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
-                # Find current Mon and Sun of start_date
-                current_monday = start_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1))
-                current_sunday = start_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
-                # total results
-                total_results = int((end_sunday - current_sunday).days / 7) + 1
-
-                delta = timedelta(days=7)
-                for i in range(total_results):
-                    if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                        start_date_string = current_monday.strftime('%Y-%m-%d')
-                        end_date_string = current_sunday.strftime('%Y-%m-%d')
-                        temp = {
-                            'start_date': start_date_string,
-                            'end_date': end_date_string
-                        }
-                        params = {'interval': 'week',
-                                  'start_date': temp['start_date'],
-                                  'end_date': temp['end_date']
-                                  }
-                        res_total = query_total.run(**params)
-                        temp['count'] = res_total[count_keyname]
-                        result.append(temp)
-
-                    current_monday += delta
-                    current_sunday += delta
-            elif unit == 'Year':
-                start_year = start_date.year
-                end_year = end_date.year
-                # total results
-                total_results = end_year - start_year + 1
-                for i in range(total_results):
-                    if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                        start_date_string = '{}-01-01'.format(start_year + i)
-                        end_date_string = '{}-12-31'.format(start_year + i)
-                        params = {'interval': 'year',
-                                  'start_date': start_date_string,
-                                  'end_date': end_date_string
-                                  }
-                        res_total = query_total.run(**params)
-                        result.append({
-                            'count': res_total[count_keyname],
-                            'start_date': start_date_string,
-                            'end_date': end_date_string,
-                            'year': start_year + i
-                        })
-            elif unit == 'Item':
-                start_date_string = start_date.strftime('%Y-%m-%d')
-                end_date_string = end_date.strftime('%Y-%m-%d')
-                params = {
-                          'start_date': start_date_string,
-                          'end_date': end_date_string
-                          }
-                res_total = query_total.run(**params)
-                i = 0
-                for item in res_total['buckets']:
-                    # result.append({
-                    #     'item_id': item['key'],
-                    #     'item_name': item['buckets'][0]['key'],
-                    #     'count': item[count_keyname],
-                    # })
-                    pid_value = item['key']
-                    for h in item['buckets']:
+        if end_date >= start_date:
+            try:
+                if unit == 'Day':
+                    # total results
+                    total_results = (end_date - start_date).days + 1
+                    delta = timedelta(days=1)
+                    for i in range(total_results):
                         if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                            record_name = h['key'] if h['key'] != 'None' else ''
+                            start_date_string = d.strftime('%Y-%m-%d')
+                            end_date_string = d.strftime('%Y-%m-%d')
+                            params = {'interval': 'day',
+                                      'start_date': start_date_string,
+                                      'end_date': end_date_string
+                                      }
+                            res_total = query_total.run(**params)
                             result.append({
-                                'col1': pid_value,
-                                'col2': record_name,
-                                'col3': h[count_keyname],
-                            })
-                        i += 1
-                        # total results
-                        total_results += 1
-
-            elif unit == 'Host':
-                result = []
-                start_date_string = start_date.strftime('%Y-%m-%d')
-                end_date_string = end_date.strftime('%Y-%m-%d')
-                params = {
-                          'start_date': start_date_string,
-                          'end_date': end_date_string
-                          }
-                res_total = query_total.run(**params)
-                i = 0
-                for item in res_total['buckets']:
-                    for h in item['buckets']:
-                        if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                            hostname = h['key'] if h['key'] != 'None' else ''
-                            result.append({
-                                'count': h[count_keyname],
+                                'count': res_total[count_keyname],
                                 'start_date': start_date_string,
                                 'end_date': end_date_string,
-                                'domain': hostname,
-                                'ip': item['key']
                             })
-                        i += 1
-                        # total results
-                        total_results += 1
-            else:
-                result = []
-        except Exception as e:
-            current_app.logger.debug(e)
+                        d += delta
+                elif unit == 'Week':
+                    # Find Sunday of end_date
+                    end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
+                    # Find current Mon and Sun of start_date
+                    current_monday = start_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1))
+                    current_sunday = start_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
+                    # total results
+                    total_results = int((end_sunday - current_sunday).days / 7) + 1
+
+                    delta = timedelta(days=7)
+                    for i in range(total_results):
+                        if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                            start_date_string = current_monday.strftime('%Y-%m-%d')
+                            end_date_string = current_sunday.strftime('%Y-%m-%d')
+                            temp = {
+                                'start_date': start_date_string,
+                                'end_date': end_date_string
+                            }
+                            params = {'interval': 'week',
+                                      'start_date': temp['start_date'],
+                                      'end_date': temp['end_date']
+                                      }
+                            res_total = query_total.run(**params)
+                            temp['count'] = res_total[count_keyname]
+                            result.append(temp)
+
+                        current_monday += delta
+                        current_sunday += delta
+                elif unit == 'Year':
+                    start_year = start_date.year
+                    end_year = end_date.year
+                    # total results
+                    total_results = end_year - start_year + 1
+                    for i in range(total_results):
+                        if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                            start_date_string = '{}-01-01'.format(start_year + i)
+                            end_date_string = '{}-12-31'.format(start_year + i)
+                            params = {'interval': 'year',
+                                      'start_date': start_date_string,
+                                      'end_date': end_date_string
+                                      }
+                            res_total = query_total.run(**params)
+                            result.append({
+                                'count': res_total[count_keyname],
+                                'start_date': start_date_string,
+                                'end_date': end_date_string,
+                                'year': start_year + i
+                            })
+                elif unit == 'Item':
+                    start_date_string = start_date.strftime('%Y-%m-%d')
+                    end_date_string = end_date.strftime('%Y-%m-%d')
+                    params = {
+                              'start_date': start_date_string,
+                              'end_date': end_date_string
+                              }
+                    res_total = query_total.run(**params)
+                    i = 0
+                    for item in res_total['buckets']:
+                        # result.append({
+                        #     'item_id': item['key'],
+                        #     'item_name': item['buckets'][0]['key'],
+                        #     'count': item[count_keyname],
+                        # })
+                        pid_value = item['key']
+                        for h in item['buckets']:
+                            if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                                record_name = h['key'] if h['key'] != 'None' else ''
+                                result.append({
+                                    'col1': pid_value,
+                                    'col2': record_name,
+                                    'col3': h[count_keyname],
+                                })
+                            i += 1
+                            # total results
+                            total_results += 1
+
+                elif unit == 'Host':
+                    result = []
+                    start_date_string = start_date.strftime('%Y-%m-%d')
+                    end_date_string = end_date.strftime('%Y-%m-%d')
+                    params = {
+                              'start_date': start_date_string,
+                              'end_date': end_date_string
+                              }
+                    res_total = query_total.run(**params)
+                    i = 0
+                    for item in res_total['buckets']:
+                        for h in item['buckets']:
+                            if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                                hostname = h['key'] if h['key'] != 'None' else ''
+                                result.append({
+                                    'count': h[count_keyname],
+                                    'start_date': start_date_string,
+                                    'end_date': end_date_string,
+                                    'domain': hostname,
+                                    'ip': item['key']
+                                })
+                            i += 1
+                            # total results
+                            total_results += 1
+                else:
+                    result = []
+            except Exception as e:
+                current_app.logger.debug(e)
 
         response = {
             'num_page': ceil(float(total_results)/reports_per_page),
