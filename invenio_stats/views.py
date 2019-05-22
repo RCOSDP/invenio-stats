@@ -454,7 +454,15 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                     total_results = (end_date - start_date).days + 1
                 if empty_date_flg:
                     params = {'interval': 'day'}
-                    result = query_total.run(**params)
+                    res_total = query_total.run(**params)
+                    for item in res_total:
+                        if item['value'] > 0:
+                            date = datetime.strptime(item['date'], '%Y-%m-%d')
+                            result.append({
+                                'count': item['value'],
+                                'start_date': date,
+                                'end_date': date,
+                            })
                 else:
                     delta = timedelta(days=1)
                     for i in range(total_results):
