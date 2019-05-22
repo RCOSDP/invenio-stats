@@ -9,6 +9,7 @@
 """InvenioStats views."""
 import calendar
 from datetime import datetime, timedelta
+import dateutil.relativedelta as relativedelta
 
 from elasticsearch.exceptions import NotFoundError
 from flask import Blueprint, abort, current_app, jsonify, request
@@ -448,13 +449,16 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 })
                 d += delta
         elif unit == 'Week':
+            # Find Sunday of end_date
+            end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
+            # Find current Mon and Sun of start_date
+            current_monday = start_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1))
+            current_sunday = start_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
+
             delta = timedelta(days=7)
-            d1 = timedelta(days=1)
-            while d <= end_date:
-                start_date_string = d.strftime('%Y-%m-%d')
-                d += delta
-                t = d - d1
-                end_date_string = t.strftime('%Y-%m-%d')
+            while current_sunday <= end_sunday:
+                start_date_string = current_monday.strftime('%Y-%m-%d')
+                end_date_string = current_sunday.strftime('%Y-%m-%d')
                 temp = {
                     'start_date': start_date_string,
                     'end_date': end_date_string
@@ -466,6 +470,9 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 res_total = query_total.run(**params)
                 temp['count'] = res_total[count_keyname]
                 result.append(temp)
+
+                current_monday += delta
+                current_sunday += delta
         elif unit == 'Year':
             start_year = start_date.year
             end_year = end_date.year
