@@ -514,6 +514,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                           'end_date': end_date_string
                           }
                 res_total = query_total.run(**params)
+                i = 0
                 for item in res_total['buckets']:
                     # result.append({
                     #     'item_id': item['key'],
@@ -522,12 +523,14 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                     # })
                     pid_value = item['key']
                     for h in item['buckets']:
-                        record_name = h['key'] if h['key'] != 'None' else ''
-                        result.append({
-                            'col1': pid_value,
-                            'col2': record_name,
-                            'col3': h[count_keyname],
-                        })
+                        if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                            record_name = h['key'] if h['key'] != 'None' else ''
+                            result.append({
+                                'col1': pid_value,
+                                'col2': record_name,
+                                'col3': h[count_keyname],
+                            })
+                        i += 1
                         # total results
                         total_results += 1
 
@@ -540,16 +543,19 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                           'end_date': end_date_string
                           }
                 res_total = query_total.run(**params)
+                i = 0
                 for item in res_total['buckets']:
                     for h in item['buckets']:
-                        hostname = h['key'] if h['key'] != 'None' else ''
-                        result.append({
-                            'count': h[count_keyname],
-                            'start_date': start_date_string,
-                            'end_date': end_date_string,
-                            'domain': hostname,
-                            'ip': item['key']
-                        })
+                        if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                            hostname = h['key'] if h['key'] != 'None' else ''
+                            result.append({
+                                'count': h[count_keyname],
+                                'start_date': start_date_string,
+                                'end_date': end_date_string,
+                                'domain': hostname,
+                                'ip': item['key']
+                            })
+                        i += 1
                         # total results
                         total_results += 1
             else:
