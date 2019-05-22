@@ -395,4 +395,13 @@ def register_queries():
                 aggregated_fields=['pid_value', 'record_name']
             )
         ),
+        dict(
+            query_name='bucket-item-detail-view-histogram',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                aggregated_fields=['timestamp']
+            )
+        ),
     ]

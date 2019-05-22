@@ -414,9 +414,13 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
     def get(self, **kwargs):
         """Get item registration report."""
         target_report = kwargs.get('target_report').title()
-        start_date = datetime.strptime(kwargs.get('start_date'), '%Y-%m-%d')
-        end_date = datetime.strptime(kwargs.get('end_date'), '%Y-%m-%d')
+        start_date = datetime.strptime(kwargs.get('start_date'), '%Y-%m-%d') \
+            if kwargs.get('start_date') != '0' else None
+        end_date = datetime.strptime(kwargs.get('end_date'), '%Y-%m-%d') \
+            if kwargs.get('end_date') != '0' else None
         unit = kwargs.get('unit').title()
+        empty_date_flg = True if not start_date or not end_date else False
+
 
         query_name = 'item-create-total'
         count_keyname = 'count'
@@ -424,7 +428,8 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
             if unit == 'Item':
                 query_name = 'item-detail-item-total'
             else:
-                query_name = 'item-detail-total'
+                query_name = 'item-detail-total' if not empty_date_flg \
+                    else 'bucket-item-detail-view-histogram'
 
         # total
         query_total_cfg = current_stats.queries[query_name]
@@ -434,21 +439,25 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         result = []
         try:
             if unit == 'Day':
-                delta = timedelta(days=1)
-                while d <= end_date:
-                    start_date_string = d.strftime('%Y-%m-%d')
-                    end_date_string = d.strftime('%Y-%m-%d')
-                    params = {'interval': 'day',
-                              'start_date': start_date_string,
-                              'end_date': end_date_string
-                              }
-                    res_total = query_total.run(**params)
-                    result.append({
-                        'count': res_total[count_keyname],
-                        'start_date': start_date_string,
-                        'end_date': end_date_string,
-                    })
-                    d += delta
+                if empty_date_flg:
+                    params = {'interval': 'day'}
+                    result = query_total.run(**params)
+                else:
+                    delta = timedelta(days=1)
+                    while d <= end_date:
+                        start_date_string = d.strftime('%Y-%m-%d')
+                        end_date_string = d.strftime('%Y-%m-%d')
+                        params = {'interval': 'day',
+                                  'start_date': start_date_string,
+                                  'end_date': end_date_string
+                                  }
+                        res_total = query_total.run(**params)
+                        result.append({
+                            'count': res_total[count_keyname],
+                            'start_date': start_date_string,
+                            'end_date': end_date_string,
+                        })
+                        d += delta
             elif unit == 'Week':
                 # Find Sunday of end_date
                 end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
