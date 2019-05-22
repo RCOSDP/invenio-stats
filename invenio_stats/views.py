@@ -435,8 +435,12 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
 
         total_results = 0
         reports_per_page = int(getattr(config, 'REPORTS_PER_PAGE'))
-        # Request params
-        page_index = int(request.args.get('p', 1)) - 1
+        # get page_index from request params
+        page_index = 0
+        try:
+            page_index = int(request.args.get('p', 1)) - 1
+        except Exception as e:
+            current_app.logger.debug(e)
         result = []
         if end_date >= start_date:
             try:
