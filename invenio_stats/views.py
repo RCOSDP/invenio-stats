@@ -452,36 +452,36 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 if unit == 'Day':
                     # total results
                     total_results = (end_date - start_date).days + 1
-                if empty_date_flg:
-                    params = {'interval': 'day'}
-                    res_total = query_total.run(**params)
-                    for item in res_total['buckets']:
-                        date = item['date'].split('T')[0]
-                        if item['value'] > 0 \
-                            and (not start_date or date >= start_date.strftime('%Y-%m-%d')) \
-                            and (not end_date or date <= end_date.strftime('%Y-%m-%d')):
-                            result.append({
-                                'count': item['value'],
-                                'start_date': date,
-                                'end_date': date,
-                            })
-                else:
-                    delta = timedelta(days=1)
-                    for i in range(total_results):
-                        if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                            start_date_string = d.strftime('%Y-%m-%d')
-                            end_date_string = d.strftime('%Y-%m-%d')
-                            params = {'interval': 'day',
-                                      'start_date': start_date_string,
-                                      'end_date': end_date_string
-                                      }
-                            res_total = query_total.run(**params)
-                            result.append({
-                                'count': res_total[count_keyname],
-                                'start_date': start_date_string,
-                                'end_date': end_date_string,
-                            })
-                        d += delta
+                    if empty_date_flg:
+                        params = {'interval': 'day'}
+                        res_total = query_total.run(**params)
+                        for item in res_total['buckets']:
+                            date = item['date'].split('T')[0]
+                            if item['value'] > 0 \
+                                and (not start_date or date >= start_date.strftime('%Y-%m-%d')) \
+                                and (not end_date or date <= end_date.strftime('%Y-%m-%d')):
+                                result.append({
+                                    'count': item['value'],
+                                    'start_date': date,
+                                    'end_date': date,
+                                })
+                    else:
+                        delta = timedelta(days=1)
+                        for i in range(total_results):
+                            if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                                start_date_string = d.strftime('%Y-%m-%d')
+                                end_date_string = d.strftime('%Y-%m-%d')
+                                params = {'interval': 'day',
+                                          'start_date': start_date_string,
+                                          'end_date': end_date_string
+                                          }
+                                res_total = query_total.run(**params)
+                                result.append({
+                                    'count': res_total[count_keyname],
+                                    'start_date': start_date_string,
+                                    'end_date': end_date_string,
+                                })
+                            d += delta
                 elif unit == 'Week':
                     # Find Sunday of end_date
                     end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
