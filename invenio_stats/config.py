@@ -25,6 +25,8 @@ signal sent.
 
 PROVIDE_PERIOD_YEAR = 5
 
+REPORTS_PER_PAGE = 10
+
 STATS_EVENTS = {
     'file-download': {
         'signal': 'invenio_files_rest.signals.file_downloaded',
