@@ -371,6 +371,15 @@ def register_queries():
             )
         ),
         dict(
+            query_name='item-create-histogram',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-item-create',
+                doc_type='item-create-day-aggregation',
+                aggregated_fields=['timestamp']
+            )
+        ),
+        dict(
             query_name='item-detail-total',
             query_class=ESTermsQuery,
             query_config=dict(

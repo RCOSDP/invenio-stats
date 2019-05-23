@@ -107,6 +107,7 @@ STATS_QUERIES = {
     'bucket-record-view-histogram': {},
     'bucket-record-view-total': {},
     'item-create-total': {},
+    'item-create-histogram': {},
     'item-detail-total': {},
     'item-detail-item-total': {},
     'bucket-item-detail-view-histogram': {},

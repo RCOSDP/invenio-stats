@@ -432,6 +432,8 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 query_name = 'item-detail-total' \
                     if not empty_date_flg or unit == 'Host' \
                     else 'bucket-item-detail-view-histogram'
+        elif empty_date_flg:
+            query_name = 'item-create-histogram'
 
         # total
         query_total_cfg = current_stats.queries[query_name]
