@@ -450,22 +450,32 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         if end_date >= start_date:
             try:
                 if unit == 'Day':
-                    # total results
-                    total_results = (end_date - start_date).days + 1
                     if empty_date_flg:
                         params = {'interval': 'day'}
                         res_total = query_total.run(**params)
+                        # Get valuable items
+                        items = []
                         for item in res_total['buckets']:
                             date = item['date'].split('T')[0]
                             if item['value'] > 0 \
                                 and (not start_date or date >= start_date.strftime('%Y-%m-%d')) \
                                 and (not end_date or date <= end_date.strftime('%Y-%m-%d')):
+                                items.append(item)
+                        # total results
+                        total_results = len(items)
+                        i = 0
+                        for item in items:
+                            if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                                date = item['date'].split('T')[0]
                                 result.append({
                                     'count': item['value'],
                                     'start_date': date,
                                     'end_date': date,
                                 })
+                            i += 1
                     else:
+                        # total results
+                        total_results = (end_date - start_date).days + 1
                         delta = timedelta(days=1)
                         for i in range(total_results):
                             if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
