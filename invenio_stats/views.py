@@ -496,13 +496,18 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                     if empty_date_flg:
                         params = {'interval': 'week'}
                         res_total = query_total.run(**params)
+                        # Get start monday and end sunday
+                        start_monday = start_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1)) \
+                            if start_date else None
+                        end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1)) \
+                            if end_date else None
                         # Get valuable items
                         items = []
                         for item in res_total['buckets']:
                             date = item['date'].split('T')[0]
                             if item['value'] > 0 \
-                                and (not start_date or date >= start_date.strftime('%Y-%m-%d')) \
-                                and (not end_date or date <= end_date.strftime('%Y-%m-%d')):
+                                and (not start_monday or date >= start_monday.strftime('%Y-%m-%d')) \
+                                and (not end_sunday or date <= end_sunday.strftime('%Y-%m-%d')):
                                 items.append(item)
                         # total results
                         total_results = len(items)
