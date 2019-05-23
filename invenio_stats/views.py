@@ -429,7 +429,8 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
             if unit == 'Item':
                 query_name = 'item-detail-item-total'
             else:
-                query_name = 'item-detail-total' if not empty_date_flg \
+                query_name = 'item-detail-total' \
+                    if not empty_date_flg or unit == 'Host' \
                     else 'bucket-item-detail-view-histogram'
 
         # total
@@ -600,12 +601,15 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                                     'year': start_year + i
                                 })
                 elif unit == 'Item':
-                    start_date_string = start_date.strftime('%Y-%m-%d')
-                    end_date_string = end_date.strftime('%Y-%m-%d')
-                    params = {
-                              'start_date': start_date_string,
-                              'end_date': end_date_string
-                              }
+                    start_date_string = ''
+                    end_date_string = ''
+                    params = {}
+                    if start_date is not None:
+                        start_date_string = start_date.strftime('%Y-%m-%d')
+                        params.update({'start_date': start_date_string})
+                    if end_date is not None:
+                        end_date_string = end_date.strftime('%Y-%m-%d')
+                        params.update({'end_date': end_date_string})
                     res_total = query_total.run(**params)
                     i = 0
                     for item in res_total['buckets']:
@@ -628,13 +632,15 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                             total_results += 1
 
                 elif unit == 'Host':
-                    result = []
-                    start_date_string = start_date.strftime('%Y-%m-%d')
-                    end_date_string = end_date.strftime('%Y-%m-%d')
-                    params = {
-                              'start_date': start_date_string,
-                              'end_date': end_date_string
-                              }
+                    start_date_string = ''
+                    end_date_string = ''
+                    params = {}
+                    if start_date is not None:
+                        start_date_string = start_date.strftime('%Y-%m-%d')
+                        params.update({'start_date': start_date_string})
+                    if end_date is not None:
+                        end_date_string = end_date.strftime('%Y-%m-%d')
+                        params.update({'end_date': end_date_string})
                     res_total = query_total.run(**params)
                     i = 0
                     for item in res_total['buckets']:
