@@ -456,6 +456,61 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
+class QueryCeleryTaskReport(ContentNegotiatedMethodView):
+    """REST API resource providing celery task report."""
+
+    view_name = 'get_celery_task_report'
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        super(QueryCeleryTaskReport, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def parse_bucket_response(self, raw_res, pretty_result):
+        """Parsing bucket response."""
+        if 'buckets' in raw_res:
+            field_name = raw_res['field']
+            value = raw_res['buckets'][0]['key']
+            pretty_result[field_name] = value
+            return self.parse_bucket_response(raw_res['buckets'][0], pretty_result)
+        else:
+            return pretty_result
+
+    def get(self, **kwargs):
+        """Get celery task report."""
+        result = {}
+        list = []
+        task_name = kwargs.get('task_name')
+        try:
+            params = {'task_name': task_name}
+
+            # Get exec logs in certain time frame
+            query_cfg = current_stats.queries['get-celery-task-report']
+            query = query_cfg.query_class(**query_cfg.query_config)
+            result = query.run(**params)
+
+            pretty_result = []
+            for report in result['buckets']:
+                current_report = {}
+                current_report['task_id'] = report['key']
+                pretty_report = self.parse_bucket_response(report, current_report)
+                pretty_result.append(current_report)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+            return self.make_response([])
+
+        return self.make_response(pretty_result)
+
+
 stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
 )
@@ -474,6 +529,10 @@ file_stats_report = QueryFileStatsReport.as_view(
 
 item_reg_report = QueryItemRegReport.as_view(
     QueryItemRegReport.view_name,
+)
+
+celery_task_report = QueryCeleryTaskReport.as_view(
+    QueryCeleryTaskReport.view_name,
 )
 
 blueprint.add_url_rule(
@@ -499,4 +558,9 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/<string:target_report>/<string:start_date>/<string:end_date>/<string:unit>',
     view_func=item_reg_report,
+)
+
+blueprint.add_url_rule(
+    '/tasks/<string:task_name>',
+    view_func=celery_task_report,
 )

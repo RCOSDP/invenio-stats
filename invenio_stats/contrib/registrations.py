@@ -10,73 +10,106 @@
 from invenio_search import current_search_client
 
 from invenio_stats.aggregations import StatAggregator
-from invenio_stats.contrib.event_builders import build_file_unique_id, \
-    build_record_unique_id, build_search_detail_condition, \
-    build_search_unique_id, build_top_unique_id
+from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
+    build_file_unique_id, build_record_unique_id, \
+    build_search_detail_condition, build_search_unique_id, \
+    build_top_unique_id
 from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
 
 def register_events():
     """Register sample events."""
-    return [
-        dict(
-            event_type='file-download',
-            templates='invenio_stats.contrib.file_download',
-            processor_class=EventsIndexer,
-            processor_config=dict(
-                preprocessors=[
-                    flag_robots,
-                    anonymize_user,
-                    build_file_unique_id
-                ])),
-        dict(
-            event_type='file-preview',
-            templates='invenio_stats.contrib.file_preview',
-            processor_class=EventsIndexer,
-            processor_config=dict(
-                preprocessors=[
-                    flag_robots,
-                    anonymize_user,
-                    build_file_unique_id
-                ])),
-        dict(
-            event_type='record-view',
-            templates='invenio_stats.contrib.record_view',
-            processor_class=EventsIndexer,
-            processor_config=dict(
-                preprocessors=[
-                    flag_robots,
-                    anonymize_user,
-                    build_record_unique_id
-                ])),
-        dict(
-            event_type='top-view',
-            templates='invenio_stats.contrib.record_view',
-            processor_class=EventsIndexer,
-            processor_config=dict(
-                preprocessors=[
-                    flag_robots,
-                    anonymize_user,
-                    build_top_unique_id
-                ])),
-        dict(
-            event_type='search',
-            templates='invenio_stats.contrib.search',
-            processor_class=EventsIndexer,
-            processor_config=dict(
-                preprocessors=[
-                    flag_robots,
-                    anonymize_user,
-                    build_search_detail_condition,
-                    build_search_unique_id
-                ]))
-    ]
+    return [dict(
+                event_type='celery-task',
+                templates='invenio_stats.contrib.celery_task',
+                processor_class=EventsIndexer,
+                processor_config=dict(
+                    preprocessors=[
+                        flag_robots,
+                        anonymize_user,
+                        build_celery_task_unique_id
+                    ])),
+            dict(
+                event_type='file-download',
+                templates='invenio_stats.contrib.file_download',
+                processor_class=EventsIndexer,
+                processor_config=dict(
+                    preprocessors=[
+                        flag_robots,
+                        anonymize_user,
+                        build_file_unique_id
+                    ])),
+            dict(
+                event_type='file-preview',
+                templates='invenio_stats.contrib.file_preview',
+                processor_class=EventsIndexer,
+                processor_config=dict(
+                    preprocessors=[
+                        flag_robots,
+                        anonymize_user,
+                        build_file_unique_id
+                    ])),
+            dict(
+                event_type='record-view',
+                templates='invenio_stats.contrib.record_view',
+                processor_class=EventsIndexer,
+                processor_config=dict(
+                    preprocessors=[
+                        flag_robots,
+                        anonymize_user,
+                        build_record_unique_id
+                    ])),
+            dict(
+                event_type='top-view',
+                templates='invenio_stats.contrib.record_view',
+                processor_class=EventsIndexer,
+                processor_config=dict(
+                    preprocessors=[
+                        flag_robots,
+                        anonymize_user,
+                        build_top_unique_id
+                    ])),
+            dict(
+                event_type='search',
+                templates='invenio_stats.contrib.search',
+                processor_class=EventsIndexer,
+                processor_config=dict(
+                    preprocessors=[
+                        flag_robots,
+                        anonymize_user,
+                        build_search_detail_condition,
+                        build_search_unique_id
+                    ]))]
 
 
 def register_aggregations():
     """Register sample aggregations."""
     return [dict(
+        aggregation_name='celery-task-agg',
+        templates='invenio_stats.contrib.aggregations.aggr_celery_task',
+        aggregator_class=StatAggregator,
+        aggregator_config=dict(
+            client=current_search_client,
+            event='celery-task',
+            aggregation_field='unique_id',
+            aggregation_interval='day',
+            copy_fields=dict(
+                task_id='task_id',
+                task_name='task_name',
+                task_state='task_state',
+                start_time='start_time',
+                end_time='end_time',
+                total_records='total_records',
+                repository_name='repository_name',
+                execution_time='execution_time',
+            ),
+            metric_aggregation_fields={
+                'unique_count': ('cardinality', 'unique_session_id',
+                                 {'precision_threshold': 1000}),
+                'volume': ('sum', 'size', {}),
+            },
+        )), dict(
         aggregation_name='file-download-agg',
         templates='invenio_stats.contrib.aggregations.aggr_file_download',
         aggregator_class=StatAggregator,
@@ -149,6 +182,19 @@ def register_aggregations():
 def register_queries():
     """Register queries."""
     return [
+        dict(
+            query_name='get-celery-task-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-celery-task',
+                doc_type='celery-task-day-aggregation',
+                aggregated_fields=['task_id', 'task_name', 'start_time',
+                                   'end_time', 'total_records', 'task_state'],
+                required_filters=dict(
+                    task_name='task_name',
+                )
+            )
+        ),
         dict(
             query_name='get-file-download-report',
             query_class=ESTermsQuery,

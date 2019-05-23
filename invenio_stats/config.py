@@ -26,6 +26,13 @@ signal sent.
 PROVIDE_PERIOD_YEAR = 5
 
 STATS_EVENTS = {
+    'celery-task': {
+        'signal': ['invenio_oaiharvester.signals.oaiharvest_finished',
+                   'weko_sitemap.signals.sitemap_finished'],
+        'event_builders': [
+            'invenio_stats.contrib.event_builders.celery_task_event_builder'
+        ]
+    },
     'file-download': {
         'signal': 'invenio_files_rest.signals.file_downloaded',
         'event_builders': [
@@ -77,6 +84,7 @@ is the name of the emitted event.
 
 
 STATS_AGGREGATIONS = {
+    'celery-task-agg': {},
     'file-download-agg': {},
     'file-preview-agg': {},
     'record-view-agg': {},
@@ -84,10 +92,13 @@ STATS_AGGREGATIONS = {
 
 
 STATS_QUERIES = {
+    'get-celery-task-report': {},
     'get-file-download-report': {},
     'get-file-download-open-access-report': {},
     'get-file-preview-report': {},
     'get-file-preview-open-access-report': {},
+    # 'bucket-celery-task-histogram': {},
+    # 'bucket-celery-task-total': {},
     'bucket-file-download-histogram': {},
     'bucket-file-download-total': {},
     'bucket-file-preview-histogram': {},

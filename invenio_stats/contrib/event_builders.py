@@ -19,6 +19,34 @@ from flask import request
 from ..utils import get_user
 
 
+def celery_task_event_builder(event, sender_app, exec_data=None, user_data=None, **kwargs):
+    """Build a celery-task event."""
+    event.update(dict(
+        # When:
+        timestamp=datetime.datetime.utcnow().isoformat(),
+
+        # What:
+        task_id=exec_data['task_id'],
+        task_name=exec_data['task_name'],
+        task_state=exec_data['task_state'],
+        start_time=exec_data['start_time'],
+        end_time=exec_data['end_time'],
+        total_records=exec_data['total_records'],
+        repository_name=exec_data['repository_name'],
+        execution_time=exec_data['execution_time'],
+
+        # Who:
+        # **get_user()
+        # Must retrieve the user data from caller
+        # Task has no access to request
+        ip_address=user_data['ip_address'],
+        user_agent=user_data['user_agent'],
+        user_id=user_data['user_id'],
+        session_id=user_data['session_id']
+    ))
+    return event
+
+
 def file_download_event_builder(event, sender_app, obj=None, **kwargs):
     """Build a file-download event."""
     event.update(dict(
@@ -59,6 +87,15 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         **get_user()
     ))
     return event
+
+
+def build_celery_task_unique_id(doc):
+    """Build celery task unique identifier."""
+    key = '{0}_{1}_{2}'.format(
+        doc['task_id'], doc['task_name'], doc['repository_name']
+    )
+    doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
+    return doc
 
 
 def build_file_unique_id(doc):
