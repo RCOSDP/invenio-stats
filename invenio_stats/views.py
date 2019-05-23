@@ -552,25 +552,53 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                             current_monday += delta
                             current_sunday += delta
                 elif unit == 'Year':
-                    start_year = start_date.year
-                    end_year = end_date.year
-                    # total results
-                    total_results = end_year - start_year + 1
-                    for i in range(total_results):
-                        if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                            start_date_string = '{}-01-01'.format(start_year + i)
-                            end_date_string = '{}-12-31'.format(start_year + i)
-                            params = {'interval': 'year',
-                                      'start_date': start_date_string,
-                                      'end_date': end_date_string
-                                      }
-                            res_total = query_total.run(**params)
-                            result.append({
-                                'count': res_total[count_keyname],
-                                'start_date': start_date_string,
-                                'end_date': end_date_string,
-                                'year': start_year + i
-                            })
+                    if empty_date_flg:
+                        params = {'interval': 'year'}
+                        res_total = query_total.run(**params)
+                        # Get start day and end day
+                        start_date_string = '{}-01-01'.format(start_date.year) if start_date else None
+                        end_date_string = '{}-12-31'.format(end_date.year) if end_date else None
+                        # Get valuable items
+                        items = []
+                        for item in res_total['buckets']:
+                            date = item['date'].split('T')[0]
+                            if item['value'] > 0 \
+                                and (not start_date_string or date >= start_date_string) \
+                                and (not end_date_string or date <= end_date_string):
+                                items.append(item)
+                        # total results
+                        total_results = len(items)
+                        i = 0
+                        for item in items:
+                            if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                                event_date = parser.parse(item['date'])
+                                result.append({
+                                    'count': item['value'],
+                                    'start_date': '{}-01-01'.format(event_date.year),
+                                    'end_date': '{}-12-31'.format(event_date.year),
+                                    'year': event_date.year
+                                })
+                            i += 1
+                    else:
+                        start_year = start_date.year
+                        end_year = end_date.year
+                        # total results
+                        total_results = end_year - start_year + 1
+                        for i in range(total_results):
+                            if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
+                                start_date_string = '{}-01-01'.format(start_year + i)
+                                end_date_string = '{}-12-31'.format(start_year + i)
+                                params = {'interval': 'year',
+                                          'start_date': start_date_string,
+                                          'end_date': end_date_string
+                                          }
+                                res_total = query_total.run(**params)
+                                result.append({
+                                    'count': res_total[count_keyname],
+                                    'start_date': start_date_string,
+                                    'end_date': end_date_string,
+                                    'year': start_year + i
+                                })
                 elif unit == 'Item':
                     start_date_string = start_date.strftime('%Y-%m-%d')
                     end_date_string = end_date.strftime('%Y-%m-%d')
