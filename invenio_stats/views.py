@@ -512,6 +512,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                         # total results
                         total_results = len(items)
                         i = 0
+                        import pytz
                         for item in items:
                             if item == items[0]:
                                 # Start date of data
@@ -520,7 +521,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                             if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
                                 start_date_string = d.strftime('%Y-%m-%d')
                                 d1 = d + delta - delta1
-                                if end_date and d1 > end_date:
+                                if end_date and d1 > end_date.replace(tzinfo=pytz.UTC):
                                     d1 = end_date
                                 end_date_string = d1.strftime('%Y-%m-%d')
                                 result.append({
