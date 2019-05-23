@@ -496,50 +496,52 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                                 })
                             d += delta
                 elif unit == 'Week':
+                    delta = timedelta(days=7)
+                    delta1 = timedelta(days=1)
                     if empty_date_flg:
                         params = {'interval': 'week'}
                         res_total = query_total.run(**params)
-                        # Get start monday and end sunday
-                        start_monday = start_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1)) \
-                            if start_date else None
-                        end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1)) \
-                            if end_date else None
                         # Get valuable items
                         items = []
                         for item in res_total['buckets']:
                             date = item['date'].split('T')[0]
                             if item['value'] > 0 \
-                                and (not start_monday or date >= start_monday.strftime('%Y-%m-%d')) \
-                                and (not end_sunday or date <= end_sunday.strftime('%Y-%m-%d')):
+                                and (not start_date or date >= start_date.strftime('%Y-%m-%d')) \
+                                and (not end_date or date <= end_date.strftime('%Y-%m-%d')):
                                 items.append(item)
                         # total results
                         total_results = len(items)
                         i = 0
                         for item in items:
+                            if item == items[0]:
+                                # Start date of data
+                                d = parser.parse(item['date'])
+
                             if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                                event_date = parser.parse(item['date'])
-                                event_monday = event_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1))
-                                event_sunday = event_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
+                                start_date_string = d.strftime('%Y-%m-%d')
+                                d1 = d + delta - delta1
+                                if end_date and d1 > end_date:
+                                    d1 = end_date
+                                end_date_string = d1.strftime('%Y-%m-%d')
                                 result.append({
                                     'count': item['value'],
-                                    'start_date': event_monday.strftime('%Y-%m-%d'),
-                                    'end_date': event_sunday.strftime('%Y-%m-%d'),
+                                    'start_date': start_date_string,
+                                    'end_date': end_date_string,
                                 })
+                            d += delta
                             i += 1
                     else:
-                        # Find Sunday of end_date
-                        end_sunday = end_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
-                        # Find current Mon and Sun of start_date
-                        current_monday = start_date + relativedelta.relativedelta(weekday=relativedelta.MO(-1))
-                        current_sunday = start_date + relativedelta.relativedelta(weekday=relativedelta.SU(+1))
                         # total results
-                        total_results = int((end_sunday - current_sunday).days / 7) + 1
+                        total_results = int((end_date - start_date).days / 7) + 1
 
-                        delta = timedelta(days=7)
+                        d = start_date
                         for i in range(total_results):
                             if page_index * reports_per_page <= i < (page_index + 1) * reports_per_page:
-                                start_date_string = current_monday.strftime('%Y-%m-%d')
-                                end_date_string = current_sunday.strftime('%Y-%m-%d')
+                                start_date_string = d.strftime('%Y-%m-%d')
+                                d1 = d + delta - delta1
+                                if d1 > end_date:
+                                    d1 = end_date
+                                end_date_string = d1.strftime('%Y-%m-%d')
                                 temp = {
                                     'start_date': start_date_string,
                                     'end_date': end_date_string
@@ -552,8 +554,7 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                                 temp['count'] = res_total[count_keyname]
                                 result.append(temp)
 
-                            current_monday += delta
-                            current_sunday += delta
+                            d += delta
                 elif unit == 'Year':
                     if empty_date_flg:
                         params = {'interval': 'year'}
