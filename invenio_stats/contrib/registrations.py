@@ -11,76 +11,88 @@ from invenio_search import current_search_client
 
 from invenio_stats.aggregations import StatAggregator
 from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
-    build_file_unique_id, build_record_unique_id, \
-    build_search_detail_condition, build_search_unique_id, \
-    build_top_unique_id
+    build_file_unique_id, build_item_create_unique_id, \
+    build_record_unique_id, build_search_detail_condition, \
+    build_search_unique_id, build_top_unique_id, copy_record_index_list
 from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
 
 def register_events():
     """Register sample events."""
-    return [dict(
-                event_type='celery-task',
-                templates='invenio_stats.contrib.celery_task',
-                processor_class=EventsIndexer,
-                processor_config=dict(
-                    preprocessors=[
-                        flag_robots,
-                        anonymize_user,
-                        build_celery_task_unique_id
-                    ])),
-            dict(
-                event_type='file-download',
-                templates='invenio_stats.contrib.file_download',
-                processor_class=EventsIndexer,
-                processor_config=dict(
-                    preprocessors=[
-                        flag_robots,
-                        anonymize_user,
-                        build_file_unique_id
-                    ])),
-            dict(
-                event_type='file-preview',
-                templates='invenio_stats.contrib.file_preview',
-                processor_class=EventsIndexer,
-                processor_config=dict(
-                    preprocessors=[
-                        flag_robots,
-                        anonymize_user,
-                        build_file_unique_id
-                    ])),
-            dict(
-                event_type='record-view',
-                templates='invenio_stats.contrib.record_view',
-                processor_class=EventsIndexer,
-                processor_config=dict(
-                    preprocessors=[
-                        flag_robots,
-                        anonymize_user,
-                        build_record_unique_id
-                    ])),
-            dict(
-                event_type='top-view',
-                templates='invenio_stats.contrib.record_view',
-                processor_class=EventsIndexer,
-                processor_config=dict(
-                    preprocessors=[
-                        flag_robots,
-                        anonymize_user,
-                        build_top_unique_id
-                    ])),
-            dict(
-                event_type='search',
-                templates='invenio_stats.contrib.search',
-                processor_class=EventsIndexer,
-                processor_config=dict(
-                    preprocessors=[
-                        flag_robots,
-                        anonymize_user,
-                        build_search_detail_condition,
-                        build_search_unique_id
-                    ]))]
+    return [
+        dict(
+            event_type='celery-task',
+            templates='invenio_stats.contrib.celery_task',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_celery_task_unique_id
+                ])),
+        dict(
+            event_type='file-download',
+            templates='invenio_stats.contrib.file_download',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_file_unique_id
+                ])),
+        dict(
+            event_type='file-preview',
+            templates='invenio_stats.contrib.file_preview',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_file_unique_id
+                ])),
+        dict(
+            event_type='item-create',
+            templates='invenio_stats.contrib.item_create',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_item_create_unique_id
+                ])),
+        dict(
+            event_type='record-view',
+            templates='invenio_stats.contrib.record_view',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_record_unique_id
+                ])),
+        dict(
+            event_type='top-view',
+            templates='invenio_stats.contrib.record_view',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_top_unique_id
+                ])),
+        dict(
+            event_type='search',
+            templates='invenio_stats.contrib.search',
+            processor_class=EventsIndexer,
+            processor_config=dict(
+                preprocessors=[
+                    flag_robots,
+                    anonymize_user,
+                    build_search_detail_condition,
+                    build_search_unique_id
+                ]))
+    ]
 
 
 def register_aggregations():
@@ -127,6 +139,7 @@ def register_aggregations():
                 userrole='userrole',
                 index_list='index_list',
                 site_license_flag='site_license_flag',
+                cur_user_id='cur_user_id',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -151,11 +164,32 @@ def register_aggregations():
                 userrole='userrole',
                 index_list='index_list',
                 site_license_flag='site_license_flag',
+                cur_user_id='cur_user_id',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
                                  {'precision_threshold': 1000}),
                 'volume': ('sum', 'size', {}),
+            },
+        )), dict(
+        aggregation_name='item-create-agg',
+        templates='invenio_stats.contrib.aggregations.aggr_item_create',
+        aggregator_class=StatAggregator,
+        aggregator_config=dict(
+            client=current_search_client,
+            event='item-create',
+            aggregation_field='unique_id',
+            aggregation_interval='day',
+            copy_fields=dict(
+                country='country',
+                hostname='hostname',
+                remote_addr='remote_addr',
+                pid_type='pid_type',
+                pid_value='pid_value',
+            ),
+            metric_aggregation_fields={
+                'unique_count': ('cardinality', 'unique_session_id',
+                                 {'precision_threshold': 1000}),
             },
         )), dict(
         aggregation_name='record-view-agg',
@@ -168,9 +202,14 @@ def register_aggregations():
             aggregation_interval='day',
             copy_fields=dict(
                 country='country',
+                hostname='hostname',
+                remote_addr='remote_addr',
                 record_id='record_id',
+                record_name='record_name',
+                record_index_names=copy_record_index_list,
                 pid_type='pid_type',
                 pid_value='pid_value',
+                cur_user_id='cur_user_id',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -306,6 +345,34 @@ def register_queries():
             )
         ),
         dict(
+            query_name='get-file-download-per-user-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                aggregated_fields=['cur_user_id', 'file_id']
+            )
+        ),
+        dict(
+            query_name='get-file-preview-per-user-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
+                aggregated_fields=['cur_user_id', 'file_id']
+            )
+        ),
+        dict(
+            query_name='get-record-view-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                aggregated_fields=['record_id', 'record_index_names',
+                                   'cur_user_id']
+            )
+        ),
+        dict(
             query_name='bucket-record-view-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
@@ -336,6 +403,61 @@ def register_queries():
                     unique_count=('sum', 'unique_count', {}),
                 ),
                 aggregated_fields=['country']
+            )
+        ),
+        dict(
+            query_name='item-create-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-item-create',
+                doc_type='item-create-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['remote_addr', 'hostname']
+            )
+        ),
+        dict(
+            query_name='item-create-histogram',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-item-create',
+                doc_type='item-create-day-aggregation',
+                aggregated_fields=['timestamp']
+            )
+        ),
+        dict(
+            query_name='item-detail-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['remote_addr', 'hostname']
+            )
+        ),
+        # For query item details (id, name, count)
+        dict(
+            query_name='item-detail-item-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['pid_value', 'record_name']
+            )
+        ),
+        dict(
+            query_name='bucket-item-detail-view-histogram',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                aggregated_fields=['timestamp']
             )
         ),
     ]

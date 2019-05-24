@@ -62,6 +62,7 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
+        cur_user_id=obj.userid,
         # Who:
         **get_user()
     ))
@@ -83,6 +84,7 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         userrole=obj.userrole,
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
+        cur_user_id=obj.userid,
         # Who:
         **get_user()
     ))
@@ -102,7 +104,8 @@ def build_file_unique_id(doc):
     """Build file unique identifier."""
     key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
-        doc['index_list'], doc['site_license_flag'], doc['country']
+        doc['index_list'], doc['site_license_flag'], doc['country'],
+        doc['cur_user_id']
     )
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     return doc
@@ -110,8 +113,24 @@ def build_file_unique_id(doc):
 
 def build_record_unique_id(doc):
     """Build record unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format(doc['record_id'], doc['country'])
+    record_index_names = copy_record_index_list(doc)
+    doc['unique_id'] = '{0}_{1}_{2}_{3}'.format(
+        doc['record_id'], doc['country'], doc['cur_user_id'],
+        record_index_names)
+    doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
+
+
+def copy_record_index_list(doc, aggregation_data=None):
+    """Copy record index list."""
+    record_index_names = ''
+    list = doc['record_index_list']
+    if list:
+        agg_record_index_list = []
+        for index in list:
+            agg_record_index_list.append(index['index_name'])
+            record_index_names = ", ".join(agg_record_index_list)
+    return record_index_names
 
 
 def record_view_event_builder(event, sender_app, pid=None, record=None,
@@ -119,23 +138,30 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
     """Build a record-view event."""
     # get index information
     index_list = []
-    if len(record.navi) > 0:
-        for index in record.navi:
+    if record.get('navi') is not None:
+        for index in record.get('navi'):
             index_list.append(dict(
                 index_id=index[1],
                 index_name=index[3],
                 index_name_en=index[4]
             ))
+    cur_user = get_user()
+    cur_user_id = cur_user['user_id'] if cur_user['user_id'] else 'guest'
+
+    record_name = record.get('item_title', '') if record is not None else ''
 
     event.update(dict(
         # When:
         timestamp=datetime.datetime.utcnow().isoformat(),
         # What:
         record_id=str(record.id),
+        record_name=record_name,
         record_index_list=index_list,
         pid_type=pid.pid_type,
         pid_value=str(pid.pid_value),
         referrer=request.referrer,
+        cur_user_id=cur_user_id,
+        remote_addr=request.remote_addr,
         # Who:
         **get_user()
     ))
@@ -160,6 +186,26 @@ def build_top_unique_id(doc):
     """Build top unique identifier."""
     doc['unique_id'] = '{0}_{1}'.format("top", "view")
     return doc
+
+
+def build_item_create_unique_id(doc):
+    """Build item_create unique identifier."""
+    doc['unique_id'] = '{0}_{1}_{2}'.format("item", "create", doc['pid_value'])
+    doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
+    return doc
+
+
+def resolve_address(addr):
+    """Resolve the ip address string addr and return its DNS name. If no name is found, return None."""
+    from socket import gethostbyaddr, herror
+    try:
+        record = gethostbyaddr(addr)
+
+    except herror as exc:
+        print('an error occurred while resolving ', addr, ': ', exc)
+        return None
+
+    return record[0]
 
 
 def search_event_builder(event, sender_app, search_args=None, **kwargs):
@@ -196,3 +242,19 @@ def build_search_detail_condition(doc):
 
     doc['search_detail'] = search_detail
     return doc
+
+
+def item_create_event_builder(event, sender_app, item_id=None, **kwargs):
+    """Build a item-create event."""
+    event.update(dict(
+        # When:
+        timestamp=datetime.datetime.utcnow().isoformat(),
+        # What:
+        referrer=request.referrer,
+        remote_addr=request.remote_addr,
+        pid_type=item_id.pid_type,
+        pid_value=str(item_id.pid_value),
+        # Who:
+        **get_user()
+    ))
+    return event

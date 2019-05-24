@@ -1,5 +1,5 @@
 {
-  "template": "stats-record-view-*",
+  "template": "stats-item-create-*",
   "settings": {
     "index.mapper.dynamic": false,
     "index": {
@@ -7,7 +7,7 @@
     }
   },
   "mappings": {
-    "record-view-day-aggregation": {
+    "item-create-day-aggregation": {
       "_all": {
         "enabled": false
       },
@@ -19,20 +19,16 @@
           "type": "date",
           "format": "date_optional_time"
         },
+        "unique_id": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
         "count": {
           "type": "integer",
           "index": "not_analyzed"
         },
         "unique_count": {
           "type": "integer",
-          "index": "not_analyzed"
-        },
-        "record_id": {
-          "type": "string",
-          "index": "not_analyzed"
-        },
-        "record_name": {
-          "type": "string",
           "index": "not_analyzed"
         },
         "country": {
@@ -47,39 +43,13 @@
           "type": "string",
           "index": "not_analyzed"
         },
-        "pid_value": {
-          "type": "string",
-          "index": "not_analyzed"
-        },
         "collection": {
           "type": "string",
           "index": "not_analyzed"
-        },
-        "cur_user_id": {
-          "type": "string",
-          "index": "not_analyzed"
-        },
-        "record_index_names": {
-          "type": "string",
-          "index": "not_analyzed"
-        },
-        "record_index_list": {
-          "type": "nested",
-          "properties": {
-            "index_id": {
-              "type": "string"
-            },
-            "index_name_en": {
-              "type": "string"
-            },
-            "index_name": {
-              "type": "string"
-            }
-          }
         }
       }
     },
-    "record-view-agg-bookmark": {
+    "item-create-agg-bookmark": {
       "date_detection": false,
       "properties": {
         "date": {
@@ -90,6 +60,6 @@
     }
   },
   "aliases": {
-    "stats-record-view": {}
+    "stats-item-create": {}
   }
 }

@@ -25,6 +25,8 @@ signal sent.
 
 PROVIDE_PERIOD_YEAR = 5
 
+REPORTS_PER_PAGE = 10
+
 STATS_EVENTS = {
     'celery-task': {
         'signal': ['invenio_oaiharvester.signals.oaiharvest_finished',
@@ -43,6 +45,12 @@ STATS_EVENTS = {
         'signal': 'invenio_files_rest.signals.file_previewed',
         'event_builders': [
             'invenio_stats.contrib.event_builders.file_preview_event_builder'
+        ]
+    },
+    'item-create': {
+        'signal': 'weko_deposit.signals.item_created',
+        'event_builders': [
+            'invenio_stats.contrib.event_builders.item_create_event_builder'
         ]
     },
     'record-view': {
@@ -88,6 +96,7 @@ STATS_AGGREGATIONS = {
     'file-download-agg': {},
     'file-preview-agg': {},
     'record-view-agg': {},
+    'item-create-agg': {},
 }
 
 
@@ -103,8 +112,16 @@ STATS_QUERIES = {
     'bucket-file-download-total': {},
     'bucket-file-preview-histogram': {},
     'bucket-file-preview-total': {},
+    'get-file-download-per-user-report': {},
+    'get-file-preview-per-user-report': {},
+    'get-record-view-report':{},
     'bucket-record-view-histogram': {},
     'bucket-record-view-total': {},
+    'item-create-total': {},
+    'item-create-histogram': {},
+    'item-detail-total': {},
+    'item-detail-item-total': {},
+    'bucket-item-detail-view-histogram': {},
 }
 
 
@@ -128,3 +145,9 @@ STATS_MQ_EXCHANGE = Exchange(
     delivery_mode='transient',  # in-memory queue
 )
 """Default exchange used for the message queues."""
+
+
+TARGET_REPORTS = {
+    'Item Registration': '1',
+    'Item Detail': '2',
+}
