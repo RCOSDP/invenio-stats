@@ -821,6 +821,248 @@ class QueryFileUsingPerUseReport(ContentNegotiatedMethodView):
 
         return self.make_response(result)
 
+class QueryFileReports(ContentNegotiatedMethodView):
+    """REST API resource providing file reports:
+        file_download
+        file_preview
+        file_using_per_user
+    """
+
+    view_name = 'get_file_reports'
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        super(QueryFileReports, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def calc_file_stats_reports(self, res, data_list):
+        """Create response object for file_stats_reports."""
+        for file in res['buckets']:
+            for index in file['buckets']:
+                data = {}
+                data['file_key'] = file['key']
+                data['index_list'] = index['key']
+                data['total'] = index['value']
+                data['admin'] = 0
+                data['reg'] = 0
+                data['login'] = 0
+                data['no_login'] = 0
+                data['site_license'] = 0
+                for user in index['buckets']:
+                    for license in user['buckets']:
+                        if license['key'] == 1:
+                            data['site_license'] += license['value']
+                            break
+                    userrole = user['key']
+                    count = user['value']
+                    if userrole == 'guest':
+                        data['no_login'] += count
+                    elif userrole == 'Contributor':
+                        data['reg'] += count
+                        data['login'] += count
+                    elif 'Administrator' in userrole:
+                        data['admin'] += count
+                        data['login'] += count
+                    else:
+                        data['login'] += count
+                data_list.append(data)
+
+    def calc_file_per_using_report(self, res, data_list):
+        """Create response object for file_per_using_report."""
+        # file-download
+        for item in res['get-file-download-per-user-report']['buckets']:
+            data = {}
+            data['cur_user_id'] = item['key']
+            data['total_download'] = item['value']
+            data_list.update({item['key']: data})
+        # file-preview
+        for item in res['get-file-preview-per-user-report']['buckets']:
+            data = {}
+            data['cur_user_id'] = item['key']
+            data['total_preview'] = item['value']
+            if data_list.get(item['key']):
+                data_list[item['key']].update(data)
+            else:
+                data_list.update({item['key']: data})
+
+    def Calculation(self, res, data_list):
+        if None != res['buckets']:
+            self.calc_file_stats_reports(res, data_list)
+        elif None != res['get-file-download-per-user-report'] \
+                and None != res['get-file-preview-per-user-report'] :
+            self.calc_file_per_using_report(res, data_list)
+
+    def get_file_stats_report(self, **kwargs):
+        """Get file download/preview report."""
+        result = {}
+        all_list = []
+        open_access_list = []
+
+        event = kwargs.get('event')
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            all_params = {'start_date': query_month + '-01',
+                          'end_date':
+                          query_month + '-' + str(lastday).zfill(2)
+                          + 'T23:59:59'}
+            params = {'start_date': query_month + '-01',
+                      'end_date':
+                      query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59',
+                      'accessrole': 'open_access'}
+
+            all_query_name = ''
+            open_access_query_name = ''
+            if event == 'file_download':
+                all_query_name = 'get-file-download-report'
+                open_access_query_name = 'get-file-download-open-access-report'
+            elif event == 'file_preview':
+                all_query_name = 'get-file-preview-report'
+                open_access_query_name = 'get-file-preview-open-access-report'
+
+            # all
+            all_query_cfg = current_stats.queries[all_query_name]
+            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
+            all_res = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+            # open access
+            open_access_query_cfg = current_stats.queries[open_access_query_name]
+            open_access = open_access_query_cfg.query_class(
+                **open_access_query_cfg.query_config)
+            open_access_res = open_access.run(**params)
+            self.Calculation(open_access_res, open_access_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_month
+        result['all'] = all_list
+        result['open_access'] = open_access_list
+
+        return self.make_response(result)
+
+    def get_file_per_using_report(self, **kwargs):
+        """Get File Using Per User report."""
+        result = {}
+        all_list = {}
+        all_res = {}
+
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            params = {'start_date': query_month + '-01',
+                      'end_date': query_month + '-' + str(lastday).zfill(2)
+                                  + 'T23:59:59'}
+
+            all_query_name = ['get-file-download-per-user-report',
+                              'get-file-preview-per-user-report']
+            for query in all_query_name:
+                all_query_cfg = current_stats.queries[query]
+                all_query = all_query_cfg.\
+                    query_class(**all_query_cfg.query_config)
+                all_res[query] = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_month
+        result['all'] = all_list
+
+        return self.make_response(result)
+
+    def get(self, **kwargs):
+        """Get file reports."""
+        event = kwargs.get('event')
+        if event == 'file_download' or event == 'file_preview':
+            return self.get_file_stats_report(**kwargs)
+        elif event == 'file_using_per_user':
+            return self.get_file_per_using_report(**kwargs)
+        else:
+            return []
+
+class QueryCommonReports(ContentNegotiatedMethodView):
+    """REST API resource providing common reports."""
+
+    view_name = 'get_common_report'
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        super(QueryCommonReports, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def get(self, **kwargs):
+        """Get file reports."""
+        event = kwargs.get('event')
+        if event == 'top_page_access' :
+            return self.get_top_page_access_report(**kwargs)
+        else:
+            return []
+
+    def Calculation(self, res, data_list):
+        for item in res['top-view-total']['buckets']:
+            for hostaccess in item['buckets']:
+                data = {}
+                data['host'] = hostaccess['key']
+                data['ip'] = item['key']
+                data['count'] = hostaccess['value']
+                data_list.update({item['key']: data})
+
+    def get_top_page_access_report(self, **kwargs):
+        result = {}
+        all_list = {}
+        all_res = {}
+
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            params = {'start_date': query_month + '-01',
+                      'end_date': query_month + '-' + str(lastday).zfill(2)
+                                  + 'T23:59:59'}
+
+            all_query_name = ['top-view-total']
+            for query in all_query_name:
+                all_query_cfg = current_stats.queries[query]
+                all_query = all_query_cfg.\
+                    query_class(**all_query_cfg.query_config)
+                all_res[query] = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        print(all_list)
+        result['date'] = query_month
+        result['all'] = all_list
+
+        return self.make_response(result)
 
 class QueryCeleryTaskReport(ContentNegotiatedMethodView):
     """REST API resource providing celery task report."""
@@ -891,9 +1133,9 @@ file_stats_count = QueryFileStatsCount.as_view(
     QueryFileStatsCount.view_name,
 )
 
-file_stats_report = QueryFileStatsReport.as_view(
-    QueryFileStatsReport.view_name,
-)
+# file_stats_report = QueryFileStatsReport.as_view(
+#     QueryFileStatsReport.view_name,
+# )
 
 item_reg_report = QueryItemRegReport.as_view(
     QueryItemRegReport.view_name,
@@ -907,8 +1149,16 @@ record_view_report = QueryRecordViewReport.as_view(
     QueryRecordViewReport.view_name,
 )
 
-file_using_per_user_report = QueryFileUsingPerUseReport.as_view(
-    QueryFileUsingPerUseReport.view_name,
+# file_using_per_user_report = QueryFileUsingPerUseReport.as_view(
+#     QueryFileUsingPerUseReport.view_name,
+# )
+
+file_reports = QueryFileReports.as_view(
+    QueryFileReports.view_name,
+)
+
+common_reports = QueryCommonReports.as_view(
+    QueryCommonReports.view_name,
 )
 
 blueprint.add_url_rule(
@@ -926,10 +1176,10 @@ blueprint.add_url_rule(
     view_func=file_stats_count,
 )
 
-blueprint.add_url_rule(
-    '/<string:event>/<int:year>/<int:month>',
-    view_func=file_stats_report,
-)
+# blueprint.add_url_rule(
+#     '/<string:event>/<int:year>/<int:month>',
+#     view_func=file_stats_report,
+# )
 
 blueprint.add_url_rule(
     '/<string:target_report>/<string:start_date>/<string:end_date>/<string:unit>',
@@ -946,7 +1196,17 @@ blueprint.add_url_rule(
     view_func=record_view_report,
 )
 
+# blueprint.add_url_rule(
+#     '/report/file/<string:event>/<int:year>/<int:month>',
+#     view_func=file_using_per_user_report,
+# )
+
 blueprint.add_url_rule(
     '/report/file/<string:event>/<int:year>/<int:month>',
-    view_func=file_using_per_user_report,
+    view_func=file_reports,
+)
+
+blueprint.add_url_rule(
+    '/<string:event>/<int:year>/<int:month>',
+    view_func=common_reports,
 )

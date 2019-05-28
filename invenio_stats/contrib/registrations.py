@@ -73,7 +73,7 @@ def register_events():
                 ])),
         dict(
             event_type='top-view',
-            templates='invenio_stats.contrib.record_view',
+            templates='invenio_stats.contrib.top_view',
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
@@ -210,6 +210,24 @@ def register_aggregations():
                 pid_type='pid_type',
                 pid_value='pid_value',
                 cur_user_id='cur_user_id',
+            ),
+            metric_aggregation_fields={
+                'unique_count': ('cardinality', 'unique_session_id',
+                                 {'precision_threshold': 1000}),
+            },
+        )), dict(
+        aggregation_name='top-view-agg',
+        templates='invenio_stats.contrib.aggregations.aggr_top_view',
+        aggregator_class=StatAggregator,
+        aggregator_config=dict(
+            client=current_search_client,
+            event='top-view',
+            aggregation_field='unique_id',
+            aggregation_interval='day',
+            copy_fields=dict(
+                country='country',
+                hostname='hostname',
+                remote_addr='remote_addr',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -458,6 +476,15 @@ def register_queries():
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['timestamp']
+            )
+        ),
+        dict(
+            query_name='top-view-total',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-top-view',
+                doc_type='top-view-day-aggregation',
+                aggregated_fields=['remote_addr', 'hostname']
             )
         ),
     ]

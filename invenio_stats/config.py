@@ -97,6 +97,7 @@ STATS_AGGREGATIONS = {
     'file-preview-agg': {},
     'record-view-agg': {},
     'item-create-agg': {},
+    'top-view-agg': {},
 }
 
 
@@ -122,6 +123,7 @@ STATS_QUERIES = {
     'item-detail-total': {},
     'item-detail-item-total': {},
     'bucket-item-detail-view-histogram': {},
+    'top-view-total': {},
 }
 
 
