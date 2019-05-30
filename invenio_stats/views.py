@@ -801,10 +801,10 @@ class QueryRecordViewPerIndexReport(ContentNegotiatedMethodView):
     def parse_bucket_response(self, res, date):
         """Parse raw aggregation response."""
         aggs = res['aggregations'][self.nested_path]
-        result = {'date': date, 'indices': [], 'total': aggs['doc_count']}
+        result = {'date': date, 'all': [], 'total': aggs['doc_count']}
         for id_agg in aggs[self.first_level_field]['buckets']:
             for name_agg in id_agg[self.second_level_field]['buckets']:
-                result['indices'].append({'index_name': name_agg['key'],
+                result['all'].append({'index_name': name_agg['key'],
                                           'view_count': id_agg['doc_count']})
         return result
 
