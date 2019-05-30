@@ -14,17 +14,18 @@ from math import ceil
 import dateutil.relativedelta as relativedelta
 from dateutil import parser
 from elasticsearch.exceptions import NotFoundError
-from elasticsearch_dsl import Search
 from flask import Blueprint, abort, current_app, jsonify, request
 from invenio_rest.views import ContentNegotiatedMethodView
-from invenio_search import current_search_client
 
+from elasticsearch_dsl import Search
+from invenio_search import current_search_client
 from invenio_stats.utils import get_aggregations
 
 from . import config
 from .errors import InvalidRequestInputError, UnknownQueryError
 from .proxies import current_stats
 from .utils import current_user
+
 
 blueprint = Blueprint(
     'invenio_stats',
@@ -799,9 +800,9 @@ class QueryRecordViewPerIndexReport(ContentNegotiatedMethodView):
 
     def parse_bucket_response(self, res, date):
         """Parse raw aggregation response."""
-        result = {'date': date, 'indices': []}
-        buckets = res['aggregations'][self.nested_path][self.first_level_field]['buckets']
-        for id_agg in buckets:
+        aggs = res['aggregations'][self.nested_path]
+        result = {'date': date, 'indices': [], 'total': aggs['doc_count']}
+        for id_agg in aggs[self.first_level_field]['buckets']:
             for name_agg in id_agg[self.second_level_field]['buckets']:
                 result['indices'].append({'index_name': name_agg['key'],
                                           'view_count': id_agg['doc_count']})
@@ -1038,3 +1039,4 @@ blueprint.add_url_rule(
     '/report/file/<string:event>/<int:year>/<int:month>',
     view_func=file_using_per_user_report,
 )
+
