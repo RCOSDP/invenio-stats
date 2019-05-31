@@ -17,10 +17,15 @@ from elasticsearch.exceptions import NotFoundError
 from flask import Blueprint, abort, current_app, jsonify, request
 from invenio_rest.views import ContentNegotiatedMethodView
 
+from elasticsearch_dsl import Search
+from invenio_search import current_search_client
+from invenio_stats.utils import get_aggregations
+
 from . import config
 from .errors import InvalidRequestInputError, UnknownQueryError
 from .proxies import current_stats
 from .utils import current_user
+
 
 blueprint = Blueprint(
     'invenio_stats',
@@ -596,6 +601,68 @@ class QueryRecordViewReport(WekoQuery):
         return self.make_response(result)
 
 
+class QueryRecordViewPerIndexReport(WekoQuery):
+    """REST API resource providing record view per index report."""
+
+    view_name = 'get_record_view_per_index_report'
+    nested_path = 'record_index_list'
+    first_level_field = 'record_index_list.index_id'
+    second_level_field = 'record_index_list.index_name'
+
+    def get_nested_agg(self, start_date, end_date):
+        """Get nested aggregation by index id."""
+        agg_query = Search(using=current_search_client,
+                           index='events-stats-record-view',
+                           doc_type='stats-record-view')[0:0]
+
+        if start_date is not None and end_date is not None:
+            time_range = {}
+            time_range['gte'] = parser.parse(start_date).isoformat()
+            time_range['lte'] = parser.parse(end_date).isoformat()
+            agg_query = agg_query.filter('range', **{'timestamp': time_range})
+
+        agg_query.aggs.bucket(self.nested_path, 'nested',
+                              path=self.nested_path) \
+            .bucket(self.first_level_field, 'terms',
+                    field=self.first_level_field, size=0) \
+            .bucket(self.second_level_field, 'terms',
+                    field=self.second_level_field, size=0)
+        return agg_query.execute().to_dict()
+
+    def parse_bucket_response(self, res, date):
+        """Parse raw aggregation response."""
+        aggs = res['aggregations'][self.nested_path]
+        result = {'date': date, 'all': [], 'total': aggs['doc_count']}
+        for id_agg in aggs[self.first_level_field]['buckets']:
+            for name_agg in id_agg[self.second_level_field]['buckets']:
+                result['all'].append({'index_name': name_agg['key'],
+                                          'view_count': id_agg['doc_count']})
+        return result
+
+    def get(self, **kwargs):
+        """Get record view per index report.
+
+        Nested aggregations are currently unsupported so manually aggregating.
+        """
+        result = {}
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            start_date = query_month + '-01'
+            end_date = query_month + '-' + str(lastday).zfill(2) + 'T23:59:59'
+            raw_result = self.get_nested_agg(start_date, end_date)
+            result = self.parse_bucket_response(raw_result, query_month)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+            return {}
+
+        return self.make_response(result)
+
+
 class QueryFileReports(WekoQuery):
     """REST API resource providing file reports:
         file_download
@@ -730,7 +797,7 @@ class QueryFileReports(WekoQuery):
             _, lastday = calendar.monthrange(year, month)
             params = {'start_date': query_month + '-01',
                       'end_date': query_month + '-' + str(lastday).zfill(2)
-                                  + 'T23:59:59'}
+                      + 'T23:59:59'}
 
             all_query_name = ['get-file-download-per-user-report',
                               'get-file-preview-per-user-report']
@@ -881,6 +948,10 @@ record_view_report = QueryRecordViewReport.as_view(
     QueryRecordViewReport.view_name,
 )
 
+record_view_per_index_report = QueryRecordViewPerIndexReport.as_view(
+    QueryRecordViewPerIndexReport.view_name,
+)
+
 file_reports = QueryFileReports.as_view(
     QueryFileReports.view_name,
 )
@@ -917,6 +988,11 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/report/record/record_view/<int:year>/<int:month>',
     view_func=record_view_report,
+)
+
+blueprint.add_url_rule(
+    '/report/record/record_view_per_index/<int:year>/<int:month>',
+    view_func=record_view_per_index_report,
 )
 
 blueprint.add_url_rule(
