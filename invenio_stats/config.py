@@ -97,11 +97,13 @@ STATS_AGGREGATIONS = {
     'file-preview-agg': {},
     'record-view-agg': {},
     'item-create-agg': {},
+    'search-agg': {},
 }
 
 
 STATS_QUERIES = {
     'get-celery-task-report': {},
+    'get-search-report': {},
     'get-file-download-report': {},
     'get-file-download-open-access-report': {},
     'get-file-preview-report': {},

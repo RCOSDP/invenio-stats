@@ -133,6 +133,13 @@ def copy_record_index_list(doc, aggregation_data=None):
     return record_index_names
 
 
+def copy_search_keyword(doc, aggregation_data=None):
+    """Copy search keyword to agg."""
+    if 'search_key' in doc['search_detail']:
+        return doc['search_detail']['search_key']
+    return ''
+
+
 def record_view_event_builder(event, sender_app, pid=None, record=None,
                               **kwargs):
     """Build a record-view event."""
@@ -224,9 +231,10 @@ def search_event_builder(event, sender_app, search_args=None, **kwargs):
 
 def build_search_unique_id(doc):
     """Build search unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format(
+    key = '{0}_{1}'.format(
         doc['search_detail']['search_key'],
         doc['search_detail']['search_type'])
+    doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     return doc
 
 
@@ -258,3 +266,4 @@ def item_create_event_builder(event, sender_app, item_id=None, **kwargs):
         **get_user()
     ))
     return event
+

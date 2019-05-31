@@ -13,7 +13,8 @@ from invenio_stats.aggregations import StatAggregator
 from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
     build_file_unique_id, build_item_create_unique_id, \
     build_record_unique_id, build_search_detail_condition, \
-    build_search_unique_id, build_top_unique_id, copy_record_index_list
+    build_search_unique_id, build_top_unique_id, copy_record_index_list, \
+    copy_search_keyword
 from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
@@ -121,6 +122,26 @@ def register_aggregations():
                                  {'precision_threshold': 1000}),
                 'volume': ('sum', 'size', {}),
             },
+        )),
+        dict(
+            aggregation_name='search-agg',
+            templates='invenio_stats.contrib.aggregations.aggr_search',
+            aggregator_class=StatAggregator,
+            aggregator_config=dict(
+                client=current_search_client,
+                event='search',
+                aggregation_field='unique_id',
+                aggregation_interval='day',
+                copy_fields=dict(
+                    country='country',
+                    referrer='referrer',
+                    search_key=copy_search_keyword,
+                    #count='count',
+                ),
+                metric_aggregation_fields={
+                    'unique_count': ('cardinality', 'unique_session_id',
+                                     {'precision_threshold': 1000}),
+                },
         )), dict(
         aggregation_name='file-download-agg',
         templates='invenio_stats.contrib.aggregations.aggr_file_download',
@@ -232,6 +253,19 @@ def register_queries():
                 required_filters=dict(
                     task_name='task_name',
                 )
+            )
+        ),
+        dict(
+            query_name='get-search-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-search',
+                doc_type='search-day-aggregation',
+                aggregated_fields=['search_key', 'count'],
+                #copy_fields=dict(
+                #    count='count',
+                #    search_key='search_detail.search_key'
+                #),
             )
         ),
         dict(

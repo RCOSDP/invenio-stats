@@ -959,6 +959,74 @@ class QueryCeleryTaskReport(ContentNegotiatedMethodView):
         return self.make_response(pretty_result)
 
 
+class QuerySearchReport(ContentNegotiatedMethodView):
+    """REST API resource providing search report."""
+
+    view_name = 'get_search_report'
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        super(QuerySearchReport, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def parse_bucket_response(self, raw_res, pretty_result):
+        """Parsing bucket response."""
+        if 'buckets' in raw_res:
+            field_name = raw_res['field']
+            value = raw_res['buckets'][0]['key']
+            pretty_result[field_name] = value
+            return self.parse_bucket_response(
+                raw_res['buckets'][0], pretty_result)
+        else:
+            return pretty_result
+
+
+    def get(self, **kwargs):
+        """Get number of searches per keyword."""
+        result = {}
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            start_date = query_month + '-01'
+            end_date = query_month + '-' + str(lastday).zfill(2) + 'T23:59:59'
+            result['date'] = query_month
+            params = {'start_date': query_month + '-01',
+                      'end_date': query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59'}
+
+            # Run query
+            keyword_query_cfg = current_stats.queries['get-search-report']
+            keyword_query = keyword_query_cfg.query_class(
+                **keyword_query_cfg.query_config)
+            raw_result = keyword_query.run(**params)
+
+            all = []
+            for report in raw_result['buckets']:
+                current_report = {}
+                current_report['search_key'] = report['key']
+                pretty_report = self.parse_bucket_response(
+                    report, current_report)
+                all.append(pretty_report)
+            result['all'] = all
+
+        except Exception as e:
+            current_app.logger.debug(e)
+            return {}
+
+        return self.make_response(result)
+
+
 stats_view = StatsQueryResource.as_view(
     StatsQueryResource.view_name,
 )
@@ -981,6 +1049,10 @@ item_reg_report = QueryItemRegReport.as_view(
 
 celery_task_report = QueryCeleryTaskReport.as_view(
     QueryCeleryTaskReport.view_name,
+)
+
+search_report = QuerySearchReport.as_view(
+    QuerySearchReport.view_name,
 )
 
 record_view_report = QueryRecordViewReport.as_view(
@@ -1013,6 +1085,11 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/<string:event>/<int:year>/<int:month>',
     view_func=file_stats_report,
+)
+
+blueprint.add_url_rule(
+    '/report/search_keywords/<int:year>/<int:month>',
+    view_func=search_report,
 )
 
 blueprint.add_url_rule(
