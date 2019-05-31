@@ -266,4 +266,3 @@ def item_create_event_builder(event, sender_app, item_id=None, **kwargs):
         **get_user()
     ))
     return event
-

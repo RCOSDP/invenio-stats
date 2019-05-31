@@ -136,13 +136,13 @@ def register_aggregations():
                     country='country',
                     referrer='referrer',
                     search_key=copy_search_keyword,
-                    #count='count',
+                    # count='count',
                 ),
                 metric_aggregation_fields={
                     'unique_count': ('cardinality', 'unique_session_id',
                                      {'precision_threshold': 1000}),
                 },
-        )), dict(
+            )), dict(
         aggregation_name='file-download-agg',
         templates='invenio_stats.contrib.aggregations.aggr_file_download',
         aggregator_class=StatAggregator,
@@ -262,10 +262,10 @@ def register_queries():
                 index='stats-search',
                 doc_type='search-day-aggregation',
                 aggregated_fields=['search_key', 'count'],
-                #copy_fields=dict(
+                # copy_fields=dict(
                 #    count='count',
                 #    search_key='search_detail.search_key'
-                #),
+                # ),
             )
         ),
         dict(

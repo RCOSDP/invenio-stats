@@ -14,18 +14,17 @@ from math import ceil
 import dateutil.relativedelta as relativedelta
 from dateutil import parser
 from elasticsearch.exceptions import NotFoundError
+from elasticsearch_dsl import Search
 from flask import Blueprint, abort, current_app, jsonify, request
 from invenio_rest.views import ContentNegotiatedMethodView
-
-from elasticsearch_dsl import Search
 from invenio_search import current_search_client
+
 from invenio_stats.utils import get_aggregations
 
 from . import config
 from .errors import InvalidRequestInputError, UnknownQueryError
 from .proxies import current_stats
 from .utils import current_user
-
 
 blueprint = Blueprint(
     'invenio_stats',
@@ -805,7 +804,7 @@ class QueryRecordViewPerIndexReport(ContentNegotiatedMethodView):
         for id_agg in aggs[self.first_level_field]['buckets']:
             for name_agg in id_agg[self.second_level_field]['buckets']:
                 result['all'].append({'index_name': name_agg['key'],
-                                          'view_count': id_agg['doc_count']})
+                                      'view_count': id_agg['doc_count']})
         return result
 
     def get(self, **kwargs):
@@ -988,7 +987,6 @@ class QuerySearchReport(ContentNegotiatedMethodView):
         else:
             return pretty_result
 
-
     def get(self, **kwargs):
         """Get number of searches per keyword."""
         result = {}
@@ -1116,4 +1114,3 @@ blueprint.add_url_rule(
     '/report/file/<string:event>/<int:year>/<int:month>',
     view_func=file_using_per_user_report,
 )
-
