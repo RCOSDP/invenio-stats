@@ -124,6 +124,9 @@ STATS_QUERIES = {
     'item-detail-total': {},
     'item-detail-item-total': {},
     'bucket-item-detail-view-histogram': {},
+    'get-file-download-per-host-report': {},
+    'get-file-download-per-item-report': {},
+    'get-file-download-per-time-report': {},
 }
 
 
@@ -152,4 +155,5 @@ STATS_MQ_EXCHANGE = Exchange(
 TARGET_REPORTS = {
     'Item Registration': '1',
     'Item Detail': '2',
+    'Contents Download': '3',
 }

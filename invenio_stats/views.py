@@ -437,6 +437,13 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
                 query_name = 'item-detail-total' \
                     if not empty_date_flg or unit == 'Host' \
                     else 'bucket-item-detail-view-histogram'
+        elif target_report == config.TARGET_REPORTS['Contents Download']:
+            if unit == 'Item':
+                query_name = 'get-file-download-per-item-report'
+            else:
+                query_name = 'get-file-download-per-host-report' \
+                    if not empty_date_flg or unit == 'Host' \
+                    else 'get-file-download-per-time-report'
         elif empty_date_flg:
             query_name = 'item-create-histogram'
 
