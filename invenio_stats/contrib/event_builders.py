@@ -63,6 +63,9 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
         cur_user_id=obj.userid,
+        item_id=obj.item_id,
+        item_title=obj.item_title,
+        remote_addr=request.remote_addr,
         # Who:
         **get_user()
     ))
@@ -85,6 +88,9 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
         cur_user_id=obj.userid,
+        item_id=obj.item_id,
+        item_title=obj.item_title,
+        remote_addr=request.remote_addr,
         # Who:
         **get_user()
     ))
@@ -102,12 +108,13 @@ def build_celery_task_unique_id(doc):
 
 def build_file_unique_id(doc):
     """Build file unique identifier."""
-    key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(
+    key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}_{7}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
         doc['index_list'], doc['site_license_flag'], doc['country'],
-        doc['cur_user_id']
+        doc['cur_user_id'], doc['remote_addr']
     )
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
+    doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
 
 

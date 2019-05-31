@@ -132,6 +132,8 @@ def register_aggregations():
             aggregation_interval='day',
             copy_fields=dict(
                 country='country',
+                item_id='item_id',
+                item_title='item_title',
                 file_key='file_key',
                 bucket_id='bucket_id',
                 file_id='file_id',
@@ -140,6 +142,8 @@ def register_aggregations():
                 index_list='index_list',
                 site_license_flag='site_license_flag',
                 cur_user_id='cur_user_id',
+                hostname='hostname',
+                remote_addr='remote_addr',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -157,6 +161,8 @@ def register_aggregations():
             aggregation_interval='day',
             copy_fields=dict(
                 country='country',
+                item_id='item_id',
+                item_title='item_title',
                 file_key='file_key',
                 bucket_id='bucket_id',
                 file_id='file_id',
@@ -165,6 +171,8 @@ def register_aggregations():
                 index_list='index_list',
                 site_license_flag='site_license_flag',
                 cur_user_id='cur_user_id',
+                hostname='hostname',
+                remote_addr='remote_addr',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -438,6 +446,18 @@ def register_queries():
                 aggregated_fields=['remote_addr', 'hostname']
             )
         ),
+        dict(
+            query_name='get-file-download-per-host-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['remote_addr', 'hostname']
+            )
+        ),
         # For query item details (id, name, count)
         dict(
             query_name='item-detail-item-total',
@@ -452,11 +472,32 @@ def register_queries():
             )
         ),
         dict(
+            query_name='get-file-download-per-item-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['item_id', 'item_title']
+            )
+        ),
+        dict(
             query_name='bucket-item-detail-view-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
+                aggregated_fields=['timestamp']
+            )
+        ),
+        dict(
+            query_name='get-file-download-per-time-report',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
                 aggregated_fields=['timestamp']
             )
         ),
