@@ -33,14 +33,12 @@ blueprint = Blueprint(
 )
 
 
-class StatsQueryResource(ContentNegotiatedMethodView):
-    """REST API resource providing access to statistics."""
-
-    view_name = 'stat_query'
+class WekoQuery(ContentNegotiatedMethodView):
+    """Docstring for WekoQuery."""
 
     def __init__(self, **kwargs):
         """Constructor."""
-        super(StatsQueryResource, self).__init__(
+        super(WekoQuery, self).__init__(
             serializers={
                 'application/json':
                 lambda data, *args, **kwargs: jsonify(data),
@@ -50,6 +48,12 @@ class StatsQueryResource(ContentNegotiatedMethodView):
             },
             default_media_type='application/json',
             **kwargs)
+
+
+class StatsQueryResource(WekoQuery):
+    """REST API resource providing access to statistics."""
+
+    view_name = 'stat_query'
 
     def post(self, **kwargs):
         """Get statistics."""
@@ -91,23 +95,10 @@ class StatsQueryResource(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
-class QueryRecordViewCount(ContentNegotiatedMethodView):
+class QueryRecordViewCount(WekoQuery):
     """REST API resource providing record view count."""
 
     view_name = 'get_record_view_count'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryRecordViewCount, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
 
     def get_data(self, record_id, query_date=None, get_period=False):
         """Get data."""
@@ -178,23 +169,10 @@ class QueryRecordViewCount(ContentNegotiatedMethodView):
         return self.make_response(self.get_data(record_id, date))
 
 
-class QueryFileStatsCount(ContentNegotiatedMethodView):
+class QueryFileStatsCount(WekoQuery):
     """REST API resource providing file download/preview count."""
 
     view_name = 'get_file_stats_count'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryFileStatsCount, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
 
     def get_data(self, bucket_id, file_key, query_date=None, get_period=False):
         """Get data."""
@@ -295,128 +273,10 @@ class QueryFileStatsCount(ContentNegotiatedMethodView):
         return self.make_response(self.get_data(bucket_id, file_key, date))
 
 
-class QueryFileStatsReport(ContentNegotiatedMethodView):
-    """REST API resource providing file download/preview report."""
-
-    view_name = 'get_file_stats_report'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryFileStatsReport, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
-
-    def Calculation(self, res, data_list):
-        """Create response object."""
-        for file in res['buckets']:
-            for index in file['buckets']:
-                data = {}
-                data['file_key'] = file['key']
-                data['index_list'] = index['key']
-                data['total'] = index['value']
-                data['admin'] = 0
-                data['reg'] = 0
-                data['login'] = 0
-                data['no_login'] = 0
-                data['site_license'] = 0
-                for user in index['buckets']:
-                    for license in user['buckets']:
-                        if license['key'] == 1:
-                            data['site_license'] += license['value']
-                            break
-                    userrole = user['key']
-                    count = user['value']
-                    if userrole == 'guest':
-                        data['no_login'] += count
-                    elif userrole == 'Contributor':
-                        data['reg'] += count
-                        data['login'] += count
-                    elif 'Administrator' in userrole:
-                        data['admin'] += count
-                        data['login'] += count
-                    else:
-                        data['login'] += count
-                data_list.append(data)
-
-    def get(self, **kwargs):
-        """Get file download/preview report."""
-        result = {}
-        all_list = []
-        open_access_list = []
-
-        event = kwargs.get('event')
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            all_params = {'start_date': query_month + '-01',
-                          'end_date':
-                          query_month + '-' + str(lastday).zfill(2)
-                          + 'T23:59:59'}
-            params = {'start_date': query_month + '-01',
-                      'end_date':
-                      query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59',
-                      'accessrole': 'open_access'}
-
-            all_query_name = ''
-            open_access_query_name = ''
-            if event == 'file_download':
-                all_query_name = 'get-file-download-report'
-                open_access_query_name = 'get-file-download-open-access-report'
-            elif event == 'file_preview':
-                all_query_name = 'get-file-preview-report'
-                open_access_query_name = 'get-file-preview-open-access-report'
-
-            # all
-            all_query_cfg = current_stats.queries[all_query_name]
-            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
-            all_res = all_query.run(**params)
-            self.Calculation(all_res, all_list)
-
-            # open access
-            open_access_query_cfg = current_stats.queries[open_access_query_name]
-            open_access = open_access_query_cfg.query_class(
-                **open_access_query_cfg.query_config)
-            open_access_res = open_access.run(**params)
-            self.Calculation(open_access_res, open_access_list)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-
-        result['date'] = query_month
-        result['all'] = all_list
-        result['open_access'] = open_access_list
-
-        return self.make_response(result)
-
-
-class QueryItemRegReport(ContentNegotiatedMethodView):
+class QueryItemRegReport(WekoQuery):
     """REST API resource providing item registration report."""
 
     view_name = 'get_item_registration_report'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryItemRegReport, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
 
     def get(self, **kwargs):
         """Get item registration report."""
@@ -701,23 +561,10 @@ class QueryItemRegReport(ContentNegotiatedMethodView):
         return self.make_response(response)
 
 
-class QueryRecordViewReport(ContentNegotiatedMethodView):
+class QueryRecordViewReport(WekoQuery):
     """REST API resource providing record view report."""
 
     view_name = 'get_record_view_report'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryRecordViewReport, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
 
     def Calculation(self, res, data_list):
         """Create response object."""
@@ -763,26 +610,13 @@ class QueryRecordViewReport(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
-class QueryRecordViewPerIndexReport(ContentNegotiatedMethodView):
+class QueryRecordViewPerIndexReport(WekoQuery):
     """REST API resource providing record view per index report."""
 
     view_name = 'get_record_view_per_index_report'
     nested_path = 'record_index_list'
     first_level_field = 'record_index_list.index_id'
     second_level_field = 'record_index_list.index_name'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryRecordViewPerIndexReport, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
 
     def get_nested_agg(self, start_date, end_date):
         """Get nested aggregation by index id."""
@@ -838,26 +672,50 @@ class QueryRecordViewPerIndexReport(ContentNegotiatedMethodView):
         return self.make_response(result)
 
 
-class QueryFileUsingPerUseReport(ContentNegotiatedMethodView):
-    """REST API resource providing File Using Per User report."""
+class QueryFileReports(WekoQuery):
+    """REST API resource providing file reports.
 
-    view_name = 'get_file_using_per_user_report'
+    file_download
+    file_preview
+    file_using_per_user
+    """
 
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryFileUsingPerUseReport, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
+    view_name = 'get_file_reports'
 
-    def Calculation(self, res, data_list):
-        """Create response object."""
+    def calc_file_stats_reports(self, res, data_list):
+        """Create response object for file_stats_reports."""
+        for file in res['buckets']:
+            for index in file['buckets']:
+                data = {}
+                data['file_key'] = file['key']
+                data['index_list'] = index['key']
+                data['total'] = index['value']
+                data['admin'] = 0
+                data['reg'] = 0
+                data['login'] = 0
+                data['no_login'] = 0
+                data['site_license'] = 0
+                for user in index['buckets']:
+                    for license in user['buckets']:
+                        if license['key'] == 1:
+                            data['site_license'] += license['value']
+                            break
+                    userrole = user['key']
+                    count = user['value']
+                    if userrole == 'guest':
+                        data['no_login'] += count
+                    elif userrole == 'Contributor':
+                        data['reg'] += count
+                        data['login'] += count
+                    elif 'Administrator' in userrole:
+                        data['admin'] += count
+                        data['login'] += count
+                    else:
+                        data['login'] += count
+                data_list.append(data)
+
+    def calc_file_per_using_report(self, res, data_list):
+        """Create response object for file_per_using_report."""
         # file-download
         for item in res['get-file-download-per-user-report']['buckets']:
             data = {}
@@ -874,7 +732,69 @@ class QueryFileUsingPerUseReport(ContentNegotiatedMethodView):
             else:
                 data_list.update({item['key']: data})
 
-    def get(self, **kwargs):
+    def Calculation(self, res, data_list):
+        """Calculation."""
+        if res['buckets'] is not None:
+            self.calc_file_stats_reports(res, data_list)
+        elif res['get-file-download-per-user-report'] is not None \
+                and res['get-file-preview-per-user-report'] is not None:
+            self.calc_file_per_using_report(res, data_list)
+
+    def get_file_stats_report(self, **kwargs):
+        """Get file download/preview report."""
+        result = {}
+        all_list = []
+        open_access_list = []
+
+        event = kwargs.get('event')
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            all_params = {'start_date': query_month + '-01',
+                          'end_date':
+                          query_month + '-' + str(lastday).zfill(2)
+                          + 'T23:59:59'}
+            params = {'start_date': query_month + '-01',
+                      'end_date':
+                      query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59',
+                      'accessrole': 'open_access'}
+
+            all_query_name = ''
+            open_access_query_name = ''
+            if event == 'file_download':
+                all_query_name = 'get-file-download-report'
+                open_access_query_name = 'get-file-download-open-access-report'
+            elif event == 'file_preview':
+                all_query_name = 'get-file-preview-report'
+                open_access_query_name = 'get-file-preview-open-access-report'
+
+            # all
+            all_query_cfg = current_stats.queries[all_query_name]
+            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
+            all_res = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+            # open access
+            open_access_query_cfg = current_stats.queries[open_access_query_name]
+            open_access = open_access_query_cfg.query_class(
+                **open_access_query_cfg.query_config)
+            open_access_res = open_access.run(**params)
+            self.Calculation(open_access_res, open_access_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_month
+        result['all'] = all_list
+        result['open_access'] = open_access_list
+
+        return self.make_response(result)
+
+    def get_file_per_using_report(self, **kwargs):
         """Get File Using Per User report."""
         result = {}
         all_list = {}
@@ -907,24 +827,78 @@ class QueryFileUsingPerUseReport(ContentNegotiatedMethodView):
 
         return self.make_response(result)
 
+    def get(self, **kwargs):
+        """Get file reports."""
+        event = kwargs.get('event')
+        if event == 'file_download' or event == 'file_preview':
+            return self.get_file_stats_report(**kwargs)
+        elif event == 'file_using_per_user':
+            return self.get_file_per_using_report(**kwargs)
+        else:
+            return []
 
-class QueryCeleryTaskReport(ContentNegotiatedMethodView):
+
+class QueryCommonReports(WekoQuery):
+    """REST API resource providing common reports."""
+
+    view_name = 'get_common_report'
+
+    def get(self, **kwargs):
+        """Get file reports."""
+        event = kwargs.get('event')
+        if event == 'top_page_access':
+            return self.get_top_page_access_report(**kwargs)
+        else:
+            return []
+
+    def Calculation(self, res, data_list):
+        """Calculation."""
+        for item in res['top-view-total']['buckets']:
+            for hostaccess in item['buckets']:
+                data = {}
+                data['host'] = hostaccess['key']
+                data['ip'] = item['key']
+                data['count'] = hostaccess['value']
+                data_list.update({item['key']: data})
+
+    def get_top_page_access_report(self, **kwargs):
+        """Get toppage access report."""
+        result = {}
+        all_list = {}
+        all_res = {}
+
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            params = {'start_date': query_month + '-01',
+                      'end_date': query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59'}
+
+            all_query_name = ['top-view-total']
+            for query in all_query_name:
+                all_query_cfg = current_stats.queries[query]
+                all_query = all_query_cfg.\
+                    query_class(**all_query_cfg.query_config)
+                all_res[query] = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        print(all_list)
+        result['date'] = query_month
+        result['all'] = all_list
+
+        return self.make_response(result)
+
+
+class QueryCeleryTaskReport(WekoQuery):
     """REST API resource providing celery task report."""
 
     view_name = 'get_celery_task_report'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryCeleryTaskReport, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
 
     def parse_bucket_response(self, raw_res, pretty_result):
         """Parsing bucket response."""
@@ -1044,10 +1018,6 @@ file_stats_count = QueryFileStatsCount.as_view(
     QueryFileStatsCount.view_name,
 )
 
-file_stats_report = QueryFileStatsReport.as_view(
-    QueryFileStatsReport.view_name,
-)
-
 item_reg_report = QueryItemRegReport.as_view(
     QueryItemRegReport.view_name,
 )
@@ -1068,8 +1038,12 @@ record_view_per_index_report = QueryRecordViewPerIndexReport.as_view(
     QueryRecordViewPerIndexReport.view_name,
 )
 
-file_using_per_user_report = QueryFileUsingPerUseReport.as_view(
-    QueryFileUsingPerUseReport.view_name,
+file_reports = QueryFileReports.as_view(
+    QueryFileReports.view_name,
+)
+
+common_reports = QueryCommonReports.as_view(
+    QueryCommonReports.view_name,
 )
 
 blueprint.add_url_rule(
@@ -1119,5 +1093,10 @@ blueprint.add_url_rule(
 
 blueprint.add_url_rule(
     '/report/file/<string:event>/<int:year>/<int:month>',
-    view_func=file_using_per_user_report,
+    view_func=file_reports,
+)
+
+blueprint.add_url_rule(
+    '/<string:event>/<int:year>/<int:month>',
+    view_func=common_reports,
 )

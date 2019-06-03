@@ -98,6 +98,7 @@ STATS_AGGREGATIONS = {
     'record-view-agg': {},
     'item-create-agg': {},
     'search-agg': {},
+    'top-view-agg': {},
 }
 
 
@@ -127,6 +128,7 @@ STATS_QUERIES = {
     'get-file-download-per-host-report': {},
     'get-file-download-per-item-report': {},
     'get-file-download-per-time-report': {},
+    'top-view-total': {},
 }
 
 

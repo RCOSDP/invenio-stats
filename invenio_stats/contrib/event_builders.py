@@ -19,7 +19,8 @@ from flask import request
 from ..utils import get_user
 
 
-def celery_task_event_builder(event, sender_app, exec_data=None, user_data=None, **kwargs):
+def celery_task_event_builder(
+        event, sender_app, exec_data=None, user_data=None, **kwargs):
     """Build a celery-task event."""
     event.update(dict(
         # When:
@@ -199,6 +200,7 @@ def top_view_event_builder(event, sender_app, **kwargs):
 def build_top_unique_id(doc):
     """Build top unique identifier."""
     doc['unique_id'] = '{0}_{1}'.format("top", "view")
+    doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
 
 
