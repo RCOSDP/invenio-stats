@@ -273,6 +273,111 @@ class QueryFileStatsCount(WekoQuery):
         return self.make_response(self.get_data(bucket_id, file_key, date))
 
 
+class QueryFileStatsReport(ContentNegotiatedMethodView):
+    """REST API resource providing file download/preview report."""
+
+    view_name = 'get_file_stats_report'
+
+    def __init__(self, **kwargs):
+        """Constructor."""
+        super(QueryFileStatsReport, self).__init__(
+            serializers={
+                'application/json':
+                lambda data, *args, **kwargs: jsonify(data),
+            },
+            default_method_media_type={
+                'GET': 'application/json',
+            },
+            default_media_type='application/json',
+            **kwargs)
+
+    def Calculation(self, res, data_list):
+        """Create response object."""
+        for file in res['buckets']:
+            for index in file['buckets']:
+                data = {}
+                data['file_key'] = file['key']
+                data['index_list'] = index['key']
+                data['total'] = index['value']
+                data['admin'] = 0
+                data['reg'] = 0
+                data['login'] = 0
+                data['no_login'] = 0
+                data['site_license'] = 0
+                for user in index['buckets']:
+                    for license in user['buckets']:
+                        if license['key'] == 1:
+                            data['site_license'] += license['value']
+                            break
+                    userrole = user['key']
+                    count = user['value']
+                    if userrole == 'guest':
+                        data['no_login'] += count
+                    elif userrole == 'Contributor':
+                        data['reg'] += count
+                        data['login'] += count
+                    elif 'Administrator' in userrole:
+                        data['admin'] += count
+                        data['login'] += count
+                    else:
+                        data['login'] += count
+                data_list.append(data)
+
+    def get(self, **kwargs):
+        """Get file download/preview report."""
+        result = {}
+        all_list = []
+        open_access_list = []
+
+        event = kwargs.get('event')
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        try:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            all_params = {'start_date': query_month + '-01',
+                          'end_date':
+                          query_month + '-' + str(lastday).zfill(2)
+                          + 'T23:59:59'}
+            params = {'start_date': query_month + '-01',
+                      'end_date':
+                      query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59',
+                      'accessrole': 'open_access'}
+
+            all_query_name = ''
+            open_access_query_name = ''
+            if event == 'file_download':
+                all_query_name = 'get-file-download-report'
+                open_access_query_name = 'get-file-download-open-access-report'
+            elif event == 'file_preview':
+                all_query_name = 'get-file-preview-report'
+                open_access_query_name = 'get-file-preview-open-access-report'
+
+            # all
+            all_query_cfg = current_stats.queries[all_query_name]
+            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
+            all_res = all_query.run(**params)
+            self.Calculation(all_res, all_list)
+
+            # open access
+            open_access_query_cfg = current_stats.queries[open_access_query_name]
+            open_access = open_access_query_cfg.query_class(
+                **open_access_query_cfg.query_config)
+            open_access_res = open_access.run(**params)
+            self.Calculation(open_access_res, open_access_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_month
+        result['all'] = all_list
+        result['open_access'] = open_access_list
+
+        return self.make_response(result)
+
+
 class QueryItemRegReport(WekoQuery):
     """REST API resource providing item registration report."""
 
@@ -1016,6 +1121,10 @@ record_view_count = QueryRecordViewCount.as_view(
 
 file_stats_count = QueryFileStatsCount.as_view(
     QueryFileStatsCount.view_name,
+)
+
+file_stats_report = QueryFileStatsReport.as_view(
+    QueryFileStatsReport.view_name,
 )
 
 item_reg_report = QueryItemRegReport.as_view(
