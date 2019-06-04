@@ -865,7 +865,7 @@ class QueryCommonReports(WekoQuery):
     def get_top_page_access_report(self, **kwargs):
         """Get toppage access report."""
 
-        def Calculation(self, res, data_list):
+        def Calculation(res, data_list):
             """Calculation."""
             for item in res['top-view-total']['buckets']:
                 for hostaccess in item['buckets']:
@@ -904,11 +904,12 @@ class QueryCommonReports(WekoQuery):
     def get_site_access_report(self, **kwargs):
         """Get site access report."""
 
-        def Calculation(self, res, site_license_list, other_list,
+        def Calculation(query_list, res, site_license_list, other_list,
                         institution_name_list):
             """Calculation."""
             mapper = {}
-            for k, items in res.items():
+            for k in query_list:
+                items = res.get(k)
                 site_license_list[k] = 0
                 other_list[k] = 0
                 if items:
@@ -924,12 +925,14 @@ class QueryCommonReports(WekoQuery):
                                 data = {}
                                 data['name'] = i['key']
                                 data[k] = i['value']
-                else:
-                    for data in institution_name_list:
-                        data[k] = 0
+                                institution_name_list.append(data)
+            for k in query_list:
+                for i in range(len(institution_name_list)):
+                    if k not in institution_name_list[i]:
+                        institution_name_list[i][k] = 0
 
         result = {}
-        all_rest = {}
+        all_res = {}
         site_license_list = {}
         other_list = {}
         institution_name_list = []
@@ -947,15 +950,15 @@ class QueryCommonReports(WekoQuery):
                                                   + '-per-site-license']
                 query = query_cfg.query_class(**query_cfg.query_config)
                 all_res[q] = query.run(**params)
-            Calculation(all_res, site_license_list, other_list,
+            Calculation(query_list, all_res, site_license_list, other_list,
                         institution_name_list)
 
         except Exception as e:
             current_app.logger.debug(e)
 
         result['date'] = query_month
-        result['site_license'] = site_license_list
-        result['other'] = other_list
+        result['site_license'] = [site_license_list]
+        result['other'] = [other_list]
         result['institution_name'] = institution_name_list
 
         return self.make_response(result)
