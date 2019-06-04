@@ -55,6 +55,14 @@
         "search_key": {
           "type": "string",
           "index": "not_analyzed"
+        },
+        "site_license_name": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "site_license_flag": {
+          "type": "boolean",
+          "index": "not_analyzed"
         }
       }
     },

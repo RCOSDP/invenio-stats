@@ -136,6 +136,8 @@ def register_aggregations():
                     country='country',
                     referrer='referrer',
                     search_key=copy_search_keyword,
+                    site_license_name='site_license_name',
+                    site_license_flag='site_license_flag'
                     # count='count',
                 ),
                 metric_aggregation_fields={
@@ -161,6 +163,7 @@ def register_aggregations():
                 accessrole='accessrole',
                 userrole='userrole',
                 index_list='index_list',
+                site_license_name='site_license_name',
                 site_license_flag='site_license_flag',
                 cur_user_id='cur_user_id',
                 hostname='hostname',
@@ -190,6 +193,7 @@ def register_aggregations():
                 accessrole='accessrole',
                 userrole='userrole',
                 index_list='index_list',
+                site_license_name='site_license_name',
                 site_license_flag='site_license_flag',
                 cur_user_id='cur_user_id',
                 hostname='hostname',
@@ -239,6 +243,8 @@ def register_aggregations():
                 pid_type='pid_type',
                 pid_value='pid_value',
                 cur_user_id='cur_user_id',
+                site_license_name='site_license_name',
+                site_license_flag='site_license_flag'
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -257,6 +263,8 @@ def register_aggregations():
                 country='country',
                 hostname='hostname',
                 remote_addr='remote_addr',
+                site_license_name='site_license_name',
+                site_license_flag='site_license_flag'
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -562,4 +570,49 @@ def register_queries():
                 aggregated_fields=['remote_addr', 'hostname']
             )
         ),
+        dict(
+            query_name='get-top-view-per-site-license',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-top-view',
+                doc_type='top-view-day-aggregation',
+                aggregated_fields=['site_license_name']
+            )
+        ),
+        dict(
+            query_name='get-record-view-per-site-license',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-record-view',
+                doc_type='record-view-day-aggregation',
+                aggregated_fields=['site_license_name']
+            )
+        ),
+        dict(
+            query_name='get-search-per-site-license',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-search',
+                doc_type='search-day-aggregation',
+                aggregated_fields=['site_license_name']
+            )
+        ),
+        dict(
+            query_name='get-file-download-per-site-license',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                aggregated_fields=['site_license_name']
+            )
+        ),
+        dict(
+            query_name='get-file-preview-per-site-license',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
+                aggregated_fields=['site_license_name']
+            )
+        )
     ]

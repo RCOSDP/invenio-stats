@@ -61,6 +61,7 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         referrer=request.referrer,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
+        site_license_name=obj.site_license_name,
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
         cur_user_id=obj.userid,
@@ -86,6 +87,7 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         referrer=request.referrer,
         accessrole=obj.file.json['accessrole'],
         userrole=obj.userrole,
+        site_license_name=obj.site_license_name,
         site_license_flag=obj.site_license_flag,
         index_list=obj.index_list,
         cur_user_id=obj.userid,
@@ -111,7 +113,7 @@ def build_file_unique_id(doc):
     """Build file unique identifier."""
     key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}_{7}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
-        doc['index_list'], doc['site_license_flag'], doc['country'],
+        doc['index_list'], doc['site_license_name'], doc['country'],
         doc['cur_user_id'], doc['remote_addr']
     )
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
@@ -122,9 +124,9 @@ def build_file_unique_id(doc):
 def build_record_unique_id(doc):
     """Build record unique identifier."""
     record_index_names = copy_record_index_list(doc)
-    doc['unique_id'] = '{0}_{1}_{2}_{3}'.format(
+    doc['unique_id'] = '{0}_{1}_{2}_{3}_{4}'.format(
         doc['record_id'], doc['country'], doc['cur_user_id'],
-        record_index_names)
+        record_index_names, doc['site_license_name'])
     doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
 
@@ -149,7 +151,7 @@ def copy_search_keyword(doc, aggregation_data=None):
 
 
 def record_view_event_builder(event, sender_app, pid=None, record=None,
-                              **kwargs):
+                              info=None, **kwargs):
     """Build a record-view event."""
     # get index information
     index_list = []
@@ -177,13 +179,15 @@ def record_view_event_builder(event, sender_app, pid=None, record=None,
         referrer=request.referrer,
         cur_user_id=cur_user_id,
         remote_addr=request.remote_addr,
+        site_license_flag=info['site_license_flag'],
+        site_license_name=info['site_license_name'],
         # Who:
         **get_user()
     ))
     return event
 
 
-def top_view_event_builder(event, sender_app, **kwargs):
+def top_view_event_builder(event, sender_app, info=None, **kwargs):
     """Build a top-view event."""
     event.update(dict(
         # When:
@@ -191,6 +195,8 @@ def top_view_event_builder(event, sender_app, **kwargs):
         # What:
         referrer=request.referrer,
         remote_addr=request.remote_addr,
+        site_license_flag=info['site_license_flag'],
+        site_license_name=info['site_license_name'],
         # Who:
         **get_user()
     ))
@@ -199,7 +205,8 @@ def top_view_event_builder(event, sender_app, **kwargs):
 
 def build_top_unique_id(doc):
     """Build top unique identifier."""
-    doc['unique_id'] = '{0}_{1}'.format("top", "view")
+    doc['unique_id'] = '{0}_{1}_{2}'.format("top", "view",
+                                            doc['site_license_name'])
     doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
 
@@ -224,7 +231,8 @@ def resolve_address(addr):
     return record[0]
 
 
-def search_event_builder(event, sender_app, search_args=None, **kwargs):
+def search_event_builder(event, sender_app, search_args=None,
+                         info=None, **kwargs):
     """Build a search event."""
     event.update(dict(
         # When:
@@ -232,6 +240,8 @@ def search_event_builder(event, sender_app, search_args=None, **kwargs):
         # What:
         referrer=request.referrer,
         search_detail=search_args.to_dict(flat=False),
+        site_license_name=info['site_license_name'],
+        site_license_flag=info['site_license_flag'],
         # Who:
         **get_user()
     ))
@@ -240,9 +250,11 @@ def search_event_builder(event, sender_app, search_args=None, **kwargs):
 
 def build_search_unique_id(doc):
     """Build search unique identifier."""
-    key = '{0}_{1}'.format(
+    key = '{0}_{1}_{2}'.format(
         doc['search_detail']['search_key'],
-        doc['search_detail']['search_type'])
+        doc['search_detail']['search_type'],
+        doc['site_license_name']
+    )
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     return doc
 

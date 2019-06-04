@@ -273,111 +273,6 @@ class QueryFileStatsCount(WekoQuery):
         return self.make_response(self.get_data(bucket_id, file_key, date))
 
 
-class QueryFileStatsReport(ContentNegotiatedMethodView):
-    """REST API resource providing file download/preview report."""
-
-    view_name = 'get_file_stats_report'
-
-    def __init__(self, **kwargs):
-        """Constructor."""
-        super(QueryFileStatsReport, self).__init__(
-            serializers={
-                'application/json':
-                lambda data, *args, **kwargs: jsonify(data),
-            },
-            default_method_media_type={
-                'GET': 'application/json',
-            },
-            default_media_type='application/json',
-            **kwargs)
-
-    def Calculation(self, res, data_list):
-        """Create response object."""
-        for file in res['buckets']:
-            for index in file['buckets']:
-                data = {}
-                data['file_key'] = file['key']
-                data['index_list'] = index['key']
-                data['total'] = index['value']
-                data['admin'] = 0
-                data['reg'] = 0
-                data['login'] = 0
-                data['no_login'] = 0
-                data['site_license'] = 0
-                for user in index['buckets']:
-                    for license in user['buckets']:
-                        if license['key'] == 1:
-                            data['site_license'] += license['value']
-                            break
-                    userrole = user['key']
-                    count = user['value']
-                    if userrole == 'guest':
-                        data['no_login'] += count
-                    elif userrole == 'Contributor':
-                        data['reg'] += count
-                        data['login'] += count
-                    elif 'Administrator' in userrole:
-                        data['admin'] += count
-                        data['login'] += count
-                    else:
-                        data['login'] += count
-                data_list.append(data)
-
-    def get(self, **kwargs):
-        """Get file download/preview report."""
-        result = {}
-        all_list = []
-        open_access_list = []
-
-        event = kwargs.get('event')
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            all_params = {'start_date': query_month + '-01',
-                          'end_date':
-                          query_month + '-' + str(lastday).zfill(2)
-                          + 'T23:59:59'}
-            params = {'start_date': query_month + '-01',
-                      'end_date':
-                      query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59',
-                      'accessrole': 'open_access'}
-
-            all_query_name = ''
-            open_access_query_name = ''
-            if event == 'file_download':
-                all_query_name = 'get-file-download-report'
-                open_access_query_name = 'get-file-download-open-access-report'
-            elif event == 'file_preview':
-                all_query_name = 'get-file-preview-report'
-                open_access_query_name = 'get-file-preview-open-access-report'
-
-            # all
-            all_query_cfg = current_stats.queries[all_query_name]
-            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
-            all_res = all_query.run(**params)
-            self.Calculation(all_res, all_list)
-
-            # open access
-            open_access_query_cfg = current_stats.queries[open_access_query_name]
-            open_access = open_access_query_cfg.query_class(
-                **open_access_query_cfg.query_config)
-            open_access_res = open_access.run(**params)
-            self.Calculation(open_access_res, open_access_list)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-
-        result['date'] = query_month
-        result['all'] = all_list
-        result['open_access'] = open_access_list
-
-        return self.make_response(result)
-
-
 class QueryItemRegReport(WekoQuery):
     """REST API resource providing item registration report."""
 
@@ -948,26 +843,38 @@ class QueryCommonReports(WekoQuery):
 
     view_name = 'get_common_report'
 
+    def get_common_params(self, year, month):
+        """Get common params."""
+        query_month = str(year) + '-' + str(month).zfill(2)
+        _, lastday = calendar.monthrange(year, month)
+        params = {'start_date': query_month + '-01',
+                  'end_date': query_month + '-' + str(lastday).zfill(2)
+                  + 'T23:59:59'}
+        return query_month, params
+
     def get(self, **kwargs):
         """Get file reports."""
         event = kwargs.get('event')
         if event == 'top_page_access':
             return self.get_top_page_access_report(**kwargs)
+        elif event == 'site_access':
+            return self.get_site_access_report(**kwargs)
         else:
             return []
 
-    def Calculation(self, res, data_list):
-        """Calculation."""
-        for item in res['top-view-total']['buckets']:
-            for hostaccess in item['buckets']:
-                data = {}
-                data['host'] = hostaccess['key']
-                data['ip'] = item['key']
-                data['count'] = hostaccess['value']
-                data_list.update({item['key']: data})
-
     def get_top_page_access_report(self, **kwargs):
         """Get toppage access report."""
+
+        def Calculation(self, res, data_list):
+            """Calculation."""
+            for item in res['top-view-total']['buckets']:
+                for hostaccess in item['buckets']:
+                    data = {}
+                    data['host'] = hostaccess['key']
+                    data['ip'] = item['key']
+                    data['count'] = hostaccess['value']
+                    data_list.update({item['key']: data})
+
         result = {}
         all_list = {}
         all_res = {}
@@ -976,26 +883,80 @@ class QueryCommonReports(WekoQuery):
         month = kwargs.get('month')
 
         try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            params = {'start_date': query_month + '-01',
-                      'end_date': query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59'}
-
+            query_month, params = self.get_common_params(year, month)
             all_query_name = ['top-view-total']
             for query in all_query_name:
                 all_query_cfg = current_stats.queries[query]
                 all_query = all_query_cfg.\
                     query_class(**all_query_cfg.query_config)
                 all_res[query] = all_query.run(**params)
-            self.Calculation(all_res, all_list)
+            Calculation(all_res, all_list)
 
         except Exception as e:
             current_app.logger.debug(e)
 
-        print(all_list)
         result['date'] = query_month
         result['all'] = all_list
+
+        return self.make_response(result)
+
+
+    def get_site_access_report(self, **kwargs):
+        """Get site access report."""
+
+        def Calculation(self, res, site_license_list, other_list,
+                        institution_name_list):
+            """Calculation."""
+            mapper = {}
+            for k, items in res.items():
+                site_license_list[k] = 0
+                other_list[k] = 0
+                if items:
+                    for i in items['buckets']:
+                        if i['key'] == '':
+                            other_list[k] += i['value']
+                        else:
+                            site_license_list[k] += i['value']
+                            if i['key'] in mapper:
+                                institution_name_list[mapper[i['key']]][k] = i['value']
+                            else:
+                                mapper[i['key']] = len(institution_name_list)
+                                data = {}
+                                data['name'] = i['key']
+                                data[k] = i['value']
+                else:
+                    for data in institution_name_list:
+                        data[k] = 0
+
+        result = {}
+        all_rest = {}
+        site_license_list = {}
+        other_list = {}
+        institution_name_list = []
+
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        query_list = ['top_view', 'search', 'record_view',
+                      'file_download', 'file_preview']
+
+        try:
+            query_month, params = self.get_common_params(year, month)
+            for q in query_list:
+                query_cfg = current_stats.queries['get-' + q.replace('_', '-')
+                                                  + '-per-site-license']
+                query = query_cfg.query_class(**query_cfg.query_config)
+                all_res[q] = query.run(**params)
+            Calculation(all_res, site_license_list, other_list,
+                        institution_name_list)
+
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_month
+        result['site_license'] = site_license_list
+        result['other'] = other_list
+        result['institution_name'] = institution_name_list
 
         return self.make_response(result)
 
@@ -1123,10 +1084,6 @@ file_stats_count = QueryFileStatsCount.as_view(
     QueryFileStatsCount.view_name,
 )
 
-file_stats_report = QueryFileStatsReport.as_view(
-    QueryFileStatsReport.view_name,
-)
-
 item_reg_report = QueryItemRegReport.as_view(
     QueryItemRegReport.view_name,
 )
@@ -1168,11 +1125,6 @@ blueprint.add_url_rule(
 blueprint.add_url_rule(
     '/<string:bucket_id>/<string:file_key>',
     view_func=file_stats_count,
-)
-
-blueprint.add_url_rule(
-    '/<string:event>/<int:year>/<int:month>',
-    view_func=file_stats_report,
 )
 
 blueprint.add_url_rule(

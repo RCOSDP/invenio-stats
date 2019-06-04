@@ -129,6 +129,11 @@ STATS_QUERIES = {
     'get-file-download-per-item-report': {},
     'get-file-download-per-time-report': {},
     'top-view-total': {},
+    'get-top-view-per-site-license': {},
+    'get-record-view-per-site-license': {},
+    'get-search-per-site-license': {},
+    'get-file-download-per-site-license': {},
+    'get-file-preview-per-site-license': {}
 }
 
 
