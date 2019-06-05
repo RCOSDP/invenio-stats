@@ -864,7 +864,6 @@ class QueryCommonReports(WekoQuery):
 
     def get_top_page_access_report(self, **kwargs):
         """Get toppage access report."""
-
         def Calculation(res, data_list):
             """Calculation."""
             for item in res['top-view-total']['buckets']:
@@ -900,10 +899,8 @@ class QueryCommonReports(WekoQuery):
 
         return self.make_response(result)
 
-
     def get_site_access_report(self, **kwargs):
         """Get site access report."""
-
         def Calculation(query_list, res, site_license_list, other_list,
                         institution_name_list):
             """Calculation."""
@@ -919,7 +916,8 @@ class QueryCommonReports(WekoQuery):
                         else:
                             site_license_list[k] += i['value']
                             if i['key'] in mapper:
-                                institution_name_list[mapper[i['key']]][k] = i['value']
+                                institution_name_list[mapper[i['key']]
+                                                      ][k] = i['value']
                             else:
                                 mapper[i['key']] = len(institution_name_list)
                                 data = {}
