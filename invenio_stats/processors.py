@@ -20,6 +20,7 @@ from dateutil import parser
 from flask import current_app
 from invenio_search import current_search_client
 from pytz import utc
+from weko_admin.api import is_restricted_user
 
 from .utils import get_anonymization_salt, get_geoip, obj_or_import_string
 
@@ -92,6 +93,17 @@ def anonymize_user(doc):
         unique_session_id=unique_session_id.hexdigest()
     ))
 
+    return doc
+
+
+def check_restricted(doc):
+    """Filter out restricted access."""
+    user_data = {
+        'ip_address': doc['ip_address'],
+        'user_agent': doc['user_agent']
+    }
+    if is_restricted_user(user_data):
+        return None
     return doc
 
 

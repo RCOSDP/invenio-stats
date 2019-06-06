@@ -15,7 +15,8 @@ from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
     build_record_unique_id, build_search_detail_condition, \
     build_search_unique_id, build_top_unique_id, copy_record_index_list, \
     copy_search_keyword
-from invenio_stats.processors import EventsIndexer, anonymize_user, flag_robots
+from invenio_stats.processors import EventsIndexer, anonymize_user, \
+    check_restricted, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
 
@@ -28,6 +29,7 @@ def register_events():
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
+                    check_restricted,
                     flag_robots,
                     anonymize_user,
                     build_celery_task_unique_id
@@ -38,6 +40,7 @@ def register_events():
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
+                    check_restricted,
                     flag_robots,
                     anonymize_user,
                     build_file_unique_id
@@ -48,6 +51,7 @@ def register_events():
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
+                    check_restricted,
                     flag_robots,
                     anonymize_user,
                     build_file_unique_id
@@ -58,6 +62,7 @@ def register_events():
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
+                    check_restricted,
                     flag_robots,
                     anonymize_user,
                     build_item_create_unique_id
@@ -68,6 +73,7 @@ def register_events():
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
+                    check_restricted,
                     flag_robots,
                     anonymize_user,
                     build_record_unique_id
@@ -78,6 +84,7 @@ def register_events():
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
+                    check_restricted,
                     flag_robots,
                     anonymize_user,
                     build_top_unique_id
@@ -88,6 +95,7 @@ def register_events():
             processor_class=EventsIndexer,
             processor_config=dict(
                 preprocessors=[
+                    check_restricted,
                     flag_robots,
                     anonymize_user,
                     build_search_detail_condition,
