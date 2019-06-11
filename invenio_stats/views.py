@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2017-2018 CERN.
+# Copyright (C) 2016-2018 CERN.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """InvenioStats views."""
+
 import calendar
 from datetime import datetime, timedelta
 from math import ceil
@@ -24,7 +25,9 @@ from invenio_stats.utils import get_aggregations
 from . import config
 from .errors import InvalidRequestInputError, UnknownQueryError
 from .proxies import current_stats
-from .utils import current_user
+from .utils import QueryCommonReportsHelper, QueryFileReportsHelper, \
+    QueryRecordViewPerIndexReportHelper, QueryRecordViewReportHelper, \
+    QuerySearchReportHelper, current_user
 
 blueprint = Blueprint(
     'invenio_stats',
@@ -566,47 +569,9 @@ class QueryRecordViewReport(WekoQuery):
 
     view_name = 'get_record_view_report'
 
-    def Calculation(self, res, data_list):
-        """Create response object."""
-        for item in res['buckets']:
-            for record in item['buckets']:
-                data = {}
-                data['record_id'] = item['key']
-                data['index_names'] = record['key']
-                data['total_all'] = record['value']
-                data['total_not_login'] = 0
-                for user in record['buckets']:
-                    if user['key'] == 'guest':
-                        data['total_not_login'] += user['value']
-                data_list.append(data)
-
     def get(self, **kwargs):
         """Get record view report."""
-        result = {}
-        all_list = []
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            params = {'start_date': query_month + '-01',
-                      'end_date':
-                          query_month + '-' + str(lastday).zfill(2)
-                          + 'T23:59:59'}
-
-            all_query_cfg = current_stats.queries['get-record-view-report']
-            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
-            all_res = all_query.run(**params)
-            self.Calculation(all_res, all_list)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-
-        result['date'] = query_month
-        result['all'] = all_list
-
+        result = QueryRecordViewReportHelper.get(**kwargs)
         return self.make_response(result)
 
 
@@ -614,61 +579,13 @@ class QueryRecordViewPerIndexReport(WekoQuery):
     """REST API resource providing record view per index report."""
 
     view_name = 'get_record_view_per_index_report'
-    nested_path = 'record_index_list'
-    first_level_field = 'record_index_list.index_id'
-    second_level_field = 'record_index_list.index_name'
-
-    def get_nested_agg(self, start_date, end_date):
-        """Get nested aggregation by index id."""
-        agg_query = Search(using=current_search_client,
-                           index='events-stats-record-view',
-                           doc_type='stats-record-view')[0:0]
-
-        if start_date is not None and end_date is not None:
-            time_range = {}
-            time_range['gte'] = parser.parse(start_date).isoformat()
-            time_range['lte'] = parser.parse(end_date).isoformat()
-            agg_query = agg_query.filter('range', **{'timestamp': time_range})
-
-        agg_query.aggs.bucket(self.nested_path, 'nested',
-                              path=self.nested_path) \
-            .bucket(self.first_level_field, 'terms',
-                    field=self.first_level_field, size=0) \
-            .bucket(self.second_level_field, 'terms',
-                    field=self.second_level_field, size=0)
-        return agg_query.execute().to_dict()
-
-    def parse_bucket_response(self, res, date):
-        """Parse raw aggregation response."""
-        aggs = res['aggregations'][self.nested_path]
-        result = {'date': date, 'all': [], 'total': aggs['doc_count']}
-        for id_agg in aggs[self.first_level_field]['buckets']:
-            for name_agg in id_agg[self.second_level_field]['buckets']:
-                result['all'].append({'index_name': name_agg['key'],
-                                      'view_count': id_agg['doc_count']})
-        return result
 
     def get(self, **kwargs):
         """Get record view per index report.
 
         Nested aggregations are currently unsupported so manually aggregating.
         """
-        result = {}
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            start_date = query_month + '-01'
-            end_date = query_month + '-' + str(lastday).zfill(2) + 'T23:59:59'
-            raw_result = self.get_nested_agg(start_date, end_date)
-            result = self.parse_bucket_response(raw_result, query_month)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-            return {}
-
+        result = QueryRecordViewPerIndexReportHelper.get(**kwargs)
         return self.make_response(result)
 
 
@@ -682,160 +599,10 @@ class QueryFileReports(WekoQuery):
 
     view_name = 'get_file_reports'
 
-    def calc_file_stats_reports(self, res, data_list):
-        """Create response object for file_stats_reports."""
-        for file in res['buckets']:
-            for index in file['buckets']:
-                data = {}
-                data['file_key'] = file['key']
-                data['index_list'] = index['key']
-                data['total'] = index['value']
-                data['admin'] = 0
-                data['reg'] = 0
-                data['login'] = 0
-                data['no_login'] = 0
-                data['site_license'] = 0
-                for user in index['buckets']:
-                    for license in user['buckets']:
-                        if license['key'] == 1:
-                            data['site_license'] += license['value']
-                            break
-                    userrole = user['key']
-                    count = user['value']
-                    if userrole == 'guest':
-                        data['no_login'] += count
-                    elif userrole == 'Contributor':
-                        data['reg'] += count
-                        data['login'] += count
-                    elif 'Administrator' in userrole:
-                        data['admin'] += count
-                        data['login'] += count
-                    else:
-                        data['login'] += count
-                data_list.append(data)
-
-    def calc_file_per_using_report(self, res, data_list):
-        """Create response object for file_per_using_report."""
-        # file-download
-        for item in res['get-file-download-per-user-report']['buckets']:
-            data = {}
-            data['cur_user_id'] = item['key']
-            data['total_download'] = item['value']
-            data_list.update({item['key']: data})
-        # file-preview
-        for item in res['get-file-preview-per-user-report']['buckets']:
-            data = {}
-            data['cur_user_id'] = item['key']
-            data['total_preview'] = item['value']
-            if data_list.get(item['key']):
-                data_list[item['key']].update(data)
-            else:
-                data_list.update({item['key']: data})
-
-    def Calculation(self, res, data_list):
-        """Calculation."""
-        if res['buckets'] is not None:
-            self.calc_file_stats_reports(res, data_list)
-        elif res['get-file-download-per-user-report'] is not None \
-                and res['get-file-preview-per-user-report'] is not None:
-            self.calc_file_per_using_report(res, data_list)
-
-    def get_file_stats_report(self, **kwargs):
-        """Get file download/preview report."""
-        result = {}
-        all_list = []
-        open_access_list = []
-
-        event = kwargs.get('event')
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            all_params = {'start_date': query_month + '-01',
-                          'end_date':
-                          query_month + '-' + str(lastday).zfill(2)
-                          + 'T23:59:59'}
-            params = {'start_date': query_month + '-01',
-                      'end_date':
-                      query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59',
-                      'accessrole': 'open_access'}
-
-            all_query_name = ''
-            open_access_query_name = ''
-            if event == 'file_download':
-                all_query_name = 'get-file-download-report'
-                open_access_query_name = 'get-file-download-open-access-report'
-            elif event == 'file_preview':
-                all_query_name = 'get-file-preview-report'
-                open_access_query_name = 'get-file-preview-open-access-report'
-
-            # all
-            all_query_cfg = current_stats.queries[all_query_name]
-            all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
-            all_res = all_query.run(**params)
-            self.Calculation(all_res, all_list)
-
-            # open access
-            open_access_query_cfg = current_stats.queries[open_access_query_name]
-            open_access = open_access_query_cfg.query_class(
-                **open_access_query_cfg.query_config)
-            open_access_res = open_access.run(**params)
-            self.Calculation(open_access_res, open_access_list)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-
-        result['date'] = query_month
-        result['all'] = all_list
-        result['open_access'] = open_access_list
-
-        return self.make_response(result)
-
-    def get_file_per_using_report(self, **kwargs):
-        """Get File Using Per User report."""
-        result = {}
-        all_list = {}
-        all_res = {}
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            params = {'start_date': query_month + '-01',
-                      'end_date': query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59'}
-
-            all_query_name = ['get-file-download-per-user-report',
-                              'get-file-preview-per-user-report']
-            for query in all_query_name:
-                all_query_cfg = current_stats.queries[query]
-                all_query = all_query_cfg.\
-                    query_class(**all_query_cfg.query_config)
-                all_res[query] = all_query.run(**params)
-            self.Calculation(all_res, all_list)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-
-        result['date'] = query_month
-        result['all'] = all_list
-
-        return self.make_response(result)
-
     def get(self, **kwargs):
         """Get file reports."""
-        event = kwargs.get('event')
-        if event == 'file_download' or event == 'file_preview':
-            return self.get_file_stats_report(**kwargs)
-        elif event == 'file_using_per_user':
-            return self.get_file_per_using_report(**kwargs)
-        else:
-            return []
+        result = QueryFileReportsHelper.get(**kwargs)
+        return self.make_response(result)
 
 
 class QueryCommonReports(WekoQuery):
@@ -843,122 +610,9 @@ class QueryCommonReports(WekoQuery):
 
     view_name = 'get_common_report'
 
-    def get_common_params(self, year, month):
-        """Get common params."""
-        query_month = str(year) + '-' + str(month).zfill(2)
-        _, lastday = calendar.monthrange(year, month)
-        params = {'start_date': query_month + '-01',
-                  'end_date': query_month + '-' + str(lastday).zfill(2)
-                  + 'T23:59:59'}
-        return query_month, params
-
     def get(self, **kwargs):
         """Get file reports."""
-        event = kwargs.get('event')
-        if event == 'top_page_access':
-            return self.get_top_page_access_report(**kwargs)
-        elif event == 'site_access':
-            return self.get_site_access_report(**kwargs)
-        else:
-            return []
-
-    def get_top_page_access_report(self, **kwargs):
-        """Get toppage access report."""
-        def Calculation(res, data_list):
-            """Calculation."""
-            for item in res['top-view-total']['buckets']:
-                for hostaccess in item['buckets']:
-                    data = {}
-                    data['host'] = hostaccess['key']
-                    data['ip'] = item['key']
-                    data['count'] = hostaccess['value']
-                    data_list.update({item['key']: data})
-
-        result = {}
-        all_list = {}
-        all_res = {}
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month, params = self.get_common_params(year, month)
-            all_query_name = ['top-view-total']
-            for query in all_query_name:
-                all_query_cfg = current_stats.queries[query]
-                all_query = all_query_cfg.\
-                    query_class(**all_query_cfg.query_config)
-                all_res[query] = all_query.run(**params)
-            Calculation(all_res, all_list)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-
-        result['date'] = query_month
-        result['all'] = all_list
-
-        return self.make_response(result)
-
-    def get_site_access_report(self, **kwargs):
-        """Get site access report."""
-        def Calculation(query_list, res, site_license_list, other_list,
-                        institution_name_list):
-            """Calculation."""
-            mapper = {}
-            for k in query_list:
-                items = res.get(k)
-                site_license_list[k] = 0
-                other_list[k] = 0
-                if items:
-                    for i in items['buckets']:
-                        if i['key'] == '':
-                            other_list[k] += i['value']
-                        else:
-                            site_license_list[k] += i['value']
-                            if i['key'] in mapper:
-                                institution_name_list[mapper[i['key']]
-                                                      ][k] = i['value']
-                            else:
-                                mapper[i['key']] = len(institution_name_list)
-                                data = {}
-                                data['name'] = i['key']
-                                data[k] = i['value']
-                                institution_name_list.append(data)
-            for k in query_list:
-                for i in range(len(institution_name_list)):
-                    if k not in institution_name_list[i]:
-                        institution_name_list[i][k] = 0
-
-        result = {}
-        all_res = {}
-        site_license_list = {}
-        other_list = {}
-        institution_name_list = []
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        query_list = ['top_view', 'search', 'record_view',
-                      'file_download', 'file_preview']
-
-        try:
-            query_month, params = self.get_common_params(year, month)
-            for q in query_list:
-                query_cfg = current_stats.queries['get-' + q.replace('_', '-')
-                                                  + '-per-site-license']
-                query = query_cfg.query_class(**query_cfg.query_config)
-                all_res[q] = query.run(**params)
-            Calculation(query_list, all_res, site_license_list, other_list,
-                        institution_name_list)
-
-        except Exception as e:
-            current_app.logger.debug(e)
-
-        result['date'] = query_month
-        result['site_license'] = [site_license_list]
-        result['other'] = [other_list]
-        result['institution_name'] = institution_name_list
-
+        result = QueryCommonReportsHelper.get(**kwargs)
         return self.make_response(result)
 
 
@@ -1024,52 +678,9 @@ class QuerySearchReport(ContentNegotiatedMethodView):
             default_media_type='application/json',
             **kwargs)
 
-    def parse_bucket_response(self, raw_res, pretty_result):
-        """Parsing bucket response."""
-        if 'buckets' in raw_res:
-            field_name = raw_res['field']
-            value = raw_res['buckets'][0]['key']
-            pretty_result[field_name] = value
-            return self.parse_bucket_response(
-                raw_res['buckets'][0], pretty_result)
-        else:
-            return pretty_result
-
     def get(self, **kwargs):
         """Get number of searches per keyword."""
-        result = {}
-        year = kwargs.get('year')
-        month = kwargs.get('month')
-
-        try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            start_date = query_month + '-01'
-            end_date = query_month + '-' + str(lastday).zfill(2) + 'T23:59:59'
-            result['date'] = query_month
-            params = {'start_date': query_month + '-01',
-                      'end_date': query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59'}
-
-            # Run query
-            keyword_query_cfg = current_stats.queries['get-search-report']
-            keyword_query = keyword_query_cfg.query_class(
-                **keyword_query_cfg.query_config)
-            raw_result = keyword_query.run(**params)
-
-            all = []
-            for report in raw_result['buckets']:
-                current_report = {}
-                current_report['search_key'] = report['key']
-                pretty_report = self.parse_bucket_response(
-                    report, current_report)
-                all.append(pretty_report)
-            result['all'] = all
-
-        except Exception as e:
-            current_app.logger.debug(e)
-            return {}
-
+        result = QuerySearchReportHelper.get(**kwargs)
         return self.make_response(result)
 
 
