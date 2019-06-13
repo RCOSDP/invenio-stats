@@ -83,6 +83,10 @@
         "is_robot": {
           "type": "boolean",
           "index": "not_analyzed"
+        },
+        "is_restricted": {
+          "type": "boolean",
+          "index": "not_analyzed"
         }
       }
     }

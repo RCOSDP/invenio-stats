@@ -96,15 +96,21 @@ def anonymize_user(doc):
     return doc
 
 
-def check_restricted(doc):
-    """Filter out restricted access."""
-    user_data = {
-        'ip_address': doc['ip_address'],
-        'user_agent': doc['user_agent']
-    }
-    if is_restricted_user(user_data):
-        return None
+def flag_restricted(doc):
+    """Mark restricted access."""
+    doc['is_restricted'] = False
+    if 'ip_address' in doc and 'user_agent' in doc:
+        user_data = {
+            'ip_address': doc['ip_address'],
+            'user_agent': doc['user_agent']
+        }
+        doc['is_restricted'] = is_restricted_user(user_data)
     return doc
+
+
+def filter_restricted(agg_query, **kwargs):
+    """Add term filter to query for checking restricted users."""
+    return agg_query.filter('term', **{'is_restricted': False})
 
 
 def flag_robots(doc):

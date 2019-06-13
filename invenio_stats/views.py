@@ -364,20 +364,22 @@ class QueryItemRegReport(WekoQuery):
                                 end_date_string = d.strftime('%Y-%m-%d')
                                 params = {'interval': 'day',
                                           'start_date': start_date_string,
-                                          'end_date': end_date_string
+                                          'end_date': end_date_string,
+                                          'is_restricted': False
                                           }
                                 res_total = query_total.run(**params)
                                 result.append({
                                     'count': res_total[count_keyname],
                                     'start_date': start_date_string,
                                     'end_date': end_date_string,
+                                    'is_restricted': False
                                 })
                             d += delta
                 elif unit == 'Week':
                     delta = timedelta(days=7)
                     delta1 = timedelta(days=1)
                     if empty_date_flg:
-                        params = {'interval': 'week'}
+                        params = {'interval': 'week', 'is_restricted': False}
                         res_total = query_total.run(**params)
                         # Get valuable items
                         items = []
@@ -408,6 +410,7 @@ class QueryItemRegReport(WekoQuery):
                                     'count': item['value'],
                                     'start_date': start_date_string,
                                     'end_date': end_date_string,
+                                    'is_restricted': False
                                 })
                             d += delta
                             i += 1
@@ -427,11 +430,13 @@ class QueryItemRegReport(WekoQuery):
                                 end_date_string = d1.strftime('%Y-%m-%d')
                                 temp = {
                                     'start_date': start_date_string,
-                                    'end_date': end_date_string
+                                    'end_date': end_date_string,
+                                    'is_restricted': False
                                 }
                                 params = {'interval': 'week',
                                           'start_date': temp['start_date'],
-                                          'end_date': temp['end_date']
+                                          'end_date': temp['end_date'],
+                                          'is_restricted': False
                                           }
                                 res_total = query_total.run(**params)
                                 temp['count'] = res_total[count_keyname]
@@ -440,7 +445,7 @@ class QueryItemRegReport(WekoQuery):
                             d += delta
                 elif unit == 'Year':
                     if empty_date_flg:
-                        params = {'interval': 'year'}
+                        params = {'interval': 'year', 'is_restricted': False}
                         res_total = query_total.run(**params)
                         # Get start day and end day
                         start_date_string = '{}-01-01'.format(
@@ -466,7 +471,8 @@ class QueryItemRegReport(WekoQuery):
                                     'count': item['value'],
                                     'start_date': '{}-01-01'.format(event_date.year),
                                     'end_date': '{}-12-31'.format(event_date.year),
-                                    'year': event_date.year
+                                    'year': event_date.year,
+                                    'is_restricted': False
                                 })
                             i += 1
                     else:
@@ -483,19 +489,21 @@ class QueryItemRegReport(WekoQuery):
                                     start_year + i)
                                 params = {'interval': 'year',
                                           'start_date': start_date_string,
-                                          'end_date': end_date_string
+                                          'end_date': end_date_string,
+                                          'is_restricted': False
                                           }
                                 res_total = query_total.run(**params)
                                 result.append({
                                     'count': res_total[count_keyname],
                                     'start_date': start_date_string,
                                     'end_date': end_date_string,
-                                    'year': start_year + i
+                                    'year': start_year + i,
+                                    'is_restricted': False
                                 })
                 elif unit == 'Item':
                     start_date_string = ''
                     end_date_string = ''
-                    params = {}
+                    params = {'is_restricted': False}
                     if start_date is not None:
                         start_date_string = start_date.strftime('%Y-%m-%d')
                         params.update({'start_date': start_date_string})
@@ -527,7 +535,7 @@ class QueryItemRegReport(WekoQuery):
                 elif unit == 'Host':
                     start_date_string = ''
                     end_date_string = ''
-                    params = {}
+                    params = {'is_restricted': False}
                     if start_date is not None:
                         start_date_string = start_date.strftime('%Y-%m-%d')
                         params.update({'start_date': start_date_string})
@@ -638,7 +646,7 @@ class QueryCeleryTaskReport(WekoQuery):
         list = []
         task_name = kwargs.get('task_name')
         try:
-            params = {'task_name': task_name}
+            params = {'task_name': task_name, 'is_restricted': False}
 
             # Get exec logs in certain time frame
             query_cfg = current_stats.queries['get-celery-task-report']

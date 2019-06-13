@@ -493,8 +493,9 @@ class QueryRecordViewPerIndexReportHelper(object):
             time_range = {}
             time_range['gte'] = parser.parse(start_date).isoformat()
             time_range['lte'] = parser.parse(end_date).isoformat()
-            agg_query = agg_query.filter('range', **{'timestamp': time_range})
-
+            agg_query = agg_query.filter(
+                'range', **{'timestamp': time_range}).filter(
+                'term', **{'is_restricted': False})
         agg_query.aggs.bucket(cls.nested_path, 'nested',
                               path=cls.nested_path) \
             .bucket(cls.first_level_field, 'terms',
@@ -571,8 +572,8 @@ class QueryRecordViewReportHelper(object):
             _, lastday = calendar.monthrange(year, month)
             params = {'start_date': query_month + '-01',
                       'end_date':
-                          query_month + '-' + str(lastday).zfill(2)
-                          + 'T23:59:59'}
+                      query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59'}
 
             all_query_cfg = current_stats.queries['get-record-view-report']
             all_query = all_query_cfg.query_class(**all_query_cfg.query_config)

@@ -80,6 +80,10 @@
           "type": "boolean",
           "index": "not_analyzed"
         },
+        "is_restricted": {
+          "type": "boolean",
+          "index": "not_analyzed"
+        },
         "size": {
           "type": "double",
           "index": "not_analyzed"
