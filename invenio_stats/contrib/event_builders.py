@@ -205,8 +205,9 @@ def top_view_event_builder(event, sender_app, info=None, **kwargs):
 
 def build_top_unique_id(doc):
     """Build top unique identifier."""
-    doc['unique_id'] = '{0}_{1}_{2}'.format("top", "view",
-                                            doc['site_license_name'])
+    doc['unique_id'] = '{0}_{1}_{2}_{3}'.format("top", "view",
+                                            doc['site_license_name'],
+                                            doc['remote_addr'])
     doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
 

@@ -579,12 +579,21 @@ def register_queries():
             )
         ),
         dict(
-            query_name='top-view-total',
+            query_name='top-view-total-per-host',
             query_class=ESTermsQuery,
             query_config=dict(
                 index='stats-top-view',
                 doc_type='top-view-day-aggregation',
-                aggregated_fields=['remote_addr', 'hostname'],
+                aggregated_fields=['remote_addr', 'hostname']
+            )
+        ),
+        dict(
+            query_name='top-view-total',
+            query_class=ESDateHistogramQuery,
+            query_config=dict(
+                index='stats-top-view',
+                doc_type='top-view-day-aggregation',
+                aggregated_fields=['remote_addr']
             )
         ),
         dict(

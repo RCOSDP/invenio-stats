@@ -356,11 +356,15 @@ class QueryCommonReportsHelper(object):
     @classmethod
     def get_common_params(cls, year, month):
         """Get common params."""
-        query_month = str(year) + '-' + str(month).zfill(2)
-        _, lastday = calendar.monthrange(year, month)
-        params = {'start_date': query_month + '-01',
-                  'end_date': query_month + '-' + str(lastday).zfill(2)
-                  + 'T23:59:59'}
+        if month > 0 and month <= 12:
+            query_month = str(year) + '-' + str(month).zfill(2)
+            _, lastday = calendar.monthrange(year, month)
+            params = {'start_date': query_month + '-01',
+                      'end_date': query_month + '-' + str(lastday).zfill(2)
+                      + 'T23:59:59'}
+        else:
+            query_month = 'all'
+            params = {'interval': 'day'}
         return query_month, params
 
     @classmethod
@@ -379,13 +383,21 @@ class QueryCommonReportsHelper(object):
         """Get toppage access report."""
         def Calculation(res, data_list):
             """Calculation."""
-            for item in res['top-view-total']['buckets']:
-                for hostaccess in item['buckets']:
-                    data = {}
-                    data['host'] = hostaccess['key']
-                    data['ip'] = item['key']
-                    data['count'] = hostaccess['value']
-                    data_list.update({item['key']: data})
+            if 'top-view-total-per-host' in res:
+                for item in res['top-view-total-per-host']['buckets']:
+                    for hostaccess in item['buckets']:
+                        data = {}
+                        data['host'] = hostaccess['key']
+                        data['ip'] = item['key']
+                        data['count'] = hostaccess['value']
+                        data_list.update({item['key']: data})
+            elif 'top-view-total' in res:
+                for item in res['top-view-total']['buckets']:
+                    data_list.update({'count':item['value']})
+            else:
+                data = {}
+                data['errors'] = str(res)
+                data_list = data
 
         result = {}
         all_list = {}
@@ -396,7 +408,11 @@ class QueryCommonReportsHelper(object):
 
         try:
             query_month, params = cls.get_common_params(year, month)
-            all_query_name = ['top-view-total']
+            if query_month == 'all':
+                all_query_name = ['top-view-total']
+            else:
+                all_query_name = ['top-view-total-per-host']
+
             for query in all_query_name:
                 all_query_cfg = current_stats.queries[query]
                 all_query = all_query_cfg.\
