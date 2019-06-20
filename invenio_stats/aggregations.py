@@ -25,6 +25,11 @@ def filter_robots(query):
     return query.filter('term', is_robot=False)
 
 
+def filter_restricted(query):
+    """Add term filter to query for checking restricted users."""
+    return query.filter('term', is_restricted=False)
+
+
 class StatAggregator(object):
     """Generic aggregation class.
 

@@ -9,14 +9,14 @@
 """Registration of contrib events."""
 from invenio_search import current_search_client
 
-from invenio_stats.aggregations import StatAggregator
+from invenio_stats.aggregations import StatAggregator, filter_restricted
 from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
     build_file_unique_id, build_item_create_unique_id, \
     build_record_unique_id, build_search_detail_condition, \
     build_search_unique_id, build_top_unique_id, copy_record_index_list, \
     copy_search_keyword
 from invenio_stats.processors import EventsIndexer, anonymize_user, \
-    filter_restricted, flag_restricted, flag_robots
+    flag_restricted, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
 
 
@@ -115,6 +115,7 @@ def register_aggregations():
             event='celery-task',
             aggregation_field='unique_id',
             aggregation_interval='day',
+            query_modifiers=[filter_restricted],
             copy_fields=dict(
                 task_id='task_id',
                 task_name='task_name',
@@ -140,6 +141,7 @@ def register_aggregations():
                 event='search',
                 aggregation_field='unique_id',
                 aggregation_interval='day',
+                query_modifiers=[filter_restricted],
                 copy_fields=dict(
                     country='country',
                     referrer='referrer',
@@ -161,6 +163,7 @@ def register_aggregations():
             event='file-download',
             aggregation_field='unique_id',
             aggregation_interval='day',
+            query_modifiers=[filter_restricted],
             copy_fields=dict(
                 country='country',
                 item_id='item_id',
@@ -190,6 +193,7 @@ def register_aggregations():
             client=current_search_client,
             event='file-preview',
             aggregation_field='unique_id',
+            query_modifiers=[filter_restricted],
             aggregation_interval='day',
             copy_fields=dict(
                 country='country',
@@ -221,6 +225,7 @@ def register_aggregations():
             event='item-create',
             aggregation_field='unique_id',
             aggregation_interval='day',
+            query_modifiers=[filter_restricted],
             copy_fields=dict(
                 country='country',
                 hostname='hostname',
@@ -241,6 +246,7 @@ def register_aggregations():
             event='record-view',
             aggregation_field='unique_id',
             aggregation_interval='day',
+            query_modifiers=[filter_restricted],
             copy_fields=dict(
                 country='country',
                 hostname='hostname',
@@ -267,6 +273,7 @@ def register_aggregations():
             event='top-view',
             aggregation_field='unique_id',
             aggregation_interval='day',
+            query_modifiers=[filter_restricted],
             copy_fields=dict(
                 country='country',
                 hostname='hostname',
@@ -295,7 +302,6 @@ def register_queries():
                 required_filters=dict(
                     task_name='task_name',
                 ),
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -305,7 +311,7 @@ def register_queries():
                 index='stats-search',
                 doc_type='search-day-aggregation',
                 aggregated_fields=['search_key', 'count'],
-                query_modifiers=[filter_restricted],
+                # query_modifiers=[filter_restricted],
                 # copy_fields=dict(
                 #    count='count',
                 #    search_key='search_detail.search_key'
@@ -321,7 +327,6 @@ def register_queries():
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -335,7 +340,6 @@ def register_queries():
                 required_filters=dict(
                     accessrole='accessrole',
                 ),
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -346,7 +350,6 @@ def register_queries():
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -360,7 +363,6 @@ def register_queries():
                 required_filters=dict(
                     accessrole='accessrole',
                 ),
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -377,7 +379,6 @@ def register_queries():
                     bucket_id='bucket_id',
                     file_key='file_key',
                 ),
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -394,7 +395,6 @@ def register_queries():
                     file_key='file_key',
                 ),
                 aggregated_fields=['country'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -411,7 +411,6 @@ def register_queries():
                     bucket_id='bucket_id',
                     file_key='file_key',
                 ),
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -428,7 +427,6 @@ def register_queries():
                     file_key='file_key',
                 ),
                 aggregated_fields=['country'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -438,8 +436,6 @@ def register_queries():
                 index='stats-file-download',
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['cur_user_id', 'file_id'],
-                query_modifiers=[filter_restricted],
-
             )
         ),
         dict(
@@ -449,7 +445,6 @@ def register_queries():
                 index='stats-file-preview',
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['cur_user_id', 'file_id'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -460,7 +455,6 @@ def register_queries():
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['record_id', 'record_index_names',
                                    'cur_user_id'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -475,7 +469,6 @@ def register_queries():
                 required_filters=dict(
                     record_id='record_id',
                 ),
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -495,7 +488,6 @@ def register_queries():
                     unique_count=('sum', 'unique_count', {}),
                 ),
                 aggregated_fields=['country'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -508,7 +500,6 @@ def register_queries():
                     count=('sum', 'count', {}),
                 ),
                 aggregated_fields=['remote_addr', 'hostname'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -518,7 +509,6 @@ def register_queries():
                 index='stats-item-create',
                 doc_type='item-create-day-aggregation',
                 aggregated_fields=['timestamp'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -531,7 +521,6 @@ def register_queries():
                     count=('sum', 'count', {}),
                 ),
                 aggregated_fields=['remote_addr', 'hostname'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -544,7 +533,6 @@ def register_queries():
                     count=('sum', 'count', {}),
                 ),
                 aggregated_fields=['remote_addr', 'hostname'],
-                query_modifiers=[filter_restricted],
             )
         ),
         # For query item details (id, name, count)
@@ -558,7 +546,6 @@ def register_queries():
                     count=('sum', 'count', {}),
                 ),
                 aggregated_fields=['pid_value', 'record_name'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -571,7 +558,6 @@ def register_queries():
                     count=('sum', 'count', {}),
                 ),
                 aggregated_fields=['item_id', 'item_title'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -581,7 +567,6 @@ def register_queries():
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['timestamp'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -591,7 +576,6 @@ def register_queries():
                 index='stats-file-download',
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['timestamp'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -601,7 +585,6 @@ def register_queries():
                 index='stats-top-view',
                 doc_type='top-view-day-aggregation',
                 aggregated_fields=['remote_addr', 'hostname'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -611,7 +594,6 @@ def register_queries():
                 index='stats-top-view',
                 doc_type='top-view-day-aggregation',
                 aggregated_fields=['site_license_name'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -621,7 +603,6 @@ def register_queries():
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['site_license_name'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -631,7 +612,6 @@ def register_queries():
                 index='stats-search',
                 doc_type='search-day-aggregation',
                 aggregated_fields=['site_license_name'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -641,7 +621,6 @@ def register_queries():
                 index='stats-file-download',
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['site_license_name'],
-                query_modifiers=[filter_restricted],
             )
         ),
         dict(
@@ -651,7 +630,6 @@ def register_queries():
                 index='stats-file-preview',
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['site_license_name'],
-                query_modifiers=[filter_restricted],
             )
         )
     ]

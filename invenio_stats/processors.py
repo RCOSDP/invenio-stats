@@ -108,11 +108,6 @@ def flag_restricted(doc):
     return doc
 
 
-def filter_restricted(agg_query, **kwargs):
-    """Add term filter to query for checking restricted users."""
-    return agg_query.filter('term', **{'is_restricted': False})
-
-
 def flag_robots(doc):
     """Flag events which are created by robots.
 
