@@ -593,7 +593,7 @@ def register_queries():
             query_config=dict(
                 index='stats-top-view',
                 doc_type='top-view-day-aggregation',
-                aggregated_fields=['remote_addr']
+                aggregated_fields=['remote_addr', 'hostname']
             )
         ),
         dict(
