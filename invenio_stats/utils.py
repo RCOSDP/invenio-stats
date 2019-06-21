@@ -393,7 +393,7 @@ class QueryCommonReportsHelper(object):
                         data_list.update({item['key']: data})
             elif 'top-view-total' in res:
                 for item in res['top-view-total']['buckets']:
-                    data_list.update({'count':item['value']})
+                    data_list.update({'count': item['value']})
             else:
                 data = {}
                 data['errors'] = str(res)
