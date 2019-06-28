@@ -56,5 +56,8 @@ def register_receivers(app, config):
                     weak=False)
         else:
             signal.connect(
-                EventEmmiter(event_name, event_builders), sender=app, weak=False
-            )
+                EventEmmiter(
+                    event_name,
+                    event_builders),
+                sender=app,
+                weak=False)

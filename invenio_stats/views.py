@@ -66,8 +66,8 @@ class StatsQueryResource(WekoQuery):
         result = {}
         for query_name, config in data.items():
             if config is None or not isinstance(config, dict) \
-                    or (set(config.keys()) != {'stat', 'params'} and
-                        set(config.keys()) != {'stat'}):
+                    or (set(config.keys()) != {'stat', 'params'}
+                        and set(config.keys()) != {'stat'}):
                 raise InvalidRequestInputError(
                     'Invalid Input. It should be of the form '
                     '{ STATISTIC_NAME: { "stat": STAT_TYPE, '

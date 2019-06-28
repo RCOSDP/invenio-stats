@@ -608,7 +608,8 @@ class QueryRecordViewReportHelper(object):
                       + 'T23:59:59'}
             all_query_cfg = current_stats.queries['get-record-view-report']
             all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
-            params.update({'agg_size': kwargs.get('agg_size', 0)})  # Limit size
+            # Limit size
+            params.update({'agg_size': kwargs.get('agg_size', 0)})
             all_res = all_query.run(**params)
             cls.Calculation(all_res, all_list)
 
@@ -798,9 +799,9 @@ class QueryItemRegReportHelper(object):
                         items = []
                         for item in res_total['buckets']:
                             date = item['date'].split('T')[0]
-                            if item['value'] > 0 \
-                                    and (not start_date_string or date >= start_date_string) \
-                                    and (not end_date_string or date <= end_date_string):
+                            if item['value'] > 0 and (
+                                    not start_date_string or date >= start_date_string) and (
+                                    not end_date_string or date <= end_date_string):
                                 items.append(item)
                         # total results
                         total_results = len(items)
@@ -852,7 +853,8 @@ class QueryItemRegReportHelper(object):
                     if end_date is not None:
                         end_date_string = end_date.strftime('%Y-%m-%d')
                         params.update({'end_date': end_date_string})
-                    params.update({'agg_size': kwargs.get('agg_size', 0)})  # Limit size
+                    # Limit size
+                    params.update({'agg_size': kwargs.get('agg_size', 0)})
                     res_total = query_total.run(**params)  # pass args
                     i = 0
                     for item in res_total['buckets']:

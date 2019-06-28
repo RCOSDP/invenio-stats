@@ -107,8 +107,8 @@ def _aggregations_process(aggregation_types=None,
                           start_date=None, end_date=None,
                           update_bookmark=False, eager=False):
     """Process stats aggregations."""
-    aggregation_types = (aggregation_types or
-                         list(current_stats.enabled_aggregations))
+    aggregation_types = (aggregation_types
+                         or list(current_stats.enabled_aggregations))
     if eager:
         aggregate_events.apply(
             (aggregation_types,),
@@ -132,8 +132,8 @@ def _aggregations_process(aggregation_types=None,
 def _aggregations_delete(aggregation_types=None,
                          start_date=None, end_date=None):
     """Delete computed aggregations."""
-    aggregation_types = (aggregation_types or
-                         list(current_stats.enabled_aggregations))
+    aggregation_types = (aggregation_types
+                         or list(current_stats.enabled_aggregations))
     for a in aggregation_types:
         aggr_cfg = current_stats.aggregations[a]
         aggregator = aggr_cfg.aggregator_class(
@@ -150,8 +150,8 @@ def _aggregations_delete(aggregation_types=None,
 def _aggregations_list_bookmarks(aggregation_types=None,
                                  start_date=None, end_date=None, limit=None):
     """List aggregation bookmarks."""
-    aggregation_types = (aggregation_types or
-                         list(current_stats.enabled_aggregations))
+    aggregation_types = (aggregation_types
+                         or list(current_stats.enabled_aggregations))
     for a in aggregation_types:
         aggr_cfg = current_stats.aggregations[a]
         aggregator = aggr_cfg.aggregator_class(
