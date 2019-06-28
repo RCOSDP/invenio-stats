@@ -586,6 +586,10 @@ class QueryRecordViewReportHelper(object):
                 data['total_all'] = record['value']
                 data['total_not_login'] = 0
                 for user in record['buckets']:
+                    for pid in user['buckets']:
+                        data['pid_value'] = pid['key']
+                        for title in pid['buckets']:
+                            data['record_name'] = title['key']
                     if user['key'] == 'guest':
                         data['total_not_login'] += user['value']
                 data_list.append(data)
@@ -595,17 +599,21 @@ class QueryRecordViewReportHelper(object):
         """Get record view report."""
         result = {}
         all_list = []
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
+        query_date = ''
 
         try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            params = {'start_date': query_month + '-01',
-                      'end_date':
-                      query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59'}
+            start_date = kwargs.get('start_date')
+            end_date = kwargs.get('end_date')
+            if not start_date or not end_date:
+                year = kwargs.get('year')
+                month = kwargs.get('month')
+                query_date = str(year) + '-' + str(month).zfill(2)
+                _, lastday = calendar.monthrange(year, month)
+                start_date = query_date + '-01'
+                end_date = query_date + '-' + str(lastday).zfill(2)
+                query_date = start_date + '-' + end_date
+            params = {'start_date': start_date,
+                      'end_date': end_date + 'T23:59:59'}
             all_query_cfg = current_stats.queries['get-record-view-report']
             all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
             params.update({'agg_size': kwargs.get('agg_size', 0)})  # Limit size
@@ -615,7 +623,7 @@ class QueryRecordViewReportHelper(object):
         except Exception as e:
             current_app.logger.debug(e)
 
-        result['date'] = query_month
+        result['date'] = query_date
         result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), all_list)
 
         return result
