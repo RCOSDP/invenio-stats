@@ -17,7 +17,8 @@ from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
     copy_search_keyword
 from invenio_stats.processors import EventsIndexer, anonymize_user, \
     flag_restricted, flag_robots
-from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery
+from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery, \
+    ESWekoTermsQuery
 
 
 def register_events():
@@ -449,7 +450,7 @@ def register_queries():
         ),
         dict(
             query_name='get-record-view-report',
-            query_class=ESTermsQuery,
+            query_class=ESWekoTermsQuery,
             query_config=dict(
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
@@ -550,7 +551,7 @@ def register_queries():
         ),
         dict(
             query_name='get-file-download-per-item-report',
-            query_class=ESTermsQuery,
+            query_class=ESWekoTermsQuery,
             query_config=dict(
                 index='stats-file-download',
                 doc_type='file-download-day-aggregation',
