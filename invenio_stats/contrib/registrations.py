@@ -230,9 +230,11 @@ def register_aggregations():
             copy_fields=dict(
                 country='country',
                 hostname='hostname',
+                username='username',
                 remote_addr='remote_addr',
                 pid_type='pid_type',
                 pid_value='pid_value',
+                record_name='record_name',
             ),
             metric_aggregation_fields={
                 'unique_count': ('cardinality', 'unique_session_id',
@@ -455,7 +457,7 @@ def register_queries():
                 index='stats-record-view',
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['record_id', 'record_index_names',
-                                   'cur_user_id'],
+                                   'cur_user_id', 'pid_value', 'record_name'],
             )
         ),
         dict(
@@ -500,7 +502,7 @@ def register_queries():
                 metric_fields=dict(
                     count=('sum', 'count', {}),
                 ),
-                aggregated_fields=['remote_addr', 'hostname'],
+                aggregated_fields=['remote_addr', 'hostname', 'username'],
             )
         ),
         dict(
