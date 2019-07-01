@@ -1,5 +1,5 @@
 {
-  "index_patterns": ["__SEARCH_INDEX_PREFIX__events-stats-file-download-*"],
+  "index_patterns": ["__SEARCH_INDEX_PREFIX__events-stats-celery-task-*"],
   "settings": {
     "index.mapper.dynamic": false,
     "index": {
@@ -14,13 +14,13 @@
             "match_mapping_type": "date",
             "mapping": {
               "type": "date",
-              "format": "strict_date_hour_minute_second"
+              "format": "date_optional_time"
             }
           }
         }
       ]
     },
-    "stats-file-download": {
+    "stats-celery-task": {
       "date_detection": false,
       "dynamic": false,
       "numeric_detection": false,
@@ -29,15 +29,11 @@
           "type": "date",
           "format": "strict_date_hour_minute_second"
         },
-        "bucket_id": {
+        "task_id": {
           "type": "keyword",
           "index": true
         },
-        "file_id": {
-          "type": "keyword",
-          "index": true
-        },
-        "file_key": {
+        "task_name": {
           "type": "keyword",
           "index": true
         },
@@ -45,7 +41,7 @@
           "type": "keyword",
           "index": true
         },
-        "country": {
+        "unique_session_id": {
           "type": "keyword",
           "index": true
         },
@@ -53,14 +49,40 @@
           "type": "keyword",
           "index": true
         },
-        "collection": {
+        "country": {
           "type": "keyword",
           "index": true
+        },
+        "task_state": {
+          "type": "keyword",
+          "index": true
+        },
+        "start_time": {
+          "type": "keyword",
+          "index": true
+        },
+        "end_time": {
+          "type": "keyword",
+          "index": true
+        },
+        "total_records": {
+          "type": "integer"
+        },
+        "repository_name": {
+          "type": "keyword",
+          "index": true
+        },
+        "execution_time": {
+          "type": "keyword",
+          "index": true
+        },
+        "is_robot": {
+          "type": "boolean"
         }
       }
     }
   },
   "aliases": {
-    "events-stats-file-download": {}
+    "events-stats-celery-task": {}
   }
 }

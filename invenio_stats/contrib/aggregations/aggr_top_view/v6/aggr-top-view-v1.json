@@ -1,5 +1,5 @@
 {
-  "index_patterns": ["__SEARCH_INDEX_PREFIX__stats-record-view-*"],
+  "index_patterns": ["__SEARCH_INDEX_PREFIX__stats-top-view-*"],
   "settings": {
     "index.mapper.dynamic": false,
     "index": {
@@ -7,7 +7,7 @@
     }
   },
   "mappings": {
-    "record-view-day-aggregation": {
+    "top-view-day-aggregation": {
       "date_detection": false,
       "dynamic": false,
       "numeric_detection": false,
@@ -16,20 +16,42 @@
           "type": "date",
           "format": "date_optional_time"
         },
+        "unique_id": {
+          "type": "keyword",
+          "index": true
+        },
         "count": {
           "type": "integer"
         },
-        "record_id": {
+        "unique_count": {
+          "type": "integer"
+        },
+        "country": {
+          "type": "keyword",
+          "index": true
+        },
+        "hostname": {
+          "type": "keyword",
+          "index": true
+        },
+        "remote_addr": {
           "type": "keyword",
           "index": true
         },
         "collection": {
           "type": "keyword",
           "index": true
+        },
+        "site_license_name": {
+          "type": "keyword",
+          "index": true
+        },
+        "site_license_flag": {
+          "type": "boolean"
         }
       }
     },
-    "record-view-agg-bookmark": {
+    "top-view-agg-bookmark": {
       "date_detection": false,
       "properties": {
         "date": {
@@ -40,6 +62,6 @@
     }
   },
   "aliases": {
-    "stats-record-view": {}
+    "stats-top-view": {}
   }
 }

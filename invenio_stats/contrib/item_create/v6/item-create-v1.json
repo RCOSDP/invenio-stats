@@ -1,5 +1,5 @@
 {
-  "index_patterns": ["__SEARCH_INDEX_PREFIX__events-stats-record-view-*"],
+  "index_patterns": ["__SEARCH_INDEX_PREFIX__events-stats-item-create-*"],
   "settings": {
     "index.mapper.dynamic": false,
     "index": {
@@ -7,7 +7,7 @@
     }
   },
   "mappings": {
-    "stats-record-view": {
+    "stats-item-create": {
       "date_detection": false,
       "dynamic": false,
       "numeric_detection": false,
@@ -16,7 +16,30 @@
           "type": "date",
           "format": "strict_date_hour_minute_second"
         },
-        "record_id": {
+        "unique_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "unique_session_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "referrer": {
+          "type": "keyword",
+          "index": true
+        },
+        "country": {
+          "type": "keyword",
+          "index": true
+        },
+        "is_robot": {
+          "type": "boolean"
+        },
+        "hostname": {
+          "type": "keyword",
+          "index": true
+        },
+        "remote_addr": {
           "type": "keyword",
           "index": true
         },
@@ -27,23 +50,11 @@
         "pid_value": {
           "type": "keyword",
           "index": true
-        },
-        "labels": {
-          "type": "keyword",
-          "index": true
-        },
-        "country": {
-          "type": "keyword",
-          "index": true
-        },
-        "visitor_id": {
-          "type": "keyword",
-          "index": true
         }
       }
     }
   },
   "aliases": {
-    "events-stats-record-view": {}
+    "events-stats-item-create": {}
   }
 }

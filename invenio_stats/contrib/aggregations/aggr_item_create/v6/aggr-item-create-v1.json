@@ -1,49 +1,60 @@
 {
-  "index_patterns": ["__SEARCH_INDEX_PREFIX__events-stats-record-view-*"],
+  "index_patterns": ["__SEARCH_INDEX_PREFIX__stats-item-create-*"],
   "settings": {
     "index.mapper.dynamic": false,
     "index": {
-      "refresh_interval": "5s"
+      "refresh_interval": "1m"
     }
   },
   "mappings": {
-    "stats-record-view": {
+    "item-create-day-aggregation": {
       "date_detection": false,
       "dynamic": false,
       "numeric_detection": false,
       "properties": {
         "timestamp": {
           "type": "date",
-          "format": "strict_date_hour_minute_second"
+          "format": "date_optional_time"
         },
-        "record_id": {
+        "unique_id": {
           "type": "keyword",
           "index": true
         },
-        "pid_type": {
-          "type": "keyword",
-          "index": true
+        "count": {
+          "type": "integer"
         },
-        "pid_value": {
-          "type": "keyword",
-          "index": true
-        },
-        "labels": {
-          "type": "keyword",
-          "index": true
+        "unique_count": {
+          "type": "integer"
         },
         "country": {
           "type": "keyword",
           "index": true
         },
-        "visitor_id": {
+        "hostname": {
           "type": "keyword",
           "index": true
+        },
+        "remote_addr": {
+          "type": "keyword",
+          "index": true
+        },
+        "collection": {
+          "type": "keyword",
+          "index": true
+        }
+      }
+    },
+    "item-create-agg-bookmark": {
+      "date_detection": false,
+      "properties": {
+        "date": {
+          "type": "date",
+          "format": "date_optional_time"
         }
       }
     }
   },
   "aliases": {
-    "events-stats-record-view": {}
+    "stats-item-create": {}
   }
 }
