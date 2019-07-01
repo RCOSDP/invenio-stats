@@ -309,7 +309,7 @@ def register_queries():
         ),
         dict(
             query_name='get-search-report',
-            query_class=ESTermsQuery,
+            query_class=ESWekoTermsQuery,
             query_config=dict(
                 index='stats-search',
                 doc_type='search-day-aggregation',

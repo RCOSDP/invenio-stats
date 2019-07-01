@@ -134,6 +134,15 @@ def get_aggregations(index, aggs_query):
     return results
 
 
+def get_start_end_date(year, month):
+    """Get first of the month and last of the month."""
+    query_month = str(year) + '-' + str(month).zfill(2)
+    _, lastday = calendar.monthrange(year, month)
+    start_date = query_month + '-01'
+    end_date = query_month + '-' + str(lastday).zfill(2)  # + 'T23:59:59'
+    return start_date, end_date
+
+
 def agg_bucket_sort(agg_sort, buckets):
     """Bucket sort.
 
@@ -333,16 +342,16 @@ class QuerySearchReportHelper(object):
         result = {}
         year = kwargs.get('year')
         month = kwargs.get('month')
+        start_date = kwargs.get('start_date')
+        end_date = kwargs.get('end_date')
 
         try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            start_date = query_month + '-01'
-            end_date = query_month + '-' + str(lastday).zfill(2) + 'T23:59:59'
-            result['date'] = query_month
-            params = {'start_date': query_month + '-01',
-                      'end_date': query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59'}
+            if not start_date or not end_date:
+                start_date, end_date = get_start_end_date(year, month)
+                result['date'] = str(year) + '-' + str(month).zfill(2)
+            params = {'start_date': start_date,
+                      'end_date': end_date + 'T23:59:59',
+                      'agg_size': kwargs.get('agg_size', 0)}
 
             # Run query
             keyword_query_cfg = current_stats.queries['get-search-report']
@@ -357,7 +366,7 @@ class QuerySearchReportHelper(object):
                 pretty_report = cls.parse_bucket_response(
                     report, current_report)
                 all.append(pretty_report)
-            result['all'] = all
+            result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), all)
 
         except Exception as e:
             current_app.logger.debug(e)
