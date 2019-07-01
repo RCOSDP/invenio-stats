@@ -912,6 +912,30 @@ class QueryItemRegReportHelper(object):
                             i += 1
                             # total results
                             total_results += 1
+                elif unit == 'User':
+                    start_date_string = ''
+                    end_date_string = ''
+                    params = {}
+                    if start_date is not None:
+                        start_date_string = start_date.strftime('%Y-%m-%d')
+                        params.update({'start_date': start_date_string})
+                    if end_date is not None:
+                        end_date_string = end_date.strftime('%Y-%m-%d')
+                        params.update({'end_date': end_date_string})
+                    # Limit size
+                    params.update({'agg_size': kwargs.get('agg_size', 0)})
+                    res_total = query_total.run(**params)
+                    index_list = {}
+                    for ip in res_total['buckets']:
+                        for host in ip['buckets']:
+                            for user in host['buckets']:
+                                if not user['key'] in index_list:
+                                    index_list[user['key']] = len(result)
+                                    result.append({'username': user['key'],
+                                                   'count': user['count']})
+                                else:
+                                    index = index_list[user['key']]
+                                    result[index]['count'] += user['count']
                 else:
                     result = []
             except Exception as e:

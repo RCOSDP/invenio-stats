@@ -495,7 +495,7 @@ def register_queries():
         ),
         dict(
             query_name='item-create-total',
-            query_class=ESTermsQuery,
+            query_class=ESWekoTermsQuery,
             query_config=dict(
                 index='stats-item-create',
                 doc_type='item-create-day-aggregation',
