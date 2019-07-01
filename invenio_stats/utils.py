@@ -586,6 +586,10 @@ class QueryRecordViewReportHelper(object):
                 data['total_all'] = record['value']
                 data['total_not_login'] = 0
                 for user in record['buckets']:
+                    for pid in user['buckets']:
+                        data['pid_value'] = pid['key']
+                        for title in pid['buckets']:
+                            data['record_name'] = title['key']
                     if user['key'] == 'guest':
                         data['total_not_login'] += user['value']
                 data_list.append(data)
@@ -595,17 +599,21 @@ class QueryRecordViewReportHelper(object):
         """Get record view report."""
         result = {}
         all_list = []
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
+        query_date = ''
 
         try:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            params = {'start_date': query_month + '-01',
-                      'end_date':
-                      query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59'}
+            start_date = kwargs.get('start_date')
+            end_date = kwargs.get('end_date')
+            if not start_date or not end_date:
+                year = kwargs.get('year')
+                month = kwargs.get('month')
+                query_date = str(year) + '-' + str(month).zfill(2)
+                _, lastday = calendar.monthrange(year, month)
+                start_date = query_date + '-01'
+                end_date = query_date + '-' + str(lastday).zfill(2)
+                query_date = start_date + '-' + end_date
+            params = {'start_date': start_date,
+                      'end_date': end_date + 'T23:59:59'}
             all_query_cfg = current_stats.queries['get-record-view-report']
             all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
             # Limit size
@@ -616,7 +624,7 @@ class QueryRecordViewReportHelper(object):
         except Exception as e:
             current_app.logger.debug(e)
 
-        result['date'] = query_month
+        result['date'] = query_date
         result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), all_list)
 
         return result
@@ -906,6 +914,30 @@ class QueryItemRegReportHelper(object):
                             i += 1
                             # total results
                             total_results += 1
+                elif unit == 'User':
+                    start_date_string = ''
+                    end_date_string = ''
+                    params = {}
+                    if start_date is not None:
+                        start_date_string = start_date.strftime('%Y-%m-%d')
+                        params.update({'start_date': start_date_string})
+                    if end_date is not None:
+                        end_date_string = end_date.strftime('%Y-%m-%d')
+                        params.update({'end_date': end_date_string})
+                    # Limit size
+                    params.update({'agg_size': kwargs.get('agg_size', 0)})
+                    res_total = query_total.run(**params)
+                    index_list = {}
+                    for ip in res_total['buckets']:
+                        for host in ip['buckets']:
+                            for user in host['buckets']:
+                                if not user['key'] in index_list:
+                                    index_list[user['key']] = len(result)
+                                    result.append({'username': user['key'],
+                                                   'count': user['count']})
+                                else:
+                                    index = index_list[user['key']]
+                                    result[index]['count'] += user['count']
                 else:
                     result = []
             except Exception as e:

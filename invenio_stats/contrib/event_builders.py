@@ -274,7 +274,8 @@ def build_search_detail_condition(doc):
     return doc
 
 
-def item_create_event_builder(event, sender_app, item_id=None, **kwargs):
+def item_create_event_builder(event, sender_app, username=None,
+                              item_id=None, item_title=None, **kwargs):
     """Build a item-create event."""
     event.update(dict(
         # When:
@@ -282,8 +283,10 @@ def item_create_event_builder(event, sender_app, item_id=None, **kwargs):
         # What:
         referrer=request.referrer,
         remote_addr=request.remote_addr,
+        username=username,
         pid_type=item_id.pid_type,
         pid_value=str(item_id.pid_value),
+        record_name=item_title,
         # Who:
         **get_user()
     ))
