@@ -59,15 +59,6 @@
           "type": "boolean"
         }
       }
-    },
-    "search-agg-bookmark": {
-      "date_detection": false,
-      "properties": {
-        "date": {
-          "type": "date",
-          "format": "date_optional_time"
-        }
-      }
     }
   },
   "aliases": {
