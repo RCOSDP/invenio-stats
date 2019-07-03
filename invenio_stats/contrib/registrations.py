@@ -14,7 +14,7 @@ from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
     build_file_unique_id, build_item_create_unique_id, \
     build_record_unique_id, build_search_detail_condition, \
     build_search_unique_id, build_top_unique_id, copy_record_index_list, \
-    copy_search_keyword
+    copy_search_keyword, copy_search_type
 from invenio_stats.processors import EventsIndexer, anonymize_user, \
     flag_restricted, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery, \
@@ -147,6 +147,7 @@ def register_aggregations():
                     country='country',
                     referrer='referrer',
                     search_key=copy_search_keyword,
+                    search_type=copy_search_type,
                     site_license_name='site_license_name',
                     site_license_flag='site_license_flag'
                     # count='count',
@@ -230,7 +231,7 @@ def register_aggregations():
             copy_fields=dict(
                 country='country',
                 hostname='hostname',
-                username='username',
+                cur_user_id='cur_user_id',
                 remote_addr='remote_addr',
                 pid_type='pid_type',
                 pid_value='pid_value',
@@ -502,7 +503,19 @@ def register_queries():
                 metric_fields=dict(
                     count=('sum', 'count', {}),
                 ),
-                aggregated_fields=['remote_addr', 'hostname', 'username'],
+                aggregated_fields=['remote_addr', 'hostname', 'cur_user_id'],
+            )
+        ),
+        dict(
+            query_name='item-create-per-date',
+            query_class=ESWekoTermsQuery,
+            query_config=dict(
+                index='stats-item-create',
+                doc_type='item-create-day-aggregation',
+                metric_fields=dict(
+                    count=('sum', 'count', {}),
+                ),
+                aggregated_fields=['timestamp', 'pid_value', 'record_name'],
             )
         ),
         dict(
