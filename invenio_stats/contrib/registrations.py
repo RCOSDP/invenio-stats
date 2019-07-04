@@ -314,7 +314,7 @@ def register_queries():
             query_config=dict(
                 index='stats-search',
                 doc_type='search-day-aggregation',
-                aggregated_fields=['search_key', 'count'],
+                aggregated_fields=['search_key'],
                 # query_modifiers=[filter_restricted],
                 # copy_fields=dict(
                 #    count='count',

@@ -368,4 +368,7 @@ class ESWekoTermsQuery(ESTermsQuery):
                     'term', **{filtered_field: kwargs[query_param]}
                 )
 
+        if kwargs.get('agg_filter'):
+            agg_query = agg_query.filter('terms', **kwargs.get('agg_filter'))
+
         return agg_query

@@ -351,7 +351,8 @@ class QuerySearchReportHelper(object):
                 result['date'] = str(year) + '-' + str(month).zfill(2)
             params = {'start_date': start_date,
                       'end_date': end_date + 'T23:59:59',
-                      'agg_size': kwargs.get('agg_size', 0)}
+                      'agg_size': kwargs.get('agg_size', 0),
+                      'agg_filter': kwargs.get('agg_filter', None)}
 
             # Run query
             keyword_query_cfg = current_stats.queries['get-search-report']
@@ -363,9 +364,8 @@ class QuerySearchReportHelper(object):
             for report in raw_result['buckets']:
                 current_report = {}
                 current_report['search_key'] = report['key']
-                pretty_report = cls.parse_bucket_response(
-                    report, current_report)
-                all.append(pretty_report)
+                current_report['count'] = report['value']
+                all.append(current_report)
             result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), all)
 
         except Exception as e:
