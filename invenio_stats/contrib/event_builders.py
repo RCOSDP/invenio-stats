@@ -168,6 +168,13 @@ def copy_search_keyword(doc, aggregation_data=None):
     return ''
 
 
+def copy_search_type(doc, aggregation_data=None):
+    """Copy search type to agg."""
+    if 'search_type' in doc['search_detail']:
+        return doc['search_detail']['search_type']
+    return -1
+
+
 def record_view_event_builder(event, sender_app, pid=None, record=None,
                               info=None, **kwargs):
     """Build a record-view event."""
@@ -292,16 +299,17 @@ def build_search_detail_condition(doc):
     return doc
 
 
-def item_create_event_builder(event, sender_app, username=None,
+def item_create_event_builder(event, sender_app, user_id=None,
                               item_id=None, item_title=None, **kwargs):
     """Build a item-create event."""
+    print(get_user())
     event.update(dict(
         # When:
         timestamp=datetime.datetime.utcnow().isoformat(),
         # What:
         referrer=request.referrer,
         remote_addr=request.remote_addr,
-        username=username,
+        cur_user_id=user_id,
         pid_type=item_id.pid_type,
         pid_value=str(item_id.pid_value),
         record_name=item_title,

@@ -43,8 +43,8 @@
           "type": "boolean",
           "index": "not_analyzed"
         },
-        "username": {
-          "type": "string",
+        "cur_user_id": {
+          "type": "integer",
           "index": "not_analyzed"
         },
         "hostname": {

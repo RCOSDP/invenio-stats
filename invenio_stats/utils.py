@@ -394,7 +394,8 @@ class QuerySearchReportHelper(object):
                 result['date'] = str(year) + '-' + str(month).zfill(2)
             params = {'start_date': start_date,
                       'end_date': end_date + 'T23:59:59',
-                      'agg_size': kwargs.get('agg_size', 0)}
+                      'agg_size': kwargs.get('agg_size', 0),
+                      'agg_filter': kwargs.get('agg_filter', None)}
 
             # Run query
             keyword_query_cfg = current_stats.queries['get-search-report']
@@ -406,9 +407,8 @@ class QuerySearchReportHelper(object):
             for report in raw_result['buckets']:
                 current_report = {}
                 current_report['search_key'] = report['key']
-                pretty_report = cls.parse_bucket_response(
-                    report, current_report)
-                all.append(pretty_report)
+                current_report['count'] = report['value']
+                all.append(current_report)
             result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), all)
 
         except Exception as e:
@@ -422,18 +422,28 @@ class QueryCommonReportsHelper(object):
     """CommonReports helper class."""
 
     @classmethod
-    def get_common_params(cls, year, month):
+    def get_common_params(cls, **kwargs):
         """Get common params."""
-        if month > 0 and month <= 12:
-            query_month = str(year) + '-' + str(month).zfill(2)
-            _, lastday = calendar.monthrange(year, month)
-            params = {'start_date': query_month + '-01',
-                      'end_date': query_month + '-' + str(lastday).zfill(2)
-                      + 'T23:59:59'}
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+        start_date = kwargs.get('start_date')
+        end_date = kwargs.get('end_date')
+        if not start_date or not end_date:
+            if month > 0 and month <= 12:
+                query_date = str(year) + '-' + str(month).zfill(2)
+                _, lastday = calendar.monthrange(year, month)
+                params = {'start_date': query_date + '-01',
+                          'end_date': query_date + '-'
+                          + str(lastday).zfill(2) + 'T23:59:59'}
+            else:
+                query_date = 'all'
+                params = {'interval': 'day'}
         else:
-            query_month = 'all'
-            params = {'interval': 'day'}
-        return query_month, params
+            query_date = start_date + '-' + end_date
+            params = {'start_date': start_date,
+                      'end_date': end_date + 'T23:59:59',
+                      'agg_size': kwargs.get('agg_size', 0)}
+        return query_date, params
 
     @classmethod
     def get(cls, **kwargs):
@@ -443,6 +453,8 @@ class QueryCommonReportsHelper(object):
             return cls.get_top_page_access_report(**kwargs)
         elif event == 'site_access':
             return cls.get_site_access_report(**kwargs)
+        elif event == 'item_create':
+            return cls.get_item_create_ranking(**kwargs)
         else:
             return []
 
@@ -470,12 +482,10 @@ class QueryCommonReportsHelper(object):
         result = {}
         all_list = {}
         all_res = {}
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
+        query_month = ''
 
         try:
-            query_month, params = cls.get_common_params(year, month)
+            query_month, params = cls.get_common_params(**kwargs)
             if query_month == 'all':
                 all_query_name = ['top-view-total']
             else:
@@ -532,15 +542,12 @@ class QueryCommonReportsHelper(object):
         site_license_list = {}
         other_list = {}
         institution_name_list = []
-
-        year = kwargs.get('year')
-        month = kwargs.get('month')
+        query_month = ''
 
         query_list = ['top_view', 'search', 'record_view',
                       'file_download', 'file_preview']
-
         try:
-            query_month, params = cls.get_common_params(year, month)
+            query_month, params = cls.get_common_params(**kwargs)
             for q in query_list:
                 query_cfg = current_stats.queries['get-' + q.replace('_', '-')
                                                   + '-per-site-license']
@@ -556,6 +563,39 @@ class QueryCommonReportsHelper(object):
         result['site_license'] = [site_license_list]
         result['other'] = [other_list]
         result['institution_name'] = institution_name_list
+        return result
+
+    @classmethod
+    def get_item_create_ranking(cls, **kwargs):
+        """Get item create ranking."""
+        def Calculation(res, result):
+            """Calculation."""
+            for item in res['buckets']:
+                for pid in item['buckets']:
+                    data = {}
+                    data['create_date'] = item['key'] / 1000 # for utc change
+                    data['pid_value'] = pid['key']
+                    if 'buckets' in pid:
+                        name = pid['buckets'][0]['key']
+                    else:
+                        name = ''
+                    data['record_name'] = name
+                    result.append(data)
+
+        result = {}
+        data_list = []
+        query_date = ''
+        try:
+            query_date, params = cls.get_common_params(**kwargs)
+            query_cfg = current_stats.queries['item-create-per-date']
+            query = query_cfg.query_class(**query_cfg.query_config)
+            res = query.run(**params)
+            Calculation(res, data_list)
+        except Exception as e:
+            current_app.logger.debug(e)
+
+        result['date'] = query_date
+        result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), data_list)
         return result
 
 
@@ -985,7 +1025,7 @@ class QueryItemRegReportHelper(object):
                             for user in host['buckets']:
                                 if not user['key'] in index_list:
                                     index_list[user['key']] = len(result)
-                                    result.append({'username': user['key'],
+                                    result.append({'user_id': user['key'],
                                                    'count': user['count']})
                                 else:
                                     index = index_list[user['key']]
