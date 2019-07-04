@@ -575,7 +575,7 @@ class QueryCommonReportsHelper(object):
             for item in res['buckets']:
                 for pid in item['buckets']:
                     data = {}
-                    data['create_date'] = item['key'] / 1000 # for utc change
+                    data['create_date'] = item['key'] / 1000  # for utc change
                     data['pid_value'] = pid['key']
                     if 'buckets' in pid:
                         name = pid['buckets'][0]['key']
