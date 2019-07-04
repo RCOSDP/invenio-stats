@@ -352,6 +352,7 @@ class QuerySearchReportHelper(object):
             params = {'start_date': start_date,
                       'end_date': end_date + 'T23:59:59',
                       'agg_size': kwargs.get('agg_size', 0),
+                      'agg_sort': kwargs.get('agg_sort', {'value': 'desc'}),
                       'agg_filter': kwargs.get('agg_filter', None)}
 
             # Run query
@@ -366,7 +367,7 @@ class QuerySearchReportHelper(object):
                 current_report['search_key'] = report['key']
                 current_report['count'] = report['value']
                 all.append(current_report)
-            result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), all)
+            result['all'] = all
 
         except Exception as e:
             current_app.logger.debug(e)
@@ -399,7 +400,8 @@ class QueryCommonReportsHelper(object):
             query_date = start_date + '-' + end_date
             params = {'start_date': start_date,
                       'end_date': end_date + 'T23:59:59',
-                      'agg_size': kwargs.get('agg_size', 0)}
+                      'agg_size': kwargs.get('agg_size', 0),
+                      'agg_sort': kwargs.get('agg_sort', {'_term': 'desc'})}
         return query_date, params
 
     @classmethod
@@ -552,7 +554,7 @@ class QueryCommonReportsHelper(object):
             current_app.logger.debug(e)
 
         result['date'] = query_date
-        result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), data_list)
+        result['all'] = data_list
         return result
 
 
@@ -667,6 +669,8 @@ class QueryRecordViewReportHelper(object):
             all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
             # Limit size
             params.update({'agg_size': kwargs.get('agg_size', 0)})
+            params.update({'agg_sort': kwargs.get('agg_sort',
+                                                  {'value': 'desc'})})
             all_res = all_query.run(**params)
             cls.Calculation(all_res, all_list)
 
@@ -674,7 +678,7 @@ class QueryRecordViewReportHelper(object):
             current_app.logger.debug(e)
 
         result['date'] = query_date
-        result['all'] = agg_bucket_sort(kwargs.get('agg_sort'), all_list)
+        result['all'] = all_list
 
         return result
 
@@ -995,6 +999,6 @@ class QueryItemRegReportHelper(object):
         response = {
             'num_page': ceil(float(total_results) / reports_per_page),
             'page': page_index + 1,
-            'data': agg_bucket_sort(kwargs.get('agg_sort'), result)
+            'data': result
         }
         return response

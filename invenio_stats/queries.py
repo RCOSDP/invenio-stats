@@ -353,8 +353,10 @@ class ESWekoTermsQuery(ESTermsQuery):
         if self.aggregated_fields:
             cur_agg = base_agg
             for term in self.aggregated_fields:  # Added size and sort
-                cur_agg = cur_agg.bucket(term, 'terms', field=term,
-                                         size=kwargs.get('agg_size', 0))
+                cur_agg = cur_agg.bucket(
+                    term, 'terms', field=term, size=kwargs.get('agg_size', 0),
+                    order=kwargs.get('agg_sort', { "_count" : "desc" })
+                )
                 _apply_metric_aggs(cur_agg)
 
         if self.copy_fields:
