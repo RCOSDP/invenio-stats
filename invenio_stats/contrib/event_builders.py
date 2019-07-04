@@ -68,6 +68,8 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         item_id=obj.item_id,
         item_title=obj.item_title,
         remote_addr=request.remote_addr,
+        is_billing_item=obj.is_billing_item,
+        user_group_list=obj.user_group_list,
         # Who:
         **get_user()
     ))
@@ -94,6 +96,8 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         item_id=obj.item_id,
         item_title=obj.item_title,
         remote_addr=request.remote_addr,
+        is_billing_item=obj.is_billing_item,
+        user_group_list=obj.user_group_list,
         # Who:
         **get_user()
     ))
@@ -111,11 +115,16 @@ def build_celery_task_unique_id(doc):
 
 def build_file_unique_id(doc):
     """Build file unique identifier."""
-    key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}_{7}'.format(
+    group_name_list = ''
+    if isinstance(doc['user_group_list'], list):
+        group_name_list = [g['group_name'] for g in doc['user_group_list']]
+    key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}_{7}_{8}_{9}_{10}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
         doc['index_list'], doc['site_license_name'], doc['country'],
-        doc['cur_user_id'], doc['remote_addr']
+        doc['cur_user_id'], doc['remote_addr'], str(doc['is_billing_item']),
+        '_'.join(group_name_list)
     )
+
     doc['unique_id'] = str(uuid.uuid3(uuid.NAMESPACE_DNS, key))
     doc['hostname'] = '{}'.format(resolve_address(doc['remote_addr']))
     return doc
@@ -141,6 +150,15 @@ def copy_record_index_list(doc, aggregation_data=None):
             agg_record_index_list.append(index['index_name'])
             record_index_names = ", ".join(agg_record_index_list)
     return record_index_names
+
+
+def copy_user_group_list(doc, aggregation_data=None):
+    """Copy record index list."""
+    group_names = ''
+    groups = doc['user_group_list']
+    if groups:
+        group_names = ', '.join([g['group_name'] for g in groups])
+    return group_names
 
 
 def copy_search_keyword(doc, aggregation_data=None):
