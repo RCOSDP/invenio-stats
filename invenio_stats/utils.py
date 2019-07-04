@@ -157,15 +157,39 @@ def agg_bucket_sort(agg_sort, buckets):
     return buckets
 
 
+def parse_bucket_response(raw_res, pretty_result=dict()):
+    """Parsing bucket response."""
+    if 'buckets' in raw_res:
+        field_name = raw_res['field']
+        value = raw_res['buckets'][0]['key']
+        pretty_result[field_name] = value
+        return parse_bucket_response(
+            raw_res['buckets'][0], pretty_result)
+    else:
+        return pretty_result
+
+
 class QueryFileReportsHelper(object):
     """Helper for parsing elasticsearch aggregations."""
 
     @classmethod
-    def calc_file_stats_reports(cls, res, data_list):
+    def calc_per_group_counts(cls, group_names, current_stats, current_count):
+        """Count the downloads for group."""
+        groups = [g.strip() for g in group_names.split(',') if g]
+        for group in groups:
+            if group in current_stats:
+                current_stats[group] += current_count
+            else:
+                current_stats[group] = current_count
+        return current_stats
+
+    @classmethod
+    def calc_file_stats_reports(cls, res, data_list, all_groups):
         """Create response object for file_stats_reports."""
         for file in res['buckets']:
             for index in file['buckets']:
                 data = {}
+                data['group_counts'] = {}  # Keep track of downloads per group
                 data['file_key'] = file['key']
                 data['index_list'] = index['key']
                 data['total'] = index['value']
@@ -179,8 +203,10 @@ class QueryFileReportsHelper(object):
                         if license['key'] == 1:
                             data['site_license'] += license['value']
                             break
+
                     userrole = user['key']
                     count = user['value']
+
                     if userrole == 'guest':
                         data['no_login'] += count
                     elif userrole == 'Contributor':
@@ -191,6 +217,16 @@ class QueryFileReportsHelper(object):
                         data['login'] += count
                     else:
                         data['login'] += count
+
+                    # Get groups counts
+                    if 'field' in user['buckets'][0]:
+                        for group_acc in user['buckets'][0]['buckets']:
+                            group_list = group_acc['key']
+                            data['group_counts'] = cls.calc_per_group_counts(
+                                group_list, data['group_counts'], group_acc['value'])
+
+                    # Keep track of groups seen
+                    all_groups.update(data['group_counts'].keys())
                 data_list.append(data)
 
     @classmethod
@@ -213,20 +249,21 @@ class QueryFileReportsHelper(object):
                 data_list.update({item['key']: data})
 
     @classmethod
-    def Calculation(cls, res, data_list):
+    def Calculation(cls, res, data_list, all_groups=set()):
         """Calculation."""
-        if res['buckets'] is not None:
-            cls.calc_file_stats_reports(res, data_list)
+        if 'buckets' in res and res['buckets'] is not None:
+            cls.calc_file_stats_reports(res, data_list, all_groups)
         elif res['get-file-download-per-user-report'] is not None \
                 and res['get-file-preview-per-user-report'] is not None:
             cls.calc_file_per_using_report(res, data_list)
 
     @classmethod
-    def get_file_stats_report(cls, **kwargs):
+    def get_file_stats_report(cls, is_billing_item=False, **kwargs):
         """Get file download/preview report."""
         result = {}
         all_list = []
         open_access_list = []
+        all_groups = set()
 
         event = kwargs.get('event')
         year = kwargs.get('year')
@@ -253,26 +290,30 @@ class QueryFileReportsHelper(object):
             elif event == 'file_preview':
                 all_query_name = 'get-file-preview-report'
                 open_access_query_name = 'get-file-preview-open-access-report'
+            elif event in ['billing_file_download', 'billing_file_preview']:
+                all_params['is_billing_item'] = is_billing_item
+                all_query_name = 'get-' + event.replace('_', '-') + '-report'
 
             # all
             all_query_cfg = current_stats.queries[all_query_name]
             all_query = all_query_cfg.query_class(**all_query_cfg.query_config)
-            all_res = all_query.run(**params)
-            cls.Calculation(all_res, all_list)
+            all_res = all_query.run(**all_params)
+            cls.Calculation(all_res, all_list, all_groups=all_groups)
 
-            # open access
-            open_access_query_cfg = current_stats.queries[open_access_query_name]
-            open_access = open_access_query_cfg.query_class(
-                **open_access_query_cfg.query_config)
-            open_access_res = open_access.run(**params)
-            cls.Calculation(open_access_res, open_access_list)
-
+            # open access -- Only run for non-billed items
+            if open_access_query_name:
+                open_access_query_cfg = current_stats.queries[open_access_query_name]
+                open_access = open_access_query_cfg.query_class(
+                    **open_access_query_cfg.query_config)
+                open_access_res = open_access.run(**params)
+                cls.Calculation(open_access_res, open_access_list)
         except Exception as e:
             current_app.logger.debug(e)
 
         result['date'] = query_month
         result['all'] = all_list
         result['open_access'] = open_access_list
+        result['all_groups'] = list(all_groups)
         return result
 
     @classmethod
@@ -315,6 +356,8 @@ class QueryFileReportsHelper(object):
         event = kwargs.get('event')
         if event == 'file_download' or event == 'file_preview':
             return cls.get_file_stats_report(**kwargs)
+        elif event in ['billing_file_download', 'billing_file_preview']:
+            return cls.get_file_stats_report(is_billing_item=True, **kwargs)
         elif event == 'file_using_per_user':
             return cls.get_file_per_using_report(**kwargs)
         else:

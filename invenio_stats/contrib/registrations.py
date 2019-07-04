@@ -14,7 +14,7 @@ from invenio_stats.contrib.event_builders import build_celery_task_unique_id, \
     build_file_unique_id, build_item_create_unique_id, \
     build_record_unique_id, build_search_detail_condition, \
     build_search_unique_id, build_top_unique_id, copy_record_index_list, \
-    copy_search_keyword, copy_search_type
+    copy_search_keyword, copy_search_type, copy_user_group_list
 from invenio_stats.processors import EventsIndexer, anonymize_user, \
     flag_restricted, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery, \
@@ -176,6 +176,8 @@ def register_aggregations():
                 accessrole='accessrole',
                 userrole='userrole',
                 index_list='index_list',
+                is_billing_item='is_billing_item',
+                user_group_names=copy_user_group_list,
                 site_license_name='site_license_name',
                 site_license_flag='site_license_flag',
                 cur_user_id='cur_user_id',
@@ -207,6 +209,8 @@ def register_aggregations():
                 accessrole='accessrole',
                 userrole='userrole',
                 index_list='index_list',
+                is_billing_item='is_billing_item',
+                user_group_names=copy_user_group_list,
                 site_license_name='site_license_name',
                 site_license_flag='site_license_flag',
                 cur_user_id='cur_user_id',
@@ -314,13 +318,7 @@ def register_queries():
             query_config=dict(
                 index='stats-search',
                 doc_type='search-day-aggregation',
-                aggregated_fields=['search_key'],
-                # query_modifiers=[filter_restricted],
-                # copy_fields=dict(
-                #    count='count',
-                #    search_key='search_detail.search_key'
-                # ),
-
+                aggregated_fields=['search_key', 'count'],
             )
         ),
         dict(
@@ -331,6 +329,20 @@ def register_queries():
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag'],
+            )
+        ),
+        dict(
+            query_name='get-billing-file-download-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-download',
+                doc_type='file-download-day-aggregation',
+                aggregated_fields=['file_key', 'index_list',
+                                   'userrole', 'site_license_flag',
+                                   'user_group_names'],
+                required_filters=dict(
+                    is_billing_item='is_billing_item',
+                ),
             )
         ),
         dict(
@@ -357,6 +369,20 @@ def register_queries():
             )
         ),
         dict(
+            query_name='get-billing-file-preview-report',
+            query_class=ESTermsQuery,
+            query_config=dict(
+                index='stats-file-preview',
+                doc_type='file-preview-day-aggregation',
+                aggregated_fields=['file_key', 'index_list',
+                                   'userrole', 'site_license_flag',
+                                   'user_group_names'],
+                required_filters=dict(
+                    is_billing_item='is_billing_item',
+                ),
+            )
+        ),
+        dict(
             query_name='get-file-preview-open-access-report',
             query_class=ESTermsQuery,
             query_config=dict(
@@ -366,6 +392,7 @@ def register_queries():
                                    'userrole', 'site_license_flag'],
                 required_filters=dict(
                     accessrole='accessrole',
+                    # is_billing_item='is_billing_item',
                 ),
             )
         ),
