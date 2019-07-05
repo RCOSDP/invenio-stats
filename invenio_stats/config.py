@@ -12,7 +12,7 @@ from __future__ import absolute_import, print_function
 
 from kombu import Exchange
 
-from .utils import default_permission_factory
+from .utils import default_permission_factory, weko_permission_factory
 
 STATS_REGISTER_RECEIVERS = True
 """Enable the registration of signal receivers.
@@ -141,7 +141,7 @@ STATS_QUERIES = {
 }
 
 
-STATS_PERMISSION_FACTORY = default_permission_factory
+STATS_PERMISSION_FACTORY = weko_permission_factory
 """Permission factory used by the statistics REST API.
 
 This is a function which returns a permission granting or forbidding access

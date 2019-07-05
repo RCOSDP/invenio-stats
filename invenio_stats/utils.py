@@ -27,6 +27,7 @@ from invenio_search import current_search_client
 from werkzeug.utils import import_string
 
 from . import config
+from .permissions import stats_api_permission
 from .proxies import current_stats
 
 
@@ -116,6 +117,14 @@ def default_permission_factory(query_name, params):
         return current_stats.queries[query_name].permission_factory(
             query_name, params
         )
+
+
+def weko_permission_factory(*args, **kwargs):  # All queries have same perms
+    """Permission factory for weko queries."""
+    def can(self):
+        return current_user.is_authenticated and stats_api_permission.can()
+
+    return type('WekoStatsPermissionChecker', (), {'can': can})()
 
 
 def get_aggregations(index, aggs_query):
