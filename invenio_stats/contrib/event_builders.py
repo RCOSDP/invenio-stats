@@ -69,6 +69,7 @@ def file_download_event_builder(event, sender_app, obj=None, **kwargs):
         item_title=obj.item_title,
         remote_addr=request.remote_addr,
         is_billing_item=obj.is_billing_item,
+        billing_file_price=obj.billing_file_price,
         user_group_list=obj.user_group_list,
         # Who:
         **get_user()
@@ -97,6 +98,7 @@ def file_preview_event_builder(event, sender_app, obj=None, **kwargs):
         item_title=obj.item_title,
         remote_addr=request.remote_addr,
         is_billing_item=obj.is_billing_item,
+        billing_file_price=obj.billing_file_price,
         user_group_list=obj.user_group_list,
         # Who:
         **get_user()
@@ -118,10 +120,11 @@ def build_file_unique_id(doc):
     group_name_list = ''
     if isinstance(doc['user_group_list'], list):
         group_name_list = [g['group_name'] for g in doc['user_group_list']]
-    key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}_{7}_{8}_{9}_{10}'.format(
+    key = '{0}_{1}_{2}_{3}_{4}_{5}_{6}_{7}_{8}_{9}_{10}_{11}'.format(
         doc['bucket_id'], doc['file_id'], doc['userrole'], doc['accessrole'],
         doc['index_list'], doc['site_license_name'], doc['country'],
         doc['cur_user_id'], doc['remote_addr'], str(doc['is_billing_item']),
+        doc['is_billing_item'],
         '_'.join(group_name_list)
     )
 

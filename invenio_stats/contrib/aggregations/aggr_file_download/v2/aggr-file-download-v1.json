@@ -104,6 +104,10 @@
           "type": "boolean",
           "index": "not_analyzed"
         },
+        "billing_file_price": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
         "user_group_names": {
           "type": "string",
           "index": "not_analyzed"

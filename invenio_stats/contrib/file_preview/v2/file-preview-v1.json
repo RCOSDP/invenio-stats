@@ -88,6 +88,10 @@
           "type": "boolean",
           "index": "not_analyzed"
         },
+        "billing_file_price": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
         "size": {
           "type": "double",
           "index": "not_analyzed"
