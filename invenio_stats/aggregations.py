@@ -95,7 +95,7 @@ class StatAggregator(object):
         self.name = name
         self.client = client or current_search_client
         self.event = event
-        self.search_index_prefix = os.environ.get('SEARCH_INDEX_PREFIX', '')#current_app.config['SEARCH_INDEX_PREFIX']
+        self.search_index_prefix = current_app.config['SEARCH_INDEX_PREFIX'].strip('-')  # TODO: Why does it have a dash???
         self.aggregation_alias = '{0}-stats-{1}'.format(
             self.search_index_prefix, self.event)
         self.bookmark_alias = '{0}-stats-{1}-bookmark'.format(

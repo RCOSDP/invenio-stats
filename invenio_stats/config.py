@@ -180,5 +180,6 @@ In ES2, size=0 was internally replaced by this value, so we have effectively
 mimicked the same functonality.
 """
 
+
 SEARCH_INDEX_PREFIX = os.environ.get('SEARCH_INDEX_PREFIX', '').strip('-')
 """Search index prefix which is set in weko config."""

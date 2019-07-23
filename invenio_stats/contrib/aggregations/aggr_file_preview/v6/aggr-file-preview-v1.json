@@ -93,6 +93,29 @@
           "type": "keyword",
           "index": true
         },
+        "is_billing_item": {
+          "type": "boolean"
+        },
+        "billing_file_price": {
+          "type": "keyword",
+          "index": true
+        },
+        "user_group_names": {
+          "type": "keyword",
+          "index": true
+        },
+        "user_group_list": {
+          "type": "nested",
+          "properties": {
+            "group_id": {
+              "type": "keyword"
+            },
+            "group_name": {
+              "type": "keyword",
+              "index": true
+            }
+          }
+        },
         "hostname": {
           "type": "keyword",
           "index": true

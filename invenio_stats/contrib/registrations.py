@@ -20,6 +20,9 @@ from invenio_stats.processors import EventsIndexer, anonymize_user, \
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery, \
     ESWekoTermsQuery
 
+import os
+from flask import current_app
+
 
 def register_events():
     """Register sample events."""
@@ -299,13 +302,14 @@ def register_aggregations():
 
 
 def register_queries():
-    """Register queries."""
+    """Register queries.""" # TODO
+    search_index_prefix = current_app.config['SEARCH_INDEX_PREFIX'].strip('-')
     return [
         dict(
             query_name='get-celery-task-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-celery-task',
+                index='{}-stats-celery-task'.format(search_index_prefix),
                 doc_type='celery-task-day-aggregation',
                 aggregated_fields=['task_id', 'task_name', 'start_time',
                                    'end_time', 'total_records', 'task_state'],
@@ -318,7 +322,7 @@ def register_queries():
             query_name='get-search-report',
             query_class=ESWekoTermsQuery,
             query_config=dict(
-                index='stats-search',
+                index='{}-stats-search'.format(search_index_prefix),
                 doc_type='search-day-aggregation',
                 aggregated_fields=['search_key', 'count'],
             )
@@ -327,7 +331,7 @@ def register_queries():
             query_name='get-file-download-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag'],
@@ -337,7 +341,7 @@ def register_queries():
             query_name='get-billing-file-download-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag',
@@ -351,7 +355,7 @@ def register_queries():
             query_name='get-file-download-open-access-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag'],
@@ -364,7 +368,7 @@ def register_queries():
             query_name='get-file-preview-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-preview',
+                index='{}-stats-file-preview'.format(search_index_prefix),
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag'],
@@ -374,7 +378,7 @@ def register_queries():
             query_name='get-billing-file-preview-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-preview',
+                index='{}-stats-file-preview'.format(search_index_prefix),
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag',
@@ -388,7 +392,7 @@ def register_queries():
             query_name='get-file-preview-open-access-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-preview',
+                index='{}-stats-file-preview'.format(search_index_prefix),
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['file_key', 'index_list',
                                    'userrole', 'site_license_flag'],
@@ -402,7 +406,7 @@ def register_queries():
             query_name='bucket-file-download-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 copy_fields=dict(
                     bucket_id='bucket_id',
@@ -418,7 +422,7 @@ def register_queries():
             query_name='bucket-file-download-total',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 copy_fields=dict(
                     # bucket_id='bucket_id',
@@ -434,7 +438,7 @@ def register_queries():
             query_name='bucket-file-preview-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
-                index='stats-file-preview',
+                index='{}-stats-file-preview'.format(search_index_prefix),
                 doc_type='file-preview-day-aggregation',
                 copy_fields=dict(
                     bucket_id='bucket_id',
@@ -450,7 +454,7 @@ def register_queries():
             query_name='bucket-file-preview-total',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-preview',
+                index='{}-stats-file-preview'.format(search_index_prefix),
                 doc_type='file-preview-day-aggregation',
                 copy_fields=dict(
                     # bucket_id='bucket_id',
@@ -466,7 +470,7 @@ def register_queries():
             query_name='get-file-download-per-user-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['cur_user_id', 'file_id'],
             )
@@ -475,7 +479,7 @@ def register_queries():
             query_name='get-file-preview-per-user-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-preview',
+                index='{}-stats-file-preview'.format(search_index_prefix),
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['cur_user_id', 'file_id'],
             )
@@ -484,7 +488,7 @@ def register_queries():
             query_name='get-record-view-report',
             query_class=ESWekoTermsQuery,
             query_config=dict(
-                index='stats-record-view',
+                index='{}-stats-record-view'.format(search_index_prefix),
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['record_id', 'record_index_names',
                                    'cur_user_id', 'pid_value', 'record_name'],
@@ -494,7 +498,7 @@ def register_queries():
             query_name='bucket-record-view-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
-                index='stats-record-view',
+                index='{}-stats-record-view'.format(search_index_prefix),
                 doc_type='record-view-day-aggregation',
                 copy_fields=dict(
                     record_id='record_id',
@@ -508,7 +512,7 @@ def register_queries():
             query_name='bucket-record-view-total',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-record-view',
+                index='{}-stats-record-view'.format(search_index_prefix),
                 doc_type='record-view-day-aggregation',
                 copy_fields=dict(
                     record_id='record_id',
@@ -527,7 +531,7 @@ def register_queries():
             query_name='item-create-total',
             query_class=ESWekoTermsQuery,
             query_config=dict(
-                index='stats-item-create',
+                index='{}-stats-item-create'.format(search_index_prefix),
                 doc_type='item-create-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
@@ -539,7 +543,7 @@ def register_queries():
             query_name='item-create-per-date',
             query_class=ESWekoTermsQuery,
             query_config=dict(
-                index='stats-item-create',
+                index='{}-stats-item-create'.format(search_index_prefix),
                 doc_type='item-create-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
@@ -551,7 +555,7 @@ def register_queries():
             query_name='item-create-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
-                index='stats-item-create',
+                index='{}-stats-item-create'.format(search_index_prefix),
                 doc_type='item-create-day-aggregation',
                 aggregated_fields=['timestamp'],
             )
@@ -560,7 +564,7 @@ def register_queries():
             query_name='item-detail-total',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-record-view',
+                index='{}-stats-record-view'.format(search_index_prefix),
                 doc_type='record-view-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
@@ -572,7 +576,7 @@ def register_queries():
             query_name='get-file-download-per-host-report',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
@@ -585,7 +589,7 @@ def register_queries():
             query_name='item-detail-item-total',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-record-view',
+                index='{}-stats-record-view'.format(search_index_prefix),
                 doc_type='record-view-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
@@ -597,7 +601,7 @@ def register_queries():
             query_name='get-file-download-per-item-report',
             query_class=ESWekoTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 metric_fields=dict(
                     count=('sum', 'count', {}),
@@ -609,7 +613,7 @@ def register_queries():
             query_name='bucket-item-detail-view-histogram',
             query_class=ESDateHistogramQuery,
             query_config=dict(
-                index='stats-record-view',
+                index='{}-stats-record-view'.format(search_index_prefix),
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['timestamp'],
             )
@@ -618,7 +622,7 @@ def register_queries():
             query_name='get-file-download-per-time-report',
             query_class=ESDateHistogramQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['timestamp'],
             )
@@ -627,7 +631,7 @@ def register_queries():
             query_name='top-view-total-per-host',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-top-view',
+                index='{}-stats-top-view'.format(search_index_prefix),
                 doc_type='top-view-day-aggregation',
                 aggregated_fields=['remote_addr', 'hostname']
             )
@@ -636,7 +640,7 @@ def register_queries():
             query_name='top-view-total',
             query_class=ESDateHistogramQuery,
             query_config=dict(
-                index='stats-top-view',
+                index='{}-stats-top-view'.format(search_index_prefix),
                 doc_type='top-view-day-aggregation',
                 aggregated_fields=['remote_addr', 'hostname']
             )
@@ -645,7 +649,7 @@ def register_queries():
             query_name='get-top-view-per-site-license',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-top-view',
+                index='{}-stats-top-view'.format(search_index_prefix),
                 doc_type='top-view-day-aggregation',
                 aggregated_fields=['site_license_name'],
             )
@@ -654,7 +658,7 @@ def register_queries():
             query_name='get-record-view-per-site-license',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-record-view',
+                index='{}-stats-record-view'.format(search_index_prefix),
                 doc_type='record-view-day-aggregation',
                 aggregated_fields=['site_license_name'],
             )
@@ -663,7 +667,7 @@ def register_queries():
             query_name='get-search-per-site-license',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-search',
+                index='{}-stats-search'.format(search_index_prefix),
                 doc_type='search-day-aggregation',
                 aggregated_fields=['site_license_name'],
             )
@@ -672,7 +676,7 @@ def register_queries():
             query_name='get-file-download-per-site-license',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-download',
+                index='{}-stats-file-download'.format(search_index_prefix),
                 doc_type='file-download-day-aggregation',
                 aggregated_fields=['site_license_name'],
             )
@@ -681,7 +685,7 @@ def register_queries():
             query_name='get-file-preview-per-site-license',
             query_class=ESTermsQuery,
             query_config=dict(
-                index='stats-file-preview',
+                index='{}-stats-file-preview'.format(search_index_prefix),
                 doc_type='file-preview-day-aggregation',
                 aggregated_fields=['site_license_name'],
             )

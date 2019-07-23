@@ -32,6 +32,28 @@
         "count": {
           "type": "integer"
         },
+        "unique_count": {
+          "type": "integer"
+        },
+        "volume": {
+          "type": "double"
+        },
+        "unique_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "country": {
+          "type": "keyword",
+          "index": true
+        },
+        "item_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "item_title": {
+          "type": "keyword",
+          "index": true
+        },
         "file_id": {
           "type": "keyword",
           "index": true
@@ -44,7 +66,61 @@
           "type": "keyword",
           "index": true
         },
+        "accessrole": {
+          "type": "keyword",
+          "index": true
+        },
+        "userrole": {
+          "type": "keyword",
+          "index": true
+        },
+        "site_license_name": {
+          "type": "keyword",
+          "index": true
+        },
+        "site_license_flag": {
+          "type": "boolean"
+        },
+        "index_list": {
+          "type": "keyword",
+          "index": true
+        },
         "collection": {
+          "type": "keyword",
+          "index": true
+        },
+        "cur_user_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "is_billing_item": {
+          "type": "boolean"
+        },
+        "billing_file_price": {
+          "type": "keyword",
+          "index": true
+        },
+        "user_group_names": {
+          "type": "keyword",
+          "index": true
+        },
+        "user_group_list": {
+          "type": "nested",
+          "properties": {
+            "group_id": {
+              "type": "keyword"
+            },
+            "group_name": {
+              "type": "keyword",
+              "index": true
+            }
+          }
+        },
+        "hostname": {
+          "type": "keyword",
+          "index": true
+        },
+        "remote_addr": {
           "type": "keyword",
           "index": true
         }

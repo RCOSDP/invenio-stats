@@ -634,9 +634,11 @@ class QueryRecordViewPerIndexReportHelper(object):
         agg_query.aggs.bucket(cls.nested_path, 'nested',
                               path=cls.nested_path) \
             .bucket(cls.first_level_field, 'terms',
-                    field=cls.first_level_field, size=0) \
+                    field=cls.first_level_field,
+                    size=current_app.config['STATS_ES_INTEGER_MAX_VALUE']) \
             .bucket(cls.second_level_field, 'terms',
-                    field=cls.second_level_field, size=0)
+                    field=cls.second_level_field,
+                    size=current_app.config['STATS_ES_INTEGER_MAX_VALUE'])
         return agg_query.execute().to_dict()
 
     @classmethod

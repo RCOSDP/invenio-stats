@@ -78,6 +78,9 @@
         },
         "is_robot": {
           "type": "boolean"
+        },
+        "is_restricted": {
+          "type": "boolean"
         }
       }
     }

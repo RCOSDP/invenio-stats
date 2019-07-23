@@ -79,6 +79,13 @@
         "is_restricted": {
           "type": "boolean"
         },
+        "is_billing_item": {
+          "type": "boolean"
+        },
+        "billing_file_price": {
+          "type": "keyword",
+          "index": true
+        },
         "size": {
           "type": "double"
         },
@@ -104,6 +111,18 @@
         "cur_user_id": {
           "type": "keyword",
           "index": true
+        },
+        "user_group_list": {
+          "type": "nested",
+          "properties": {
+            "group_id": {
+              "type": "keyword"
+            },
+            "group_name": {
+              "type": "keyword",
+              "index": true
+            }
+          }
         },
         "remote_addr": {
           "type": "keyword",
