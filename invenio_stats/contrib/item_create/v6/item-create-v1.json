@@ -35,6 +35,13 @@
         "is_robot": {
           "type": "boolean"
         },
+        "is_restricted": {
+          "type": "boolean"
+        },
+        "username": {
+          "type": "keyword",
+          "index": true
+        },
         "hostname": {
           "type": "keyword",
           "index": true
@@ -50,11 +57,15 @@
         "pid_value": {
           "type": "keyword",
           "index": true
+        },
+        "record_name": {
+          "type": "keyword",
+          "index": true
         }
       }
     }
   },
   "aliases": {
-    "events-stats-item-create": {}
+    "__SEARCH_INDEX_PREFIX__events-stats-item-create": {}
   }
 }

@@ -53,6 +53,6 @@
     }
   },
   "aliases": {
-    "stats-top-view": {}
+    "__SEARCH_INDEX_PREFIX__stats-top-view": {}
   }
 }

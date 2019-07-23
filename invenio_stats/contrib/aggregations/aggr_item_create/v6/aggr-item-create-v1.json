@@ -46,6 +46,6 @@
     }
   },
   "aliases": {
-    "stats-item-create": {}
+    "__SEARCH_INDEX_PREFIX__stats-item-create": {}
   }
 }

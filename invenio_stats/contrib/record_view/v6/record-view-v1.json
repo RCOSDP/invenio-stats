@@ -16,7 +16,15 @@
           "type": "date",
           "format": "strict_date_hour_minute_second"
         },
+        "unique_id": {
+          "type": "keyword",
+          "index": true
+        },
         "record_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "record_name": {
           "type": "keyword",
           "index": true
         },
@@ -39,11 +47,62 @@
         "visitor_id": {
           "type": "keyword",
           "index": true
+        },
+        "unique_session_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "referrer": {
+          "type": "keyword",
+          "index": true
+        },
+        "is_robot": {
+          "type": "keyword",
+          "index": true
+        },
+        "is_restricted": {
+          "type": "keyword",
+          "index": true
+        },
+        "hostname": {
+          "type": "keyword",
+          "index": true
+        },
+        "remote_addr": {
+          "type": "keyword",
+          "index": true
+        },
+        "cur_user_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "record_index_list": {
+          "type": "nested",
+          "properties": {
+            "index_id": {
+              "type": "keyword"
+            },
+            "index_name_en": {
+              "type": "keyword",
+              "index": true
+            },
+            "index_name": {
+              "type": "keyword",
+              "index": true
+            }
+          }
+        },
+        "site_license_name": {
+          "type": "keyword",
+          "index": true
+        },
+        "site_license_flag": {
+          "type": "boolean"
         }
       }
     }
   },
   "aliases": {
-    "events-stats-record-view": {}
+    "__SEARCH_INDEX_PREFIX__events-stats-record-view": {}
   }
 }

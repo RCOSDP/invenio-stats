@@ -105,6 +105,6 @@
     }
   },
   "aliases": {
-    "stats-file-preview": {}
+    "__SEARCH_INDEX_PREFIX__stats-file-preview": {}
   }
 }

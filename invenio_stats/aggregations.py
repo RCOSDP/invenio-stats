@@ -19,6 +19,10 @@ from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index, Search
 from invenio_search import current_search_client
 
+from flask import current_app
+import os
+
+
 
 def filter_robots(query):
     """Modify an elasticsearch query so that robot events are filtered out."""
@@ -91,7 +95,11 @@ class StatAggregator(object):
         self.name = name
         self.client = client or current_search_client
         self.event = event
-        self.aggregation_alias = 'stats-{}'.format(self.event)
+        self.search_index_prefix = os.environ.get('SEARCH_INDEX_PREFIX', '')#current_app.config['SEARCH_INDEX_PREFIX']
+        self.aggregation_alias = '{0}-stats-{1}'.format(
+            self.search_index_prefix, self.event)
+        self.bookmark_alias = '{0}-stats-{1}-bookmark'.format(
+            self.search_index_prefix, self.event)
         self.aggregation_field = aggregation_field
         self.metric_aggregation_fields = metric_aggregation_fields or {}
         self.allowed_metrics = {
@@ -121,7 +129,9 @@ class StatAggregator(object):
         self.index_name_suffix = self.supported_intervals[index_interval]
         self.doc_id_suffix = self.supported_intervals[aggregation_interval]
         self.batch_size = batch_size
-        self.event_index = 'events-stats-{}'.format(self.event)
+        self.event_index = '{0}-events-stats-{1}'.format(
+            self.search_index_prefix, self.event)
+
 
     @property
     def bookmark_doc_type(self):
@@ -145,6 +155,7 @@ class StatAggregator(object):
             {'timestamp': {'order': 'asc'}}
         )
         result = query_events.execute()
+
         # There might not be any events yet if the first event have been
         # indexed but the indices have not been refreshed yet.
         if len(result) == 0:
@@ -153,7 +164,7 @@ class StatAggregator(object):
 
     def get_bookmark(self):
         """Get last aggregation date."""
-        if not Index(self.aggregation_alias,
+        if not Index(self.bookmark_alias,
                      using=self.client).exists():
             if not Index(self.event_index,
                          using=self.client).exists():
@@ -163,7 +174,7 @@ class StatAggregator(object):
         # retrieve the oldest bookmark
         query_bookmark = Search(
             using=self.client,
-            index=self.aggregation_alias,
+            index=self.bookmark_alias,
             doc_type=self.bookmark_doc_type
         )[0:1].sort(
             {'date': {'order': 'desc'}}
@@ -226,8 +237,10 @@ class StatAggregator(object):
             interval=self.aggregation_interval
         )
         terms = hist.bucket(
-            'terms', 'terms', field=self.aggregation_field, size=0
+            'terms', 'terms', field=self.aggregation_field,
+            size=current_app.config['STATS_ES_INTEGER_MAX_VALUE']
         )
+        #terms = terms[5, 10] # PAGINATE THROUGH ALL
         top = terms.metric(
             'top_hit', 'top_hits', size=1, sort={'timestamp': 'desc'}
         )
@@ -236,6 +249,7 @@ class StatAggregator(object):
 
         results = self.agg_query.execute()
         index_name = None
+        bookmark_name = None
         for interval in results.aggregations['histogram'].buckets:
             interval_date = datetime.datetime.strptime(
                 interval['key_as_string'], '%Y-%m-%dT%H:%M:%S')
@@ -258,11 +272,17 @@ class StatAggregator(object):
                             aggregation_data
                         )
 
-                index_name = 'stats-{0}-{1}'.\
-                             format(self.event,
+
+                index_name = '{0}-stats-{1}-{2}'.\
+                             format(self.search_index_prefix, self.event,
                                     interval_date.strftime(
                                         self.index_name_suffix))
+                bookmark_name = '{0}-stats-bookmark-{1}-{2}'.\
+                                format(self.search_index_prefix, self.event,
+                                       interval_date.strftime(
+                                           self.index_name_suffix))
                 self.indices.add(index_name)
+                # self.indices.add(bookmark_name)  # TODO: Change the logic for flushing indices
                 yield dict(_id='{0}-{1}'.
                            format(aggregation['key'],
                                   interval_date.strftime(
@@ -270,14 +290,15 @@ class StatAggregator(object):
                            _index=index_name,
                            _type=self.aggregation_doc_type,
                            _source=aggregation_data)
-        self.last_index_written = index_name
+        self.last_index_written = bookmark_name
 
     def run(self, start_date=None, end_date=None, update_bookmark=True):
         """Calculate statistics aggregations."""
         # If no events have been indexed there is nothing to aggregate
         if not Index(self.event_index, using=self.client).exists():
             return
-        lower_limit = start_date or self.get_bookmark()
+
+        lower_limit = start_date or self.get_bookmark() # TODO: TEMP
         # Stop here if no bookmark could be estimated.
         if lower_limit is None:
             return
@@ -316,7 +337,7 @@ class StatAggregator(object):
         """List the aggregation's bookmarks."""
         query = Search(
             using=self.client,
-            index=self.aggregation_alias,
+            index=self.bookmark_alias,
             doc_type=self.bookmark_doc_type
         ).sort({'date': {'order': 'desc'}})
 
@@ -352,7 +373,7 @@ class StatAggregator(object):
 
         bookmarks_query = Search(
             using=self.client,
-            index=self.aggregation_alias,
+            index=self.bookmark_alias,
             doc_type=self.bookmark_doc_type
         ).sort({'date': {'order': 'desc'}})
 

@@ -38,6 +38,9 @@
         "is_robot": {
           "type": "boolean"
         },
+        "is_restricted": {
+          "type": "boolean"
+        },
         "hostname": {
           "type": "keyword",
           "index": true
@@ -57,6 +60,6 @@
     }
   },
   "aliases": {
-    "events-stats-top-view": {}
+    "__SEARCH_INDEX_PREFIX__events-stats-top-view": {}
   }
 }

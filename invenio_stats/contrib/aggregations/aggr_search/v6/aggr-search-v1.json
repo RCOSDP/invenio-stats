@@ -62,6 +62,6 @@
     }
   },
   "aliases": {
-    "stats-search": {}
+    "__SEARCH_INDEX_PREFIX__stats-search": {}
   }
 }

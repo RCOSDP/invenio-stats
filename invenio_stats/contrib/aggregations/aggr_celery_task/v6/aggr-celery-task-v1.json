@@ -82,6 +82,6 @@
     }
   },
   "aliases": {
-    "stats-celery-task": {}
+    "__SEARCH_INDEX_PREFIX__stats-celery-task": {}
   }
 }

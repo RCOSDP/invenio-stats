@@ -76,6 +76,9 @@
         "is_robot": {
           "type": "boolean"
         },
+        "is_restricted": {
+          "type": "boolean"
+        },
         "size": {
           "type": "double"
         },
@@ -114,6 +117,6 @@
     }
   },
   "aliases": {
-    "events-stats-file-preview": {}
+    "__SEARCH_INDEX_PREFIX__events-stats-file-preview": {}
   }
 }

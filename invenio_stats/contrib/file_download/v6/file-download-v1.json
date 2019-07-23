@@ -29,6 +29,14 @@
           "type": "date",
           "format": "strict_date_hour_minute_second"
         },
+        "item_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "item_title": {
+          "type": "keyword",
+          "index": true
+        },
         "bucket_id": {
           "type": "keyword",
           "index": true
@@ -56,11 +64,59 @@
         "collection": {
           "type": "keyword",
           "index": true
+        },
+        "unique_session_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "referrer": {
+          "type": "keyword",
+          "index": true
+        },
+        "is_robot": {
+          "type": "boolean"
+        },
+        "is_restricted": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "double"
+        },
+        "accessrole": {
+          "type": "keyword",
+          "index": true
+        },
+        "userrole": {
+          "type": "keyword",
+          "index": true
+        },
+        "site_license_name": {
+          "type": "keyword",
+          "index": true
+        },
+        "site_license_flag": {
+          "type": "boolean"
+        },
+        "index_list": {
+          "type": "keyword",
+          "index": true
+        },
+        "cur_user_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "remote_addr": {
+          "type": "keyword",
+          "index": true
+        },
+        "hostname": {
+          "type": "keyword",
+          "index": true
         }
       }
     }
   },
   "aliases": {
-    "events-stats-file-download": {}
+    "__SEARCH_INDEX_PREFIX__events-stats-file-download": {}
   }
 }

@@ -55,6 +55,9 @@
         "is_robot": {
           "type": "boolean"
         },
+        "is_restricted": {
+          "type": "boolean"
+        },
         "site_license_name": {
           "type": "keyword",
           "index": true
@@ -66,6 +69,6 @@
     }
   },
   "aliases": {
-    "events-stats-search": {}
+    "__SEARCH_INDEX_PREFIX__events-stats-search": {}
   }
 }

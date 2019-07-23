@@ -24,6 +24,8 @@ from weko_admin.api import is_restricted_user
 
 from .utils import get_anonymization_salt, get_geoip, obj_or_import_string
 
+import os
+
 
 def anonymize_user(doc):
     """Preprocess an event by anonymizing user information.
@@ -173,7 +175,9 @@ class EventsIndexer(object):
         self.queue = queue
         self.client = client or current_search_client
         self.doctype = queue.routing_key
-        self.index = '{0}-{1}'.format(prefix, self.queue.routing_key)
+        self.search_index_prefix = os.environ.get('SEARCH_INDEX_PREFIX', '')# current_app.config['SEARCH_INDEX_PREFIX']
+        self.index = '{0}-{1}-{2}'.format(self.search_index_prefix, prefix,
+                                          self.queue.routing_key)
         self.suffix = suffix
         # load the preprocessors
         self.preprocessors = [

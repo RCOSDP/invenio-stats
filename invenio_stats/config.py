@@ -10,9 +10,12 @@
 
 from __future__ import absolute_import, print_function
 
+import os
+
 from kombu import Exchange
 
 from .utils import default_permission_factory, weko_permission_factory
+
 
 STATS_REGISTER_RECEIVERS = True
 """Enable the registration of signal receivers.
@@ -168,3 +171,14 @@ TARGET_REPORTS = {
     'Item Detail': '2',
     'Contents Download': '3',
 }
+
+
+STATS_ES_INTEGER_MAX_VALUE = 2147483647
+"""Since ES2 using size=0 has been prohibited, so in order to accomplish
+the same thing, Integer.MAX_VALUE is used to retrieve agg buckets.
+In ES2, size=0 was internally replaced by this value, so we have effectively
+mimicked the same functonality.
+"""
+
+SEARCH_INDEX_PREFIX = os.environ.get('SEARCH_INDEX_PREFIX', '').strip('-')
+"""Search index prefix which is set in weko config."""
