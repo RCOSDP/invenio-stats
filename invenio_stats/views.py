@@ -10,6 +10,7 @@
 
 import calendar
 from datetime import datetime, timedelta
+from functools import wraps
 from math import ceil
 
 import dateutil.relativedelta as relativedelta
@@ -17,6 +18,7 @@ from dateutil import parser
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Search
 from flask import Blueprint, abort, current_app, jsonify, request
+from flask_login import login_required
 from invenio_rest.views import ContentNegotiatedMethodView
 from invenio_search import current_search_client
 
@@ -34,6 +36,17 @@ blueprint = Blueprint(
     __name__,
     url_prefix='/stats',
 )
+
+
+def stats_api_access_required(f):
+    """Decorator for checking access to invenio-stats api."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        p = current_stats.permission_factory()
+        if p is not None and not p.can():
+            return abort(403)
+        return f(*args, **kwargs)
+    return wrapper
 
 
 class WekoQuery(ContentNegotiatedMethodView):
@@ -156,11 +169,13 @@ class QueryRecordViewCount(WekoQuery):
 
         return result
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get total record view count."""
         record_id = kwargs.get('record_id')
         return self.make_response(self.get_data(record_id, get_period=True))
 
+    @stats_api_access_required
     def post(self, **kwargs):
         """Get record view count with date."""
         record_id = kwargs.get('record_id')
@@ -254,6 +269,7 @@ class QueryFileStatsCount(WekoQuery):
 
         return result
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get total file download/preview count."""
         bucket_id = kwargs.get('bucket_id')
@@ -264,6 +280,7 @@ class QueryFileStatsCount(WekoQuery):
                 file_key,
                 get_period=True))
 
+    @stats_api_access_required
     def post(self, **kwargs):
         """Get file download/preview count with date."""
         bucket_id = kwargs.get('bucket_id')
@@ -281,6 +298,7 @@ class QueryItemRegReport(WekoQuery):
 
     view_name = 'get_item_registration_report'
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get item registration report."""
         try:
@@ -297,6 +315,7 @@ class QueryRecordViewReport(WekoQuery):
 
     view_name = 'get_record_view_report'
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get record view report."""
         result = QueryRecordViewReportHelper.get(**kwargs)
@@ -308,6 +327,7 @@ class QueryRecordViewPerIndexReport(WekoQuery):
 
     view_name = 'get_record_view_per_index_report'
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get record view per index report.
 
@@ -327,6 +347,7 @@ class QueryFileReports(WekoQuery):
 
     view_name = 'get_file_reports'
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get file reports."""
         result = QueryFileReportsHelper.get(**kwargs)
@@ -338,6 +359,7 @@ class QueryCommonReports(WekoQuery):
 
     view_name = 'get_common_report'
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get file reports."""
         result = QueryCommonReportsHelper.get(**kwargs)
@@ -360,6 +382,7 @@ class QueryCeleryTaskReport(WekoQuery):
         else:
             return pretty_result
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get celery task report."""
         result = {}
@@ -406,6 +429,7 @@ class QuerySearchReport(ContentNegotiatedMethodView):
             default_media_type='application/json',
             **kwargs)
 
+    @stats_api_access_required
     def get(self, **kwargs):
         """Get number of searches per keyword."""
         result = QuerySearchReportHelper.get(**kwargs)

@@ -130,7 +130,10 @@ setup(
         'invenio_stats.queries': [
             'invenio_stats = '
             'invenio_stats.contrib.registrations:register_queries'
-        ]
+        ],
+        'invenio_access.actions': [
+            'stats_api_access = invenio_stats.permissions:stats_api_access',
+        ],
     },
     extras_require=extras_require,
     install_requires=install_requires,
