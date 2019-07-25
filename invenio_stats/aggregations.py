@@ -95,7 +95,8 @@ class StatAggregator(object):
         self.name = name
         self.client = client or current_search_client
         self.event = event
-        self.search_index_prefix = current_app.config['SEARCH_INDEX_PREFIX'].strip('-')  # TODO: Why does it have a dash???
+        self.search_index_prefix = current_app.config['SEARCH_INDEX_PREFIX']. \
+                strip('-')
         self.aggregation_alias = '{0}-stats-{1}'.format(
             self.search_index_prefix, self.event)
         self.bookmark_alias = '{0}-stats-{1}-bookmark'.format(
@@ -282,7 +283,6 @@ class StatAggregator(object):
                                        interval_date.strftime(
                                            self.index_name_suffix))
                 self.indices.add(index_name)
-                # self.indices.add(bookmark_name)  # TODO: Change the logic for flushing indices
                 yield dict(_id='{0}-{1}'.
                            format(aggregation['key'],
                                   interval_date.strftime(
@@ -298,7 +298,7 @@ class StatAggregator(object):
         if not Index(self.event_index, using=self.client).exists():
             return
 
-        lower_limit = start_date or self.get_bookmark() # TODO: TEMP
+        lower_limit = start_date or self.get_bookmark()
         # Stop here if no bookmark could be estimated.
         if lower_limit is None:
             return

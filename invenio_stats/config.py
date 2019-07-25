@@ -181,5 +181,5 @@ mimicked the same functonality.
 """
 
 
-SEARCH_INDEX_PREFIX = os.environ.get('SEARCH_INDEX_PREFIX', '').strip('-')
+SEARCH_INDEX_PREFIX = os.environ.get('SEARCH_INDEX_PREFIX', '')
 """Search index prefix which is set in weko config."""

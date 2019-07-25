@@ -302,7 +302,7 @@ def register_aggregations():
 
 
 def register_queries():
-    """Register queries.""" # TODO
+    """Register queries."""
     search_index_prefix = current_app.config['SEARCH_INDEX_PREFIX'].strip('-')
     return [
         dict(

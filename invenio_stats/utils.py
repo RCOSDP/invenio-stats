@@ -620,9 +620,11 @@ class QueryRecordViewPerIndexReportHelper(object):
     @classmethod
     def get_nested_agg(cls, start_date, end_date):
         """Get nested aggregation by index id."""
-        agg_query = Search(using=current_search_client,
-                           index='events-stats-record-view',
-                           doc_type='stats-record-view')[0:0]
+        agg_query = Search(
+            using=current_search_client,
+            index='{}-events-stats-record-view'.format(
+                current_app.config['SEARCH_INDEX_PREFIX'].strip('-')),
+            doc_type='stats-record-view')[0:0]  # FIXME: Get ALL results
 
         if start_date is not None and end_date is not None:
             time_range = {}
