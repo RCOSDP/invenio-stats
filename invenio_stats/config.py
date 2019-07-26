@@ -16,7 +16,6 @@ from kombu import Exchange
 
 from .utils import default_permission_factory, weko_permission_factory
 
-
 STATS_REGISTER_RECEIVERS = True
 """Enable the registration of signal receivers.
 

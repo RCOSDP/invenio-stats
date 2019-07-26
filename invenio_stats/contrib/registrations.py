@@ -7,6 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Registration of contrib events."""
+from flask import current_app
 from invenio_search import current_search_client
 
 from invenio_stats.aggregations import StatAggregator, filter_restricted
@@ -19,9 +20,6 @@ from invenio_stats.processors import EventsIndexer, anonymize_user, \
     flag_restricted, flag_robots
 from invenio_stats.queries import ESDateHistogramQuery, ESTermsQuery, \
     ESWekoTermsQuery
-
-import os
-from flask import current_app
 
 
 def register_events():

@@ -264,7 +264,7 @@ class ESTermsQuery(ESQuery):
                 cur_agg = cur_agg.bucket(
                     term, 'terms', field=term,
                     size=kwargs.get('agg_size') or \
-                        current_app.config['STATS_ES_INTEGER_MAX_VALUE'])
+                    current_app.config['STATS_ES_INTEGER_MAX_VALUE'])
                 _apply_metric_aggs(cur_agg)
 
         if self.copy_fields:
@@ -360,7 +360,7 @@ class ESWekoTermsQuery(ESTermsQuery):
                 cur_agg = cur_agg.bucket(
                     term, 'terms', field=term,
                     size=kwargs.get('agg_size') or \
-                        current_app.config['STATS_ES_INTEGER_MAX_VALUE'],
+                    current_app.config['STATS_ES_INTEGER_MAX_VALUE'],
                     order=kwargs.get('agg_sort', {"_count": "desc"})
                 )
                 _apply_metric_aggs(cur_agg)

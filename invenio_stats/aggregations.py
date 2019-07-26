@@ -17,11 +17,8 @@ import six
 from dateutil import parser
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index, Search
-from invenio_search import current_search_client
-
 from flask import current_app
-import os
-
+from invenio_search import current_search_client
 
 
 def filter_robots(query):
@@ -96,7 +93,7 @@ class StatAggregator(object):
         self.client = client or current_search_client
         self.event = event
         self.search_index_prefix = current_app.config['SEARCH_INDEX_PREFIX']. \
-                strip('-')
+            strip('-')
         self.aggregation_alias = '{0}-stats-{1}'.format(
             self.search_index_prefix, self.event)
         self.bookmark_alias = '{0}-stats-{1}-bookmark'.format(
@@ -132,7 +129,6 @@ class StatAggregator(object):
         self.batch_size = batch_size
         self.event_index = '{0}-events-stats-{1}'.format(
             self.search_index_prefix, self.event)
-
 
     @property
     def bookmark_doc_type(self):
@@ -241,7 +237,7 @@ class StatAggregator(object):
             'terms', 'terms', field=self.aggregation_field,
             size=current_app.config['STATS_ES_INTEGER_MAX_VALUE']
         )
-        #terms = terms[5, 10] # PAGINATE THROUGH ALL
+        # FIXME: Paginate?
         top = terms.metric(
             'top_hit', 'top_hits', size=1, sort={'timestamp': 'desc'}
         )
@@ -272,7 +268,6 @@ class StatAggregator(object):
                             doc,
                             aggregation_data
                         )
-
 
                 index_name = '{0}-stats-{1}-{2}'.\
                              format(self.search_index_prefix, self.event,
