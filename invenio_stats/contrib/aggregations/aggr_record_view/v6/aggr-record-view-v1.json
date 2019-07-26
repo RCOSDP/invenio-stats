@@ -19,13 +19,67 @@
         "count": {
           "type": "integer"
         },
+        "unique_count": {
+          "type": "integer"
+        },
         "record_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "record_name": {
+          "type": "keyword",
+          "index": true
+        },
+        "country": {
+          "type": "keyword",
+          "index": true
+        },
+        "hostname": {
+          "type": "keyword",
+          "index": true
+        },
+        "remote_addr": {
+          "type": "keyword",
+          "index": true
+        },
+        "pid_value": {
           "type": "keyword",
           "index": true
         },
         "collection": {
           "type": "keyword",
           "index": true
+        },
+        "cur_user_id": {
+          "type": "keyword",
+          "index": true
+        },
+        "record_index_names": {
+          "type": "keyword",
+          "index": true
+        },
+        "record_index_list": {
+          "type": "nested",
+          "properties": {
+            "index_id": {
+              "type": "keyword"
+            },
+            "index_name_en": {
+              "type": "keyword",
+              "index": true
+            },
+            "index_name": {
+              "type": "keyword",
+              "index": true
+            }
+          }
+        },
+        "site_license_name": {
+          "type": "keyword",
+          "index": true
+        },
+        "site_license_flag": {
+          "type": "boolean"
         }
       }
     }
