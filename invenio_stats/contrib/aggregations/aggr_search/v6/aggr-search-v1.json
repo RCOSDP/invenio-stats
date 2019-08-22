@@ -51,6 +51,10 @@
           "type": "keyword",
           "index": true
         },
+        "search_type": {
+          "type": "integer",
+          "index": true
+        },
         "site_license_name": {
           "type": "keyword",
           "index": true

@@ -38,6 +38,10 @@
         "is_restricted": {
           "type": "boolean"
         },
+        "cur_user_id": {
+          "type": "integer",
+          "index": true
+        },
         "username": {
           "type": "keyword",
           "index": true

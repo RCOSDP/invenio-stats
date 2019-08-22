@@ -30,11 +30,23 @@
           "type": "keyword",
           "index": true
         },
+        "cur_user_id": {
+          "type": "integer",
+          "index": true
+        },
         "hostname": {
           "type": "keyword",
           "index": true
         },
         "remote_addr": {
+          "type": "keyword",
+          "index": true
+        },
+        "pid_value": {
+          "type": "keyword",
+          "index": true
+        },
+        "record_name": {
           "type": "keyword",
           "index": true
         },
