@@ -359,7 +359,6 @@ class QueryCommonReports(WekoQuery):
 
     view_name = 'get_common_report'
 
-    @stats_api_access_required
     def get(self, **kwargs):
         """Get file reports."""
         result = QueryCommonReportsHelper.get(**kwargs)
