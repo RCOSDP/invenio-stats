@@ -169,13 +169,11 @@ class QueryRecordViewCount(WekoQuery):
 
         return result
 
-    @stats_api_access_required
     def get(self, **kwargs):
         """Get total record view count."""
         record_id = kwargs.get('record_id')
         return self.make_response(self.get_data(record_id, get_period=True))
 
-    @stats_api_access_required
     def post(self, **kwargs):
         """Get record view count with date."""
         record_id = kwargs.get('record_id')
@@ -269,7 +267,6 @@ class QueryFileStatsCount(WekoQuery):
 
         return result
 
-    @stats_api_access_required
     def get(self, **kwargs):
         """Get total file download/preview count."""
         bucket_id = kwargs.get('bucket_id')
@@ -280,7 +277,6 @@ class QueryFileStatsCount(WekoQuery):
                 file_key,
                 get_period=True))
 
-    @stats_api_access_required
     def post(self, **kwargs):
         """Get file download/preview count with date."""
         bucket_id = kwargs.get('bucket_id')
